@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 유저 모델
+model User {
+  id           String  @id @default(uuid())
+  email        String  @unique
+  password     String?
+  nickname     String
+  profileImage String?
+  bio          String?
+
+  noShowCount  Int @default(0) // 노쇼 누적 횟수 
+  yesShowCount Int @default(0) // 예스쇼 누적 횟수
+
+  provider String? // 예: 'KAKAO', 'NAVER', 'GOOGLE', 'LOCAL' 등
+  socialId String? // 소셜 서비스에서 제공하는 유저의 고유 ID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hostGatherings Gathering[]            @relation("HostGatherings")
+  participants   Participant[]
+  gatheringChatMessages       GatheringChatMessage[]
+
+  directChatRoomAsUser1 DirectChatRoom[]    @relation("DirectChatUser1")
+  directChatRoomAsUser2 DirectChatRoom[]    @relation("DirectChatUser2")
+  directChatMessages    DirectChatMessage[] @relation("DirectChatMessages")
+
+  sentFriendRequests     Friendship[] @relation("SentFriendRequests")
+  receivedFriendRequests Friendship[] @relation("ReceivedFriendRequests")
+
+  @@unique([provider, socialId]) // 같은 소셜 계정으로 중복 가입 방지
+}
+
+///////////////////////////////////////////////////////////////
+
+enum GatheringCategory {
+  DRINK // 술 모임
+  CLUB // 클럽 모임
+  DRINK_CLUB // 술+클럽 모임
+}
+
+enum GatheringStatus {
+  OPEN // 모집 중
+  FULL // 인원 마감
+  IN_PROGRESS // 진행 중
+  CANCELED // 취소됨
+  COMPLETED // 종료됨
+}
+
+// 모임 모델
+model Gathering {
+  id          String            @id @default(uuid())
+  title       String
+  description String
+  category    GatheringCategory
+  location    String
+  latitude    Float?
+  longitude   Float?
+  maxPeople   Int
+  status      GatheringStatus   @default(OPEN)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  hostId String
+  host   User   @relation("HostGatherings", fields: [hostId], references: [id])
+
+  participants       Participant[]
+  gatheringChatRooms GatheringChatRoom[]
+}
+
+///////////////////////////////////////////////////////////////
+
+enum ParticipantStatus {
+  PENDING // 승인 대기 중 
+  APPROVED // 승인됨
+  BANNED // 강퇴됨 
+  YES_SHOW // 참석 완료 
+  NO_SHOW // 노쇼 발생
+}
+
+// 참여자 모델
+model Participant {
+  id       String            @id @default(uuid())
+  status   ParticipantStatus @default(PENDING) // 기본값은 대기 중
+  joinedAt DateTime?
+  userId   String
+  user     User              @relation(fields: [userId], references: [id])
+
+  gatheringId           String
+  gathering             Gathering              @relation(fields: [gatheringId], references: [id])
+  gatheringChatMessages GatheringChatMessage[]
+
+  @@unique([userId, gatheringId]) // 한 모임에 중복 신청 방지
+}
+
+///////////////////////////////////////////////////////////////
+
+// 모임 채팅방 모델
+model GatheringChatRoom {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  gatheringId String
+  gathering   Gathering @relation(fields: [gatheringId], references: [id])
+
+  messages GatheringChatMessage[]
+}
+
+// 모임 채팅 메시지 모델
+model GatheringChatMessage {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now())
+
+  roomId String
+  room   GatheringChatRoom @relation(fields: [roomId], references: [id])
+
+  senderId String
+  sender   Participant @relation(fields: [senderId], references: [id])
+  
+  user     User?       @relation(fields: [userId], references: [id])
+  userId   String?
+}
+
+///////////////////////////////////////////////////////////////
+
+enum DirectChatRoomStatus {
+  PENDING // 대화 신청 대기 중 
+  ACCEPTED // 대화 수락됨 
+  REJECTED // 대화 거절됨
+}
+
+// 일대일 채팅방 모델
+model DirectChatRoom {
+  id        String               @id @default(uuid())
+  status    DirectChatRoomStatus @default(PENDING)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  user1Id String
+  user1   User   @relation("DirectChatUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+
+  user2Id String
+  user2   User   @relation("DirectChatUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+
+  messages DirectChatMessage[]
+
+  @@unique([user1Id, user2Id])
+}
+
+// 일대일 채팅 메시지 모델
+model DirectChatMessage {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now())
+
+  roomId String
+  room   DirectChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  senderId String
+  sender   User   @relation("DirectChatMessages", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+/////////////////////////////////////////////////
+
+enum FriendshipStatus {
+  PENDING // 신청 대기 중
+  ACCEPTED // 수락 완료 (서로 친구)
+  BLOCKED // 손절됨
+}
+
+// 친구 모델
+model Friendship {
+  id        String           @id @default(uuid())
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // 친구 신청을 보낸 사람
+  senderId String
+  sender   User   @relation("SentFriendRequests", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // 친구 신청을 받은 사람
+  receiverId String
+  receiver   User   @relation("ReceivedFriendRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+}
