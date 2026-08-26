@@ -1,0 +1,318 @@
+@baseUrl = http://localhost:3000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjI4MSwiZXhwIjoxNzg3NzQ5NDgxfQ.ofBQBR5_EzE4HswZNyUAJk0l4dEBaOEOkXa20LcRPZQ
+@gatheringId = 833ed1d7-46b2-4b3a-a752-fc44b3c1ae8d
+
+
+
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test2@naver.com",
+  "password": "tjdwls1234",
+  "passwordConfirm": "tjdwls1234",
+  "nickname": "테스터2"
+}
+
+######################################
+
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test2@naver.com",
+  "password": "tjdwls1234"
+}
+
+
+
+############################################################################
+
+GET {{baseUrl}}/user/me
+Authorization: Bearer {{token}}
+
+######################################
+
+
+PATCH {{baseUrl}}/user/profile
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nickname": "뉴 테스터",
+  "bio": "안녕하세요! 저는 천재입니다."
+}
+
+
+
+######################################
+
+
+DELETE {{baseUrl}}/user/account
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+
+############################################################################
+
+
+POST {{baseUrl}}/gathering
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "이태원 주말 술 모임",
+  "description": "이번 주 금요일 이태원에서 진탕 마실 분 구합니다!",
+  "category": "DRINK_CLUB",
+  "location": "앳",
+  "latitude": 37.4979,
+  "longitude": 127.0276,
+  "maxPeople": 12
+}
+
+
+######################################
+
+
+GET {{baseUrl}}/gathering
+
+
+######################################
+
+
+GET {{baseUrl}}/gathering/{{gatheringId}}
+
+
+######################################
+
+
+PATCH {{baseUrl}}/gathering/{{gatheringId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "category": "DRINK_CLUB",
+  "maxPeople": 10
+}
+
+
+######################################
+
+
+
+
+
+
+@hostToken = YOUR_HOST_JWT_TOKEN
+@userToken = YOUR_NORMAL_USER_JWT_TOKEN
+@gatheringId = YOUR_GATHERING_UUID
+
+
+
+### 1-1. 모임 시작 (방장이 진행 중으로 변경)
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/start
+Authorization: Bearer {{hostToken}}
+
+### 1-2. 모임 종료 (진행 중인 모임을 종료 처리)
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/complete
+Authorization: Bearer {{hostToken}}
+
+
+### 2-1. 모임 취소 (모집 중인 모임을 취소 처리)
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/cancel
+Authorization: Bearer {{hostToken}}
+
+
+
+
+### 3-1. [403 Forbidden] 방장이 아닌 일반 유저가 시작 시도할 경우
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/start
+Authorization: Bearer {{userToken}}
+
+### 3-2. [400 Bad Request] 이미 진행 중(IN_PROGRESS)인 모임을 취소 시도할 경우
+# (1-1 실행 후 테스트)
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/cancel
+Authorization: Bearer {{hostToken}}
+
+### 3-3. [400 Bad Request] 진행 시작을 하지 않은 상태(OPEN)에서 바로 종료 시도할 경우
+PATCH {{baseUrl}}/gathering/{{gatheringId}}/complete
+Authorization: Bearer {{hostToken}}
+
+### 3-4. [404 Not Found] 존재하지 않는 모임 ID로 요청할 경우
+PATCH {{baseUrl}}/gathering/invalid-gathering-id/start
+Authorization: Bearer {{hostToken}}
+
+
+
+
+
+
+
+
+############################################################################
+
+
+@hostToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjI4MSwiZXhwIjoxNzg3NzQ5NDgxfQ.ofBQBR5_EzE4HswZNyUAJk0l4dEBaOEOkXa20LcRPZQ
+@userToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmOWRiMmE4Ny0xY2Q3LTQyYTEtOWIwZS1hODBiMjA3MTdiMWMiLCJlbWFpbCI6InRlc3QyQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjMxMSwiZXhwIjoxNzg3NzQ5NTExfQ.wZo3QgfHmgXteuSE-0lErEMG6qGCzLgjwpFykV0ney8
+@participantId = 6450f829-045b-4d02-8161-e8626dc2bed9
+
+
+
+POST {{baseUrl}}/participant/apply/{{gatheringId}}
+Authorization: Bearer {{userToken}}
+
+
+######################################
+
+PATCH {{baseUrl}}/participant/{{participantId}}/approve
+Authorization: Bearer {{hostToken}}
+
+
+######################################
+
+PATCH {{baseUrl}}/participant/{{participantId}}/ban
+Authorization: Bearer {{hostToken}}
+
+######################################
+
+
+PATCH {{baseUrl}}/participant/{{participantId}}/noshow
+Authorization: Bearer {{hostToken}}
+
+
+####################################################################################
+
+
+GET {{baseUrl}}/gathering-chat/{{gatheringId}}/messages
+Authorization: Bearer {{userToken}}
+
+
+######################################
+
+POST {{baseUrl}}/gathering-chat/{{gatheringId}}/messages
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "message": "채팅 테스트입니다."
+}
+
+######################################
+
+@messageId = 551d4eaf-8b8d-406a-8487-3cc78e272f8d
+
+
+DELETE {{baseUrl}}/gathering-chat/messages/{{messageId}}
+Authorization: Bearer {{userToken}}
+
+
+
+##########################################################################
+
+
+
+@myToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjI4MSwiZXhwIjoxNzg3NzQ5NDgxfQ.ofBQBR5_EzE4HswZNyUAJk0l4dEBaOEOkXa20LcRPZQ
+@targetUserId = f9db2a87-1cd7-42a1-9b0e-a80b20717b1c
+
+@friendToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmOWRiMmE4Ny0xY2Q3LTQyYTEtOWIwZS1hODBiMjA3MTdiMWMiLCJlbWFpbCI6InRlc3QyQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjMxMSwiZXhwIjoxNzg3NzQ5NTExfQ.wZo3QgfHmgXteuSE-0lErEMG6qGCzLgjwpFykV0ney8
+
+@friendshipId = 41ce9eee-acf4-4fca-8686-06daed2a132a
+
+
+POST {{baseUrl}}/friendship/request/{{targetUserId}}
+Authorization: Bearer {{myToken}}
+
+###############################################
+
+
+GET {{baseUrl}}/friendship/requests/pending
+Authorization: Bearer {{friendToken}}
+
+###############################################
+
+
+PATCH {{baseUrl}}/friendship/{{friendshipId}}/accept
+Authorization: Bearer {{friendToken}}
+
+###############################################
+
+GET {{baseUrl}}/friendship
+Authorization: Bearer {{myToken}}
+
+###############################################
+
+PATCH {{baseUrl}}/friendship/{{friendshipId}}/reject
+Authorization: Bearer {{friendToken}}
+
+###############################################
+
+PATCH {{baseUrl}}/friendship/block/{{targetUserId}}
+Authorization: Bearer {{myToken}}
+
+
+###############################################
+
+
+GET {{baseUrl}}/friendship/blocked
+Authorization: Bearer {{myToken}}
+
+###############################################
+
+PATCH {{baseUrl}}/friendship/unblock/{{targetUserId}}
+Authorization: Bearer {{myToken}}
+
+
+##########################################################################
+
+@user1Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjI4MSwiZXhwIjoxNzg3NzQ5NDgxfQ.ofBQBR5_EzE4HswZNyUAJk0l4dEBaOEOkXa20LcRPZQ
+@user2Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmOWRiMmE4Ny0xY2Q3LTQyYTEtOWIwZS1hODBiMjA3MTdiMWMiLCJlbWFpbCI6InRlc3QyQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjMxMSwiZXhwIjoxNzg3NzQ5NTExfQ.wZo3QgfHmgXteuSE-0lErEMG6qGCzLgjwpFykV0ney8
+
+@targetUserId = f9db2a87-1cd7-42a1-9b0e-a80b20717b1c
+
+@directRoomId = d5e6345d-7cbe-44ca-a01b-daad4c95a78b
+@messageId = 63b2d9f0-126c-4377-98ec-d79bc853e7ac
+
+###  일대일 대화 신청 
+POST {{baseUrl}}/direct-chat/request/{{targetUserId}}
+Authorization: Bearer {{user1Token}}
+
+
+###내가 받은 대화 신청 목록 조회 
+GET {{baseUrl}}/direct-chat/requests/pending
+Authorization: Bearer {{user2Token}}
+
+
+###  대화 신청 수락 
+PATCH {{baseUrl}}/direct-chat/{{directRoomId}}/accept
+Authorization: Bearer {{user2Token}}
+
+### 대화 신청 거절 
+PATCH {{baseUrl}}/direct-chat/{{directRoomId}}/reject
+Authorization: Bearer {{user2Token}}
+
+### 내 일대일 대화방 목록 조회 
+GET {{baseUrl}}/direct-chat/rooms
+Authorization: Bearer {{user1Token}}
+
+### 일대일 대화방 메시지 목록 조회 
+GET {{baseUrl}}/direct-chat/rooms/{{directRoomId}}/messages
+Authorization: Bearer {{user1Token}}
+
+###  일대일 대화방 메시지 전송 
+POST {{baseUrl}}/direct-chat/rooms/{{directRoomId}}/messages
+Authorization: Bearer {{user1Token}}
+Content-Type: application/json
+
+{
+  "message": "반가워요! 일대일 메시지 테스트입니다."
+}
+
+###  일대일 대화방 메시지 삭제 
+DELETE {{baseUrl}}/direct-chat/messages/{{messageId}}
+Authorization: Bearer {{user1Token}}
+
+
+### 일대일 대화방 나가기 (대화방 및 메시지 전체 삭제)
+DELETE {{baseUrl}}/direct-chat/rooms/{{directRoomId}}/leave
+Authorization: Bearer {{user1Token}}
