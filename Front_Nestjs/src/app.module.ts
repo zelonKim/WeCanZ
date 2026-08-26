@@ -9,6 +9,7 @@ import { GatheringModule } from './gathering/gathering.module';
 import { ParticipantModule } from './participant/participant.module';
 import { ChatModule } from './chat/chat.module';
 import { FriendshipModule } from './friendship/friendship.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FriendshipModule } from './friendship/friendship.module';
     ParticipantModule,
     ChatModule,
     FriendshipModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

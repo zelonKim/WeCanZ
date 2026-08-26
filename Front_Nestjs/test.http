@@ -1,6 +1,5 @@
 @baseUrl = http://localhost:3000
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4NzcwNjI4MSwiZXhwIjoxNzg3NzQ5NDgxfQ.ofBQBR5_EzE4HswZNyUAJk0l4dEBaOEOkXa20LcRPZQ
-@gatheringId = 833ed1d7-46b2-4b3a-a752-fc44b3c1ae8d
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZWYzYzY1NS1lY2FiLTRkNDEtOWI2MS05MWE5MzlkMzg5MWUiLCJlbWFpbCI6InRlc3Q0QG5hdmVyLmNvbSIsImlhdCI6MTc4Nzc1NTE3MywiZXhwIjoxNzg4MzU5OTczfQ.lo2Qw7DYFuSj7bfyIHW2dTAUcDawETfVkzF2uzSGlHI
 
 
 
@@ -8,10 +7,13 @@ POST {{baseUrl}}/auth/signup
 Content-Type: application/json
 
 {
-  "email": "test2@naver.com",
+  "email": "test4@naver.com",
   "password": "tjdwls1234",
   "passwordConfirm": "tjdwls1234",
-  "nickname": "테스터2"
+  "nickname": "테스터4",
+  "isTermsAgreed": true,
+  "isPrivacyAgreed": true,
+  "isMarketingAgreed": true
 }
 
 ######################################
@@ -20,7 +22,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "test2@naver.com",
+  "email": "test1@naver.com",
   "password": "tjdwls1234"
 }
 
@@ -39,8 +41,8 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "nickname": "뉴 테스터",
-  "bio": "안녕하세요! 저는 천재입니다."
+  "bio": "hello there",
+  "isMarketingAgreed": false
 }
 
 
@@ -55,6 +57,10 @@ Authorization: Bearer {{token}}
 
 
 ############################################################################
+
+
+
+@gatheringId = 833ed1d7-46b2-4b3a-a752-fc44b3c1ae8d
 
 
 POST {{baseUrl}}/gathering
@@ -316,3 +322,44 @@ Authorization: Bearer {{user1Token}}
 ### 일대일 대화방 나가기 (대화방 및 메시지 전체 삭제)
 DELETE {{baseUrl}}/direct-chat/rooms/{{directRoomId}}/leave
 Authorization: Bearer {{user1Token}}
+
+
+##########################################################################
+
+
+@authToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNzdhY2QwMC04YjI5LTQ5NzYtYjZlYy1jMWM5MWFlZTE0MDEiLCJlbWFpbCI6InRlc3QxQG5hdmVyLmNvbSIsImlhdCI6MTc4Nzc1NjE1MSwiZXhwIjoxNzg4MzYwOTUxfQ.pV8Nq2GI78A_5Yyz5t7gp44ig5tkNg-rbmW39_x-UhU
+@reportedUserId = 0d6b7c4f-4a45-4ae0-8a07-4985bf209499
+@reportId = c7287170-462a-46a0-a6f7-bacbb215add1
+
+### 1. 신고하기 (유저용)
+POST {{baseUrl}}/reports
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "reportedUserId": "{{reportedUserId}}",
+  "reason": "SPAM",
+  "details": "불법 광고성 메시지를 계속 발송합니다."
+}
+
+### 2. 대기 중인 신고 목록 조회 (관리자용)
+GET {{baseUrl}}/reports/pending
+Authorization: Bearer {{authToken}}
+
+### 3. 신고 상태 변경 - 승인/제재 완료 (관리자용)
+PATCH {{baseUrl}}/reports/{{reportId}}/status
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "status": "RESOLVED"
+}
+
+### 4. 신고 상태 변경 - 무효/기각 (관리자용)
+PATCH {{baseUrl}}/reports/{{reportId}}/status
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "status": "DISMISSED"
+}

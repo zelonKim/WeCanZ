@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, Matches, IsBoolean, IsOptional } from 'class-validator';
 
 export class SignupDto {
   @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
@@ -20,4 +20,16 @@ export class SignupDto {
   @IsNotEmpty()
   @MinLength(2, { message: '닉네임은 최소 2글자 이상이어야 합니다.' })
   nickname!: string;
+
+  @IsBoolean()
+  @IsNotEmpty({ message: '서비스 이용 약관에 동의해야 합니다.' })
+  isTermsAgreed!: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty({ message: '개인정보 처리 방침에 동의해야 합니다.' })
+  isPrivacyAgreed!: boolean;
+  
+  @IsBoolean()
+  @IsOptional()
+  isMarketingAgreed?: boolean;
 }

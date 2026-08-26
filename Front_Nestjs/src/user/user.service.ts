@@ -29,9 +29,20 @@ export class UserService {
   ////////////////////////////////////
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
+    const { isMarketingAgreed, ...profileData } = dto;
+
+    let marketingAgreedAt: Date | null | undefined = undefined;
+
+    if (isMarketingAgreed !== undefined) {
+      marketingAgreedAt = isMarketingAgreed ? new Date() : null;
+    }
+
     return await this.prisma.user.update({
       where: { id: userId },
-      data: dto,
+      data: {
+        ...profileData,
+        ...(marketingAgreedAt !== undefined && { marketingAgreedAt }),
+      },
       select: {
         email: true,
         nickname: true,
@@ -39,6 +50,7 @@ export class UserService {
         bio: true,
         yesShowCount: true,
         noShowCount: true,
+        marketingAgreedAt: true,
       },
     });
   }

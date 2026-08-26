@@ -25,6 +25,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  termsAgreedAt     DateTime // 서비스 이용약관 동의 일시
+  privacyAgreedAt   DateTime // 개인정보 처리방침 동의 일시
+  marketingAgreedAt DateTime? // 마케팅 수신 동의 일시 (선택)
+
   hostGatherings        Gathering[]            @relation("HostGatherings")
   participants          Participant[]
   gatheringChatMessages GatheringChatMessage[]
@@ -35,6 +39,9 @@ model User {
   directChatRoomAsUser1 DirectChatRoom[]    @relation("DirectChatUser1")
   directChatRoomAsUser2 DirectChatRoom[]    @relation("DirectChatUser2")
   directChatMessages    DirectChatMessage[] @relation("DirectChatMessages")
+
+  sentReports     Report[] @relation("ReportReporter")
+  receivedReports Report[] @relation("ReportedUser")
 
   @@unique([provider, socialId]) // 같은 소셜 계정으로 중복 가입 방지
 }
@@ -196,4 +203,43 @@ model DirectChatMessage {
 
   senderId String
   sender   User   @relation("DirectChatMessages", fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+///////////////////////////////////////////////////////////////
+
+enum ReportReason {
+  SPAM // 불법 광고 및 도배
+  INAPPROPRIATE // 부적절한 콘텐츠
+  ABUSE // 욕설, 비방, 혐오 발언
+  IMPERSONATION // 사칭 및 허위 정보
+  OTHER // 기타
+}
+
+enum ReportStatus {
+  PENDING // 처리 대기 중
+  RESOLVED // 제재 완료
+  DISMISSED // 무효 기각 
+}
+
+// 신고하기 모델
+model Report {
+  id String @id @default(uuid())
+
+  reporterId String
+  reporter   User   @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  reportedUserId String
+  reportedUser   User   @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  reason  ReportReason
+  details String
+  status  ReportStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 동일 유저가 같은 상대를 중복 신고하는 것을 방지 
+  @@unique([reporterId, reportedUserId])
+  @@index([status])
+  @@index([reportedUserId])
 }

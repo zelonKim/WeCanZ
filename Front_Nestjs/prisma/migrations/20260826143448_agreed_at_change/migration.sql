@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "privacyAgreedAt" DROP DEFAULT,
+ALTER COLUMN "termsAgreedAt" DROP DEFAULT;
