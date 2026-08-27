@@ -60,7 +60,13 @@ export class GatheringService {
         host: {
           select: { id: true, nickname: true, profileImage: true },
         },
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: { id: true, nickname: true, profileImage: true },
+            },
+          },
+        },
       },
     });
 
@@ -86,7 +92,7 @@ export class GatheringService {
     if (!gathering) {
       throw new NotFoundException('해당 모임을 찾을 수 없습니다.');
     }
-    
+
     // 모임 작성자가 아닌 유저가 수정하려 하면 403 Forbidden
     if (gathering.hostId !== userId) {
       throw new ForbiddenException('모임을 수정할 권한이 없습니다.');

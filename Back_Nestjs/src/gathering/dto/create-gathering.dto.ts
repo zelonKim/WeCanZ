@@ -21,7 +21,7 @@ export class CreateGatheringDto {
   maxPeople: number;
 
   @IsString()
-  location?: string;
+  location: string;
 
   @IsOptional()
   @IsNumber()
@@ -31,7 +31,6 @@ export class CreateGatheringDto {
   @IsNumber()
   longitude?: number;
 
-  @IsOptional()
   @IsDateString({}, { message: '올바른 날짜 형식이어야 합니다.' })
-  dateTime?: string;
+  dateTime: string;
 }

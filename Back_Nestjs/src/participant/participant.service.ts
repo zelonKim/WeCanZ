@@ -12,7 +12,7 @@ import { ParticipantStatus } from '@prisma/client';
 export class ParticipantService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 1. 모임 참여 신청
+  // 1-1. 모임 참여 신청
   async applyGathering(gatheringId: string, userId: string) {
     const gathering = await this.prisma.gathering.findUnique({
       where: { id: gatheringId },
@@ -67,7 +67,38 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 2. 참여자 승인 (방장 전용)
+  // 1-2. 모임 참여 취소
+  async cancelGathering(gatheringId: string, userId: string) {
+    const gathering = await this.prisma.gathering.findUnique({
+      where: { id: gatheringId },
+      include: { participants: true },
+    });
+
+    if (!gathering) {
+      throw new NotFoundException('존재하지 않는 모임입니다.');
+    }
+
+    // 방장 본인은 신청 불가
+    if (gathering.hostId === userId) {
+      throw new BadRequestException(
+        '방장은 본인의 모임에 참여 취소할 수 없습니다.',
+      );
+    }
+
+    // 참여 취소
+    return await this.prisma.participant.delete({
+      where: {
+        userId_gatheringId: {
+          userId,
+          gatheringId,
+        },
+      },
+    });
+  }
+
+  ////////////////////////////////////////////////////////////////
+
+  // 2-1. 참여자 승인 (방장 전용)
   async approveParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -105,6 +136,30 @@ export class ParticipantService {
     });
   }
 
+  ////////////////////////////////////////////////////////////////
+
+  // 2-2. 참여자 대기 (방장 전용)
+  async pendingParticipant(participantId: string, hostId: string) {
+    const participant = await this.prisma.participant.findUnique({
+      where: { id: participantId },
+      include: { gathering: true },
+    });
+
+    if (!participant) {
+      throw new NotFoundException('참여자 정보를 찾을 수 없습니다.');
+    }
+
+    if (participant.gathering.hostId !== hostId) {
+      throw new ForbiddenException('방장만 참여자를 대기시킬 수 있습니다.');
+    }
+
+    return await this.prisma.participant.update({
+      where: { id: participantId },
+      data: {
+        status: ParticipantStatus.PENDING,
+      },
+    });
+  }
   ////////////////////////////////////////////////////////////////
 
   // 3. 참여자 강퇴 (방장 전용)

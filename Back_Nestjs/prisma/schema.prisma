@@ -69,10 +69,10 @@ model Gathering {
   description String
   category    GatheringCategory
   maxPeople   Int
-  location    String?
+  location    String
   latitude    Float?
   longitude   Float?
-  dateTime    DateTime?
+  dateTime    DateTime
 
   status    GatheringStatus @default(OPEN)
   createdAt DateTime        @default(now())
