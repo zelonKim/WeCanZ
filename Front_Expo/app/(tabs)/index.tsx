@@ -1,5 +1,6 @@
 import { client } from "@/api/client";
 import Colors from "@/constants/Colors";
+import { formatDateTime } from "@/utils/formatDateTime";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -9,6 +10,7 @@ import {
   Alert,
   FlatList,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -124,8 +126,14 @@ export default function HomeScreen() {
   });
 
   const filteredGatherings = gatherings.filter((item) => {
-    if (selectedCategory === "ALL") return true;
-    return item.category === selectedCategory;
+    // 1. 상태 조건: OPEN 또는 FULL 상태인 모임만 노출
+    const isOpenOrFull = item.status === "OPEN" || item.status === "FULL";
+
+    // 2. 카테고리 조건
+    const matchesCategory =
+      selectedCategory === "ALL" || item.category === selectedCategory;
+
+    return isOpenOrFull && matchesCategory;
   });
 
   const closeAndResetModal = () => {
@@ -155,6 +163,7 @@ export default function HomeScreen() {
 
     // 최종 선택한 날짜 + 시간 ISO 생성
     const [year, month, day] = selectedDateStr.split("-").map(Number);
+
     const finalDate = new Date(
       year,
       month - 1,
@@ -180,23 +189,12 @@ export default function HomeScreen() {
       case GatheringCategory.DRINK:
         return "🍺 술벙";
       case GatheringCategory.CLUB:
-        return "🪩 클럽벙";
+        return Platform.OS === "ios" ? "🪩 클럽벙" : "💃 클럽벙";
       case GatheringCategory.DRINK_CLUB:
         return "🔥 술+클럽벙";
       default:
         return cat;
     }
-  };
-
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-
-    return `${month}월 ${day}일 / ${hours}:${minutes}`;
   };
 
   const getTodayString = () => {
@@ -265,11 +263,37 @@ export default function HomeScreen() {
               onPress={() => router.push(`/gathering/${item.id}`)}
             >
               <View style={styles.cardHeader}>
-                <Text style={styles.cardCategory}>
-                  {getCategoryLabel(item.category)}
-                </Text>
-                <Text style={styles.cardPeople}>최대 {item.maxPeople}명</Text>
+                {/* 뱃지 + 카테고리 묶음 */}
+                <View style={styles.headerLeftGroup}>
+                  {/* 상태 뱃지 */}
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      item.status === "OPEN"
+                        ? styles.statusOpen
+                        : styles.statusFull,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusBadgeText,
+                        item.status === "OPEN"
+                          ? styles.statusOpenText
+                          : styles.statusFullText,
+                      ]}
+                    >
+                      {item.status === "OPEN" ? "모집중" : "인원 마감"}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.cardCategory}>
+                    {getCategoryLabel(item.category)}
+                  </Text>
+                </View>
+
+                <Text style={styles.cardPeople}>정원 {item.maxPeople}명</Text>
               </View>
+
               <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardDescription} numberOfLines={2}>
                 {item.description}
@@ -512,6 +536,43 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  headerLeftGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  cardCategory: { fontSize: 13, fontWeight: "bold", color: Colors.text },
+
+  /* 뱃지 스타일 */
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+  // 모집중 (초록 톤)
+  statusOpen: {
+    backgroundColor: Colors.green,
+  },
+  statusOpenText: {
+    color: Colors.text,
+  },
+  // 인원 마감 (주황 톤)
+  statusFull: {
+    backgroundColor: Colors.red,
+  },
+  statusFullText: {
+    color: Colors.text,
+  },
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: { paddingHorizontal: 16, paddingVertical: 12 },
@@ -545,12 +606,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  cardCategory: { fontSize: 12, fontWeight: "bold", color: Colors.red },
+
   cardPeople: { fontSize: 12, color: Colors.tabIconDefault },
   cardTitle: {
     fontSize: 17,

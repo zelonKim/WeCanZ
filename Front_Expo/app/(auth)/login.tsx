@@ -89,7 +89,7 @@ export default function LoginScreen() {
         >
           {/* 1. 상단 로고 & 타이틀 */}
           <View style={styles.brandSection}>
-            <Text style={[styles.logoText, { color: Colors.red }]}>⚡️ 종태원</Text>
+            <Text style={[styles.logoText, { color: Colors.red }]}>⚡️ </Text>
             <Text style={styles.subText}>
               오늘 밤, 가장 핫한 술번개 & 클럽번개
             </Text>

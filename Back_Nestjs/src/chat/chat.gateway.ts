@@ -59,6 +59,22 @@ export class ChatGateway {
     return savedMessage;
   }
 
+  @SubscribeMessage('deleteGatheringMessage')
+  async handleDeleteMessage(
+    @MessageBody()
+    data: {
+      gatheringId: string;
+      messageId: string;
+      userId: string;
+    },
+  ) {
+    await this.gatheringChatService.deleteMessage(data.messageId, data.userId);
+
+    this.server
+      .to(`gathering_${data.gatheringId}`)
+      .emit('gatheringMessageDeleted', { messageId: data.messageId });
+  }
+
   ////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('joinDirectRoom')
@@ -78,7 +94,6 @@ export class ChatGateway {
     client.leave(`direct_${data.roomId}`);
     return { event: 'leftDirectRoom', roomId: data.roomId };
   }
-
 
   @SubscribeMessage('sendDirectMessage')
   async handleSendDirectMessage(

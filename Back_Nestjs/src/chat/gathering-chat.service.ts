@@ -117,7 +117,7 @@ export class GatheringChatService {
 
     if (!isOwner && !isHost) {
       throw new ForbiddenException(
-        '작성자 혹은 방장만 메시지를 삭제할 수 있습니다.',
+        '방장 혹은 작성자만 메시지를 삭제할 수 있습니다.',
       );
     }
 

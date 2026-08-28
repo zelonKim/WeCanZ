@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGatheringDto } from './dto/create-gathering.dto';
 import { UpdateGatheringDto } from './dto/update-gathering.dto';
-import { GatheringStatus } from '@prisma/client';
+import { GatheringStatus, ParticipantStatus } from '@prisma/client';
 
 @Injectable()
 export class GatheringService {
@@ -107,7 +107,7 @@ export class GatheringService {
   //////////////////////////////////////////////////////////////////
 
   // 5. 모임 시작 (진행)
-  async startGathering(gatheringId: string, hostId: string) {
+  async startGathering(gatheringId: string, userId: string) {
     // 모임 존재 여부 확인
     const gathering = await this.prisma.gathering.findUnique({
       where: { id: gatheringId },
@@ -118,7 +118,7 @@ export class GatheringService {
     }
 
     // 방장 권한 확인
-    if (gathering.hostId !== hostId) {
+    if (gathering.hostId !== userId) {
       throw new ForbiddenException('모임을 시작할 권한이 없습니다.');
     }
 
@@ -169,13 +169,6 @@ export class GatheringService {
       throw new BadRequestException('취소된 모임은 종료할 수 없습니다.');
     }
 
-    if (
-      gathering.status === GatheringStatus.OPEN ||
-      gathering.status === GatheringStatus.FULL
-    ) {
-      throw new BadRequestException('모임이 진행되어야 종료할 수 있습니다.');
-    }
-
     // 종료 처리
     return await this.prisma.gathering.update({
       where: { id: gatheringId },
@@ -220,6 +213,50 @@ export class GatheringService {
     return await this.prisma.gathering.update({
       where: { id: gatheringId },
       data: { status: GatheringStatus.CANCELED },
+    });
+  }
+
+  //////////////////////////////////////////////////////////////////
+
+  // 8. 나의 모임 조회
+  async getMyGatherings(userId: string) {
+    return await this.prisma.gathering.findMany({
+      where: {
+        OR: [
+          // 1. 내가 방장인 모임
+          { hostId: userId },
+          // 2. 내가 참여 신청했거나 참여 중인 모임 (PENDING, APPROVED)
+          {
+            participants: {
+              some: {
+                userId,
+                status: {
+                  in: [ParticipantStatus.PENDING, ParticipantStatus.APPROVED],
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        // 프런트엔드 뱃지 처리를 위한 참여자 정보 포함
+        participants: {
+          select: {
+            userId: true,
+            status: true,
+          },
+        },
+        host: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImage: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc', // 최신순 정렬
+      },
     });
   }
 }

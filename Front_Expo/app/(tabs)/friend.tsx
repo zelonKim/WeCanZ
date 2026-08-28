@@ -7,12 +7,10 @@ export default function FriendScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>👤 나의 친구</Text>
+        <Text style={styles.headerTitle}>👥 나의 친구</Text>
       </View>
       <View style={styles.content}>
-        <Text style={styles.placeholderText}>
-          참여 확정된 번개 모임 단톡방 목록이 노출됩니다.
-        </Text>
+        <Text style={styles.placeholderText}>친구 목록이 노출됩니다.</Text>
       </View>
     </SafeAreaView>
   );

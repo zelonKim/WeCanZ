@@ -4,9 +4,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
-
 import { APIProvider } from "@/api/api-provider";
 import { useColorScheme } from "@/components/useColorScheme";
+import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,14 +49,16 @@ function RootLayoutNav() {
 
   return (
     <APIProvider>
-      <ThemeProvider value={DarkTheme}>
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="gathering" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-        </Stack>
-      </ThemeProvider>
+      <ActionSheetProvider>
+        <ThemeProvider value={DarkTheme}>
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="gathering" options={{ headerShown: false }} />
+            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+          </Stack>
+        </ThemeProvider>
+      </ActionSheetProvider>
     </APIProvider>
   );
 }

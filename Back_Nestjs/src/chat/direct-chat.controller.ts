@@ -10,7 +10,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 export class DirectChatController {
   constructor(private readonly directChatService: DirectChatService) {}
 
-  // 1. 일대일 대화 신청
+  // 1. DM 요청
   @Post('request/:targetUserId')
   createOrRequestRoom(
     @GetUser('id') myId: string,
@@ -19,13 +19,13 @@ export class DirectChatController {
     return this.directChatService.createOrRequestRoom(myId, targetUserId);
   }
 
-  // 2. 나에게 들어온 대화 요청 목록 조회
+  // 2. 나에게 들어온 DM 요청 목록 조회
   @Get('requests/pending')
   getPendingChatRequests(@GetUser('id') userId: string) {
     return this.directChatService.getPendingChatRequests(userId);
   }
 
-  // 3. 대화 신청 수락
+  // 3. DM 요청 수락
   @Patch(':roomId/accept')
   acceptChatRequest(
     @GetUser('id') userId: string,
@@ -34,7 +34,7 @@ export class DirectChatController {
     return this.directChatService.acceptChatRequest(roomId, userId);
   }
 
-  // 4. 대화 신청 거절
+  // 4. DM 요청 거절
   @Patch(':roomId/reject')
   rejectChatRequest(
     @GetUser('id') userId: string,
@@ -43,7 +43,7 @@ export class DirectChatController {
     return this.directChatService.rejectChatRequest(roomId, userId);
   }
 
-  // 5. 내 일대일 대화방 목록 조회
+  // 5. 내 DM 목록 조회
   @Get('rooms')
   getMyRooms(@GetUser('id') userId: string) {
     return this.directChatService.getMyRooms(userId);
@@ -74,7 +74,7 @@ export class DirectChatController {
     return this.directChatService.deleteMessage(messageId, userId);
   }
 
-  // 9. 일대일 대화방 나가기
+  // 9. DM 방 나가기
   @Delete('rooms/:roomId/leave')
   leaveRoom(@GetUser('id') userId: string, @Param('roomId') roomId: string) {
     return this.directChatService.leaveRoom(roomId, userId);

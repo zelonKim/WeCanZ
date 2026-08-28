@@ -17,31 +17,34 @@ export class FriendshipController {
     return this.friendshipService.sendFriendRequest(senderId, receiverId);
   }
 
-  // 2. 친구 신청 수락
-  @Patch(':id/accept')
-  acceptFriendRequest(@GetUser('id') userId: string, @Param('id') id: string) {
-    return this.friendshipService.acceptFriendRequest(id, userId);
-  }
 
-  // 3. 친구 신청 거절
-  @Patch(':id/reject')
-  rejectFriendRequest(@GetUser('id') userId: string, @Param('id') id: string) {
-    return this.friendshipService.rejectFriendRequest(id, userId);
-  }
-
-  // 4. 내 친구 목록 조회
-  @Get()
-  getMyFriends(@GetUser('id') userId: string) {
-    return this.friendshipService.getMyFriends(userId);
-  }
-
-  // 5. 받은 친구 요청 목록 조회
+    // 2. 받은 친구 요청 목록 조회
   @Get('requests/pending')
   getPendingRequests(@GetUser('id') userId: string) {
     return this.friendshipService.getPendingRequests(userId);
   }
 
-  // 6. 친구 차단
+  // 3. 친구 신청 수락
+  @Patch(':id/accept')
+  acceptFriendRequest(@GetUser('id') userId: string, @Param('id') id: string) {
+    return this.friendshipService.acceptFriendRequest(id, userId);
+  }
+
+  // 4. 친구 신청 거절
+  @Patch(':id/reject')
+  rejectFriendRequest(@GetUser('id') userId: string, @Param('id') id: string) {
+    return this.friendshipService.rejectFriendRequest(id, userId);
+  }
+
+  // 5. 내 친구 목록 조회
+  @Get()
+  getMyFriends(@GetUser('id') userId: string) {
+    return this.friendshipService.getMyFriends(userId);
+  }
+
+  
+
+  // 6. 유저 차단
   @Patch('block/:targetUserId')
   blockFriend(
     @GetUser('id') userId: string,
