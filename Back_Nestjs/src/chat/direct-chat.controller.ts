@@ -80,4 +80,28 @@ export class DirectChatController {
     return this.directChatService.leaveRoom(roomId, userId);
   }
 
+  // 9. DM 방 조회
+  @Get('rooms/:roomId')
+  async getRoomById(
+    @GetUser('id') userId: string,
+    @Param('roomId') roomId: string,
+  ) {
+    //방 정보 반환
+    return this.directChatService.getRoomById(roomId);
+  }
+
+  // 10. 최근 메시지 조회
+  @Get('room/:roomId/last-message')
+  async getLastMessage(@Param('roomId') roomId: string) {
+    const lastMessage = await this.directChatService.getLastMessage(roomId);
+
+    if (!lastMessage) {
+      return {
+        message: '삭제된 메시지입니다.',
+        createdAt: new Date().toISOString(),
+      };
+    }
+
+    return lastMessage;
+  }
 }

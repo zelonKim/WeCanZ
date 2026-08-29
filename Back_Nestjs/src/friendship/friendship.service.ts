@@ -38,14 +38,19 @@ export class FriendshipService {
     });
 
     if (existing) {
-      if (existing.status === FriendshipStatus.BLOCKED) {
-        throw new ForbiddenException(
-          '차단된 사용자에게는 친구 신청을 보낼 수 없습니다.',
+      if (existing.status === FriendshipStatus.PENDING) {
+        throw new BadRequestException(
+          '이미 친구 요청을 보냈거나, 친구 상태입니다.',
         );
       }
-      throw new ConflictException(
-        '이미 친구 요청을 보냈거나, 친구 상태입니다.',
-      );
+      if (existing.status === FriendshipStatus.REJECTED) {
+        throw new BadRequestException('현재 친구 요청이 거절된 상태입니다.');
+      }
+      if (existing.status === FriendshipStatus.BLOCKED) {
+        throw new BadRequestException(
+          '차단된 사용자에게는 친구 요청을 보낼 수 없습니다.',
+        );
+      }
     }
 
     return await this.prisma.friendship.create({

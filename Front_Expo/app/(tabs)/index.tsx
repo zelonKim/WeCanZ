@@ -210,6 +210,16 @@ export default function HomeScreen() {
       {/* 상단 타이틀 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>👋 벙개의 광장</Text>
+
+        {/* 💡 3. 오른쪽 끝에 배치할 광고/제휴 페이지 이동 버튼 */}
+        <TouchableOpacity
+          style={styles.commercialButton}
+          activeOpacity={0.5}
+          onPress={() => router.push("/commercial")} // 💡 4. app/commercial/index.tsx로 이동
+        >
+          <Ionicons name="storefront-outline" size={22} color="#333" />
+          {/* <Text style={styles.commercialButtonText}></Text> */}
+        </TouchableOpacity>
       </View>
 
       {/* 카테고리 필터 바 */}
@@ -536,6 +546,20 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  commercialButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4, // 아이콘과 텍스트 사이 간격 (RN 0.71+)
+  },
+  commercialButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#444",
+  },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -575,7 +599,13 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { paddingHorizontal: 16, paddingVertical: 12 },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   headerTitle: { fontSize: 22, fontWeight: "bold", color: Colors.text },
 
   categoryContainer: { paddingHorizontal: 16, marginBottom: 20 },

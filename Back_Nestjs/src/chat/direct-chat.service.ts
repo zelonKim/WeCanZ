@@ -53,7 +53,6 @@ export class DirectChatService {
       }
     }
 
-
     // 이미 생성된 대화방이 있는지 확인
     const existingRoom = await this.prisma.directChatRoom.findFirst({
       where: {
@@ -198,7 +197,7 @@ export class DirectChatService {
 
   // 5. 내 일대일 대화방 목록 조회
   async getMyRooms(userId: string) {
-    return await this.prisma.directChatRoom.findMany({
+    const rooms = await this.prisma.directChatRoom.findMany({
       where: {
         status: DirectChatRoomStatus.ACCEPTED,
         OR: [{ user1Id: userId }, { user2Id: userId }],
@@ -211,6 +210,25 @@ export class DirectChatService {
           orderBy: { createdAt: 'desc' },
         },
       },
+    });
+
+    return rooms.map((room) => {
+      const isUser1 = room.user1Id === userId;
+
+      // 💡 가장 최근 메시지 1건 추출
+      const lastMsg =
+        room.messages && room.messages.length > 0 ? room.messages[0] : null;
+
+      return {
+        ...room,
+        targetUser: isUser1 ? room.user2 : room.user1,
+        lastMessage: lastMsg
+          ? {
+              content: lastMsg.message, // 💡 DB/소켓의 message 필드를 content로 매핑해줍니다.
+              createdAt: lastMsg.createdAt,
+            }
+          : null,
+      };
     });
   }
 
@@ -234,7 +252,7 @@ export class DirectChatService {
     // ACCEPTED 상태 검증 핵심 로직
     if (room.status !== DirectChatRoomStatus.ACCEPTED) {
       throw new ForbiddenException(
-        '상대방이 대화를 수락한 경우에만 메시지를 조회 및 전송할 수 있습니다.',
+        '상대방이 수락한 경우에만 DM을 보낼 수 있습니다.',
       );
     }
 
@@ -331,5 +349,46 @@ export class DirectChatService {
     });
 
     return { message: '일대일 대화방을 나갔습니다.' };
+  }
+
+  ////////////////////////////////////////////////////////////
+
+  // 10. 일대일 대화방 조회
+  async getRoomById(roomId: string) {
+    const room = await this.prisma.directChatRoom.findUnique({
+      where: { id: roomId },
+      select: {
+        id: true,
+        user1Id: true,
+        user2Id: true,
+      },
+    });
+
+    if (!room) {
+      throw new NotFoundException('존재하지 않는 대화방입니다.');
+    }
+
+    return room;
+  }
+
+  ////////////////////////////////////////////////////////////
+
+  // 11. 최근 메시지 조회
+  async getLastMessage(roomId: string) {
+    const lastMessage = await this.prisma.directChatMessage.findFirst({
+      where: {
+        roomId,
+      },
+      orderBy: {
+        createdAt: 'desc', // 가장 최신 메시지 순 정렬
+      },
+      select: {
+        id: true,
+        message: true,
+        createdAt: true,
+      },
+    });
+
+    return lastMessage;
   }
 }

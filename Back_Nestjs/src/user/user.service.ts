@@ -64,4 +64,23 @@ export class UserService {
     });
     return { message: '회원 탈퇴가 완료되었습니다.' };
   }
+
+  ////////////////////////////////////
+
+  async findByNickname(nickname: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { nickname },
+      select: {
+        id: true,
+        nickname: true,
+        profileImage: true, 
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 닉네임입니다.');
+    }
+
+    return user;
+  }
 }

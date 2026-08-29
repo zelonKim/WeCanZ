@@ -584,10 +584,7 @@ export default function GatheringDetailScreen() {
         <Text style={styles.headerTitle}>모임 상세 정보</Text>
 
         <TouchableOpacity
-          style={[
-            styles.chatButton,
-            canAccessChat ? styles.chatButtonActive : styles.chatButtonDisabled,
-          ]}
+          style={[styles.chatButton, styles.chatButtonActive]}
           activeOpacity={canAccessChat ? 0.7 : 1}
           onPress={() => {
             if (!canAccessChat) {
@@ -602,14 +599,9 @@ export default function GatheringDetailScreen() {
           <Ionicons
             name="chatbubbles-outline"
             size={16}
-            color={canAccessChat ? Colors.yellow : "#777"}
+            color={Colors.yellow}
           />
-          <Text
-            style={[
-              styles.chatButtonText,
-              { color: canAccessChat ? Colors.yellow : "#777" },
-            ]}
-          >
+          <Text style={[styles.chatButtonText, { color: Colors.yellow }]}>
             채팅방
           </Text>
         </TouchableOpacity>
@@ -794,7 +786,7 @@ export default function GatheringDetailScreen() {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            marginTop: -10,
+            marginTop: 5,
             marginBottom: 8,
           }}
         >
@@ -1299,7 +1291,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   applyButtonText: {
-    color: Colors.card,
+    color: Colors.text,
     fontSize: 16,
     fontWeight: "bold",
   },

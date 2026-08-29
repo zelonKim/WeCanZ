@@ -10,6 +10,7 @@ import { ParticipantModule } from './participant/participant.module';
 import { ChatModule } from './chat/chat.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { ReportModule } from './report/report.module';
+import { CommercialModule } from './commercial/commercial.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { ReportModule } from './report/report.module';
     ChatModule,
     FriendshipModule,
     ReportModule,
+    CommercialModule,
   ],
   controllers: [AppController],
   providers: [AppService],

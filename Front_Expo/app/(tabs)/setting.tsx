@@ -273,7 +273,7 @@ export default function SettingScreen() {
           <Text style={styles.sectionTitle}>앱 설정</Text>
 
           <View style={styles.cardGroup}>
-            {/* 마케팅 수신 동의 */}
+            {/* 알림 수신 동의 */}
             {/* <View style={styles.menuRow}>
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -281,7 +281,7 @@ export default function SettingScreen() {
                   size={18}
                   color={Colors.tabIconDefault}
                 />
-                <Text style={styles.menuLabel}>마케팅 정보 수신 동의</Text>
+                <Text style={styles.menuLabel}>알림 수신 동의</Text>
               </View>
               <Switch
                 value={isMarketingAgreed}
@@ -313,7 +313,7 @@ export default function SettingScreen() {
 
             {/* 개인정보 처리방침 */}
             <TouchableOpacity
-              style={[styles.menuRow, { borderBottomWidth: 0 }]}
+              style={[styles.menuRow, { borderBottomWidth: 1 }]}
               onPress={() => openTerms("https://example.com/privacy")}
             >
               <View style={styles.menuLabelGroup}>
@@ -323,6 +323,26 @@ export default function SettingScreen() {
                   color={Colors.tabIconDefault}
                 />
                 <Text style={styles.menuLabel}>개인정보 처리방침</Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={Colors.tabIconDefault}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.menuRow, { borderBottomWidth: 0 }]}
+              onPress={() => openTerms("https://example.com/privacy")}
+            >
+              <View style={styles.menuLabelGroup}>
+                <Ionicons
+                  name="megaphone-outline"
+                  size={18}
+                  color={Colors.red}
+                />
+                <Text style={[styles.menuLabel, { color: Colors.red }]}>
+                  신고하기
+                </Text>
               </View>
               <Ionicons
                 name="chevron-forward"

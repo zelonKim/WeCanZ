@@ -1,5 +1,6 @@
 import { client } from "@/api/client";
 import Colors from "@/constants/Colors";
+import { getSocket } from "@/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,7 +20,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { io, Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -84,67 +85,63 @@ export default function GatheringChatScreen() {
   useEffect(() => {
     if (!id) return;
 
-    // 소켓 연결 생성
-    const socket = io(SOCKET_URL, {
-      transports: ["websocket"],
-      reconnection: true, // 자동 재연결 활성화
-      reconnectionAttempts: Infinity, // 계속 재연결 시도
-      reconnectionDelay: 1000, // 1초 뒤 재연결 시도
-      reconnectionDelayMax: 5000, // 최대 대기 시간
-      timeout: 20000,
-    });
+    // 💡 전역 소켓 인스턴스 가져오기
+    const socket = getSocket();
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
     socketRef.current = socket;
 
-    // 모임 채팅방 입장 이벤트 발송 (ChatGateway handleJoinRoom 대응)
+    // 모임 채팅방 입장 이벤트 발송
     socket.emit("joinGatheringRoom", { gatheringId: id });
 
-    // 실시간 신규 메시지 수신 (ChatGateway sendGatheringMessage의 emit 수신)
-    socket.on("newGatheringMessage", (newMessage: ChatMessage) => {
+    // 실시간 신규 메시지 수신
+    const handleNewMessage = (newMessage: ChatMessage) => {
       queryClient.setQueryData<ChatMessage[]>(
         ["gathering-messages", id],
         (oldMessages = []) => {
-          // 중복 메시지 방지
           if (oldMessages.some((msg) => msg.id === newMessage.id)) {
             return oldMessages;
           }
           return [...oldMessages, newMessage];
         },
       );
-    });
+    };
 
-    socket.on(
-      "gatheringMessageDeleted",
-      ({ messageId }: { messageId: string }) => {
-        queryClient.setQueryData<ChatMessage[]>(
-          ["gathering-messages", id],
-          (oldMessages = []) =>
-            oldMessages.filter((msg) => msg.id !== messageId),
-        );
-      },
-    );
+    // 메시지 삭제 수신
+    const handleDeletedMessage = ({ messageId }: { messageId: string }) => {
+      queryClient.setQueryData<ChatMessage[]>(
+        ["gathering-messages", id],
+        (oldMessages = []) => oldMessages.filter((msg) => msg.id !== messageId),
+      );
+    };
 
-    // 클린업: 화면 이탈 시 방 퇴장 및 소켓 연결 해제
+    socket.on("newGatheringMessage", handleNewMessage);
+    socket.on("gatheringMessageDeleted", handleDeletedMessage);
+
+    // 💡 클린업: disconnect()를 부르지 말고, 방 퇴장과 이벤트 해제만 수행
     return () => {
       socket.emit("leaveGatheringRoom", { gatheringId: id });
-      socket.disconnect();
+      socket.off("newGatheringMessage", handleNewMessage);
+      socket.off("gatheringMessageDeleted", handleDeletedMessage);
     };
   }, [id, queryClient]);
 
-  // 네트워크 변동 감지 및 자동 재연결
+
+
+  // 네트워크 변동 감지 및 재연결
   useEffect(() => {
     if (!id) return;
 
     const unsubscribe = NetInfo.addEventListener((state) => {
-      // 인터넷이 연결되었고, 소켓이 끊어져 있는 상태라면 재연결 시도
-      if (
-        state.isConnected &&
-        socketRef.current &&
-        !socketRef.current.connected
-      ) {
+      const socket = socketRef.current;
+      if (state.isConnected && socket && !socket.connected) {
         console.log("네트워크 감지: 소켓 재연결 및 메시지 갱신");
 
-        socketRef.current.connect();
-        // 끊겨 있던 동안 받지 못한 과거 메시지 목록 HTTP API로 다시 최신화
+        socket.connect();
+        socket.emit("joinGatheringRoom", { gatheringId: id });
         queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
       }
     });
@@ -154,6 +151,8 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
+
+  
   /////////////////////////////////////////////////////////
 
   // 4. 메시지 전송 (웹소켓 방식)
@@ -171,7 +170,6 @@ export default function GatheringChatScreen() {
   };
 
   /////////////////////////////////////////////////////////
-
 
   // 5. 메시지 삭제 (웹소켓 방식)
   const handleDeletePrompt = (msg: ChatMessage) => {
@@ -248,6 +246,7 @@ export default function GatheringChatScreen() {
             ) : (
               messages.map((msg) => {
                 const isMyMessage = String(msg.userId) === String(me?.id);
+
                 const timeString = new Date(msg.createdAt).toLocaleTimeString(
                   "ko-KR",
                   { hour: "2-digit", minute: "2-digit" },
@@ -408,12 +407,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === "ios" ? 15 : 12,
+    paddingHorizontal: Platform.OS === "ios" ? 20 : 15,
     backgroundColor: Colors.card,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     gap: 8,
-    marginBottom: Platform.OS === "android" ? 48 : 0,
   },
   textInput: {
     flex: 1,

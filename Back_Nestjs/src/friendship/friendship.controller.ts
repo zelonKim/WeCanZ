@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Param, UseGuards } from '@nestjs/common';
 import { FriendshipService } from './friendship.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { GetUser } from '../auth/decorators/get-user.decorator'; // 커스텀 데코레이터 경로
+import { GetUser } from '../auth/decorators/get-user.decorator';
 
 @Controller('friendship')
 @UseGuards(JwtAuthGuard)
@@ -17,8 +17,7 @@ export class FriendshipController {
     return this.friendshipService.sendFriendRequest(senderId, receiverId);
   }
 
-
-    // 2. 받은 친구 요청 목록 조회
+  // 2. 받은 친구 요청 목록 조회
   @Get('requests/pending')
   getPendingRequests(@GetUser('id') userId: string) {
     return this.friendshipService.getPendingRequests(userId);
@@ -41,8 +40,6 @@ export class FriendshipController {
   getMyFriends(@GetUser('id') userId: string) {
     return this.friendshipService.getMyFriends(userId);
   }
-
-  
 
   // 6. 유저 차단
   @Patch('block/:targetUserId')

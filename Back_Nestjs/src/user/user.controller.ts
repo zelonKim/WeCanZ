@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service'; // 같은 user 폴더 안에 있다면!
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // auth 모듈 경로에 맞게 수정!
 import { GetUser } from '../auth/decorators/get-user.decorator'; // 커스텀 데코레이터 경로에 맞게!
@@ -26,5 +34,11 @@ export class UserController {
   @Delete('account')
   deleteAccount(@GetUser() user: User) {
     return this.userService.deleteAccount(user.id);
-  }   
+  }
+
+  // 4. 닉네임으로 유저 찾기
+  @Get('search/:nickname')
+  async searchUserByNickname(@Param('nickname') nickname: string) {
+    return await this.userService.findByNickname(nickname);
+  }
 }

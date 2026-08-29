@@ -6,7 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "frontexpo",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
+    "androidNavigationBar": {
+      "backgroundColor": "#121212",
+      "barStyle": "light-content"
+    },
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",

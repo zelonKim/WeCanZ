@@ -12,7 +12,7 @@ model User {
   id           String  @id @default(uuid())
   email        String  @unique
   password     String?
-  nickname     String
+  nickname     String  @unique
   profileImage String?
   bio          String?
 
@@ -242,4 +242,39 @@ model Report {
   @@unique([reporterId, reportedUserId])
   @@index([status])
   @@index([reportedUserId])
+}
+
+//////////////////////////////////////////////////////
+
+model Store {
+  id        String  @id @default(uuid())
+  name      String
+  address   String
+  openTime  String
+  closeTime String
+  imageUrl  String?
+
+  ads Ad[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ad {
+  id      String @id @default(uuid())
+  title   String
+  content String
+
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  imageUrl   String?
+  linkUrl    String?
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  clickCount Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
