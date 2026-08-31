@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Modal,
   Platform,
   ScrollView,
@@ -40,6 +41,9 @@ export interface Gathering {
   status: string;
   createdAt: string;
   hostId: string;
+  host: {
+    profileImage: string;
+  };
 }
 
 export interface CreateGatheringDto {
@@ -215,9 +219,9 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.commercialButton}
           activeOpacity={0.5}
-          onPress={() => router.push("/commercial")} // 💡 4. app/commercial/index.tsx로 이동
+          onPress={() => router.push("/commercial")}
         >
-          <Ionicons name="storefront-outline" size={22} color="#333" />
+          <Ionicons name="storefront-outline" size={22} color={Colors.card} />
           {/* <Text style={styles.commercialButtonText}></Text> */}
         </TouchableOpacity>
       </View>
@@ -262,7 +266,7 @@ export default function HomeScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.placeholderText}>
-                등록된 모임이 없습니다. 첫 모임을 열어보세요!
+                아직 등록된 벙개가 없습니다. {"\n"}첫 벙개를 열어보세요!
               </Text>
             </View>
           }
@@ -309,24 +313,48 @@ export default function HomeScreen() {
                 {item.description}
               </Text>
 
-              <View style={styles.infoRow}>
-                <Ionicons
-                  name="calendar-outline"
-                  size={14}
-                  color={Colors.yellow}
-                />
-                <Text style={styles.cardInfoText}>
-                  {formatDateTime(item.dateTime)}
-                </Text>
-              </View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <View>
+                  <View style={styles.infoRow}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={14}
+                      color={Colors.yellow}
+                    />
+                    <Text style={styles.cardInfoText}>
+                      {formatDateTime(item.dateTime)}
+                    </Text>
+                  </View>
 
-              <View style={[styles.infoRow, { marginTop: 4 }]}>
-                <Ionicons
-                  name="location-outline"
-                  size={14}
-                  color={Colors.red}
-                />
-                <Text style={styles.cardInfoText}>{item.location}</Text>
+                  <View style={[styles.infoRow, { marginTop: 4 }]}>
+                    <Ionicons
+                      name="location-outline"
+                      size={14}
+                      color={Colors.red}
+                    />
+                    <Text style={styles.cardInfoText}>{item.location}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.hostContainer}>
+                  {item.host?.profileImage ? (
+                    <Image
+                      source={{
+                        uri: item.host.profileImage,
+                      }}
+                      style={styles.hostImage}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Ionicons name="person" size={20} color={Colors.text} />
+                    </View>
+                  )}
+                </View>
               </View>
             </TouchableOpacity>
           )}
@@ -549,7 +577,7 @@ const styles = StyleSheet.create({
   commercialButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: Colors.yellow,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
@@ -571,7 +599,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  cardCategory: { fontSize: 13, fontWeight: "bold", color: Colors.text },
+  cardCategory: { fontSize: 13, fontWeight: "bold", color: Colors.yellow },
 
   /* 뱃지 스타일 */
   statusBadge: {
@@ -626,13 +654,20 @@ const styles = StyleSheet.create({
 
   listContent: { paddingHorizontal: 16, paddingBottom: 80 },
   emptyContainer: { paddingVertical: 60, alignItems: "center" },
-  placeholderText: { fontSize: 15, color: Colors.tabIconDefault },
+  placeholderText: {
+    fontSize: 15,
+    color: Colors.tabIconDefault,
+    lineHeight: 22,
+    textAlign: "center",
+    position: "relative",
+    top: 150,
+  },
 
   card: {
     backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 18,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -790,4 +825,31 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitButtonText: { color: "white", fontSize: 16, fontWeight: "700" },
+
+  hostContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end", // 오른쪽 정렬
+    marginTop: 8,
+  },
+  hostImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 24, // 동그란 프로필 이미지
+    borderWidth: 1,
+    borderColor: "#333333", // 다크모드 카드용 미세 테두리
+  },
+  hostName: {
+    color: "#CCCCCC",
+    fontSize: 12,
+    marginLeft: 6,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

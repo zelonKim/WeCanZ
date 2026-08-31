@@ -2,7 +2,6 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
-  ConflictException,
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -177,12 +176,22 @@ export class FriendshipService {
 
   //////////////////////////////////////////////////////////////
 
-  // 6. 친구 차단
+  // 6. 유저차단
   async blockFriend(targetUserId: string, userId: string) {
     if (targetUserId === userId) {
       throw new BadRequestException('자신은 차단할 수 없습니다.');
     }
 
+    // 차단 대상 유저가 실제로 존재하는지 검증
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundException('존재하지 않는 사용자입니다.');
+    }
+
+    // 2) 기존 관계 존재 여부 확인
     const existing = await this.prisma.friendship.findFirst({
       where: {
         OR: [
@@ -192,19 +201,19 @@ export class FriendshipService {
       },
     });
 
-    // 이미 관계가 존재하는 경우 BLOCKED로 상태 업데이트
+    // 3) 이미 관계가 존재하는 경우 BLOCKED로 상태 업데이트 및 주체/대상 명확히 지정
     if (existing) {
       return await this.prisma.friendship.update({
         where: { id: existing.id },
         data: {
-          senderId: userId,
-          receiverId: targetUserId,
+          senderId: userId, // 차단 요청자
+          receiverId: targetUserId, // 차단 당한 자
           status: FriendshipStatus.BLOCKED,
         },
       });
     }
 
-    // 기존 관계가 없더라도 바로 차단 레코드 생성
+    // 4) 기존 관계가 없으면 새로운 차단 레코드 생성
     return await this.prisma.friendship.create({
       data: {
         senderId: userId,
@@ -213,7 +222,6 @@ export class FriendshipService {
       },
     });
   }
-
   //////////////////////////////////////////////////////////////
 
   // 7. 친구 차단 해제

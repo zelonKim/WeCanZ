@@ -63,11 +63,20 @@ export class ParticipantController {
   }
 
   // 4. 노쇼 처리 (방장 전용)
-  @Patch(':participantId/noshow')
+  @Patch(':participantId/no-show')
   noShowParticipant(
     @Param('participantId') participantId: string,
     @GetUser() user: User,
   ) {
     return this.participantService.noShowParticipant(participantId, user.id);
+  }
+
+  // 5. 예스쇼 처리 (방장 전용)
+  @Patch(':participantId/yes-show')
+  yesShowParticipant(
+    @Param('participantId') participantId: string,
+    @GetUser() user: User,
+  ) {
+    return this.participantService.yesShowParticipant(participantId, user.id);
   }
 }

@@ -302,7 +302,7 @@ export default function SignupScreen() {
               </TouchableOpacity>
 
               {/* 마케팅 정보 수신 (선택) */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.checkRow}
                 onPress={() => setIsMarketingAgreed(!isMarketingAgreed)}
               >
@@ -316,7 +316,7 @@ export default function SignupScreen() {
                 <Text style={styles.checkText}>
                   [선택] 마케팅 정보 수신 동의
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
 
@@ -327,7 +327,7 @@ export default function SignupScreen() {
             disabled={isPending}
           >
             {isPending ? (
-              <ActivityIndicator size="small" color="#000" />
+              <ActivityIndicator size="small" color={Colors.text} />
             ) : (
               <Text style={styles.submitBtnText}>가입하기</Text>
             )}
@@ -400,5 +400,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
   },
-  submitBtnText: { color: "#000", fontSize: 16, fontWeight: "bold" },
+  submitBtnText: { color: Colors.text, fontSize: 16, fontWeight: "bold" },
 });

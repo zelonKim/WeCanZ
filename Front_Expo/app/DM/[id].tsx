@@ -6,7 +6,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as NavigationBar from "expo-navigation-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -21,7 +21,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 
 interface MessageUser {
@@ -104,8 +107,6 @@ export default function DirectChatRoomScreen() {
     }
   }, [initialMessages]);
 
-
-
   // 1. 소켓 연결 및 이벤트 핸들링 (전역 소켓 재사용)
   useEffect(() => {
     if (!roomId) return;
@@ -147,8 +148,6 @@ export default function DirectChatRoomScreen() {
     };
   }, [roomId]);
 
-
-
   // 2. 네트워크 감지 및 재연결
   useEffect(() => {
     if (!roomId) return;
@@ -166,7 +165,6 @@ export default function DirectChatRoomScreen() {
       unsubscribe();
     };
   }, [roomId, queryClient]);
-
 
   // 메시지 전송
   const handleSend = () => {
@@ -208,7 +206,6 @@ export default function DirectChatRoomScreen() {
     });
   };
 
-  
   // 메시지 삭제
   const handleLongPressMessage = (msg: DirectChatMessage) => {
     if (myInfo?.id && msg.senderId !== myInfo.id) return;
@@ -264,6 +261,34 @@ export default function DirectChatRoomScreen() {
       minute: "2-digit",
     });
   };
+
+  // 1. 차단된 유저 목록 조회 (API 엔드포인트 경로에 맞게 확인)
+  const { data: blockedUsers = [] } = useQuery({
+    queryKey: ["blocked-users"],
+    queryFn: async () => {
+      const res = await client.get("/friendship/blocked");
+      return res.data?.data || res.data;
+    },
+  });
+
+  // 2. 메시지 목록 또는 params/props에서 상대방 User ID를 도출
+  const targetUserId = useMemo(() => {
+    const otherMsg = messages.find(
+      (msg) => String(msg.senderId) !== String(myInfo?.id),
+    );
+    return otherMsg?.senderId || otherMsg?.sender?.id;
+  }, [messages, myInfo]);
+
+  // 3. 차단 목록의 receiver.id 중 targetUserId가 존재하는지 확인
+  const isBlocked = useMemo(() => {
+    if (!targetUserId || !blockedUsers.length) return false;
+
+    return blockedUsers.some(
+      (item: any) => String(item.receiver?.id) === String(targetUserId),
+    );
+  }, [targetUserId, blockedUsers]);
+
+  const insets = useSafeAreaInsets();
 
   return (
     // 💡 edges를 ["top"]으로 설정하여 하단 패딩 여백을 제거합니다.
@@ -360,25 +385,40 @@ export default function DirectChatRoomScreen() {
           />
         )}
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="메시지를 입력하세요..."
-            placeholderTextColor="#8E8E93"
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !inputText.trim() && styles.disabledSendButton,
-            ]}
-            onPress={handleSend}
-            disabled={!inputText.trim()}
-          >
-            <Ionicons name="arrow-up" size={20} color={Colors.card} />
-          </TouchableOpacity>
+        <View
+          style={[
+            styles.inputContainer,
+            { paddingBottom: insets.bottom || 12 },
+          ]}
+        >
+          {isBlocked ? (
+            <View style={styles.blockedBanner}>
+              <Text style={styles.blockedText}>
+                차단한 유저와는 대화할 수 없습니다.
+              </Text>
+            </View>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="메시지를 입력하세요..."
+                placeholderTextColor="#8E8E93"
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  !inputText.trim() && styles.disabledSendButton,
+                ]}
+                onPress={handleSend}
+                disabled={!inputText.trim()}
+              >
+                <Ionicons name="arrow-up" size={20} color={Colors.card} />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -481,7 +521,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 12,
-    paddingBottom: Platform.OS === "ios" ? 15 : 12,
     paddingHorizontal: Platform.OS === "ios" ? 20 : 15,
     backgroundColor: "#1E1E1E",
     borderTopWidth: 1,
@@ -508,5 +547,18 @@ const styles = StyleSheet.create({
   },
   disabledSendButton: {
     backgroundColor: "#3A3A3C",
+  },
+  blockedBanner: {
+    flex: 1,
+    height: 40,
+    backgroundColor: "#2C2C2E",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  blockedText: {
+    color: "#8E8E93",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

@@ -1,6 +1,8 @@
 import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
 import Colors from "@/constants/Colors";
+import { CustomAppleLoginButton } from "@/utils/CustomAppleLoginButton";
+import { CustomGoogleLoginButton } from "@/utils/CustomGoogleLoginButton";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -152,6 +154,23 @@ export default function LoginScreen() {
             <View style={styles.divider} />
           </View>
 
+          {/* {socialLoginMutation.isPending ? ( */}
+          {/* <ActivityIndicator color={Colors.yellow} size="large" /> */}
+          {/* ) : ( */}
+          <View style={styles.socialButtonRow}>
+            {/* 구글 로그인 */}
+            <CustomGoogleLoginButton
+              onPress={() => console.log("구글 로그인")}
+            />
+
+            {/* 애플 로그인 */}
+            <CustomAppleLoginButton
+              onPress={() => console.log("애플 로그인")}
+            />
+          </View>
+
+          {/* )} */}
+
           {/* 4. 하단 간편 소셜 로그인 */}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -160,6 +179,19 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  socialButtonRow: {
+    flexDirection: "column",
+    justifyContent: "center",
+    gap: 20,
+  },
+  googleIcon: { width: 48, height: 48 },
+  appleIcon: {
+    width: 48,
+    height: 48,
+    borderColor: Colors.text,
+    borderWidth: 1,
+    borderRadius: 24,
+  },
   container: { flex: 1 },
   scrollContent: {
     flexGrow: 1,

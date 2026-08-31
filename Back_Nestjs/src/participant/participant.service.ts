@@ -6,7 +6,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ParticipantStatus } from '@prisma/client';
+import { GatheringStatus, ParticipantStatus } from '@prisma/client';
 
 @Injectable()
 export class ParticipantService {
@@ -98,7 +98,7 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 2-1. 참여자 승인 (방장 전용)
+  // 2. 참여자 승인 (방장 전용)
   async approveParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -113,32 +113,46 @@ export class ParticipantService {
       throw new ForbiddenException('방장만 참여자를 승인할 수 있습니다.');
     }
 
-    // 승인(APPROVED) 시 정원 체크
-    const approvedCount = await this.prisma.participant.count({
-      where: {
-        gatheringId: participant.gatheringId,
-        status: {
-          in: [ParticipantStatus.APPROVED],
+    return await this.prisma.$transaction(async (tx) => {
+      // 현재 APPROVED 상태인 참여자 수 조회
+      const approvedCount = await tx.participant.count({
+        where: {
+          gatheringId: participant.gatheringId,
+          status: ParticipantStatus.APPROVED,
         },
-      },
-    });
+      });
 
-    if (approvedCount >= participant.gathering.maxPeople) {
-      throw new BadRequestException('정원이 차서 더 이상 승인할 수 없습니다.');
-    }
+      if (approvedCount >= participant.gathering.maxPeople) {
+        throw new BadRequestException(
+          '정원이 차서 더 이상 승인할 수 없습니다.',
+        );
+      }
 
-    return await this.prisma.participant.update({
-      where: { id: participantId },
-      data: {
-        status: ParticipantStatus.APPROVED,
-        joinedAt: new Date(),
-      },
+      // 1) 대상 참여자 승인 처리
+      const updatedParticipant = await tx.participant.update({
+        where: { id: participantId },
+        data: {
+          status: ParticipantStatus.APPROVED,
+          joinedAt: new Date(),
+        },
+      });
+
+      // 2) 이번 승인으로 정원이 찼는지 확인 후 모임 상태 변경 (FULL)
+      const newApprovedCount = approvedCount + 1;
+      if (newApprovedCount >= participant.gathering.maxPeople) {
+        await tx.gathering.update({
+          where: { id: participant.gatheringId },
+          data: { status: GatheringStatus.FULL },
+        });
+      }
+
+      return updatedParticipant;
     });
   }
 
   ////////////////////////////////////////////////////////////////
 
-  // 2-2. 참여자 대기 (방장 전용)
+  // 3. 참여자 대기 처리 (방장 전용)
   async pendingParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -153,16 +167,35 @@ export class ParticipantService {
       throw new ForbiddenException('방장만 참여자를 대기시킬 수 있습니다.');
     }
 
-    return await this.prisma.participant.update({
-      where: { id: participantId },
-      data: {
-        status: ParticipantStatus.PENDING,
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      // 1) 대상 참여자 PENDING 처리
+      const updatedParticipant = await tx.participant.update({
+        where: { id: participantId },
+        data: { status: ParticipantStatus.PENDING },
+      });
+
+      // 2) APPROVED 인원 재계산 후 정원 미만이면 모임 상태 변경 (OPEN)
+      const approvedCount = await tx.participant.count({
+        where: {
+          gatheringId: participant.gatheringId,
+          status: ParticipantStatus.APPROVED,
+        },
+      });
+
+      if (approvedCount < participant.gathering.maxPeople) {
+        await tx.gathering.update({
+          where: { id: participant.gatheringId },
+          data: { status: GatheringStatus.OPEN },
+        });
+      }
+
+      return updatedParticipant;
     });
   }
+
   ////////////////////////////////////////////////////////////////
 
-  // 3. 참여자 강퇴 (방장 전용)
+  // 4. 참여자 강퇴 (방장 전용)
   async banParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -177,17 +210,34 @@ export class ParticipantService {
       throw new ForbiddenException('방장만 참여자를 강퇴할 수 있습니다.');
     }
 
-    return await this.prisma.participant.update({
-      where: { id: participantId },
-      data: {
-        status: ParticipantStatus.BANNED,
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      // 1) 대상 참여자 BANNED 처리
+      const updatedParticipant = await tx.participant.update({
+        where: { id: participantId },
+        data: { status: ParticipantStatus.BANNED },
+      });
+
+      // 2) APPROVED 인원 재계산 후 정원 미만이면 모임 상태 변경 (OPEN)
+      const approvedCount = await tx.participant.count({
+        where: {
+          gatheringId: participant.gatheringId,
+          status: ParticipantStatus.APPROVED,
+        },
+      });
+
+      if (approvedCount < participant.gathering.maxPeople) {
+        await tx.gathering.update({
+          where: { id: participant.gatheringId },
+          data: { status: GatheringStatus.OPEN },
+        });
+      }
+
+      return updatedParticipant;
     });
   }
-
   ////////////////////////////////////////////////////////////////
 
-  // 4. 노쇼 처리 (방장 전용)
+  // 5. 노쇼 처리 (방장 전용)
   async noShowParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -195,18 +245,70 @@ export class ParticipantService {
     });
 
     if (!participant) {
-      throw new NotFoundException('참여자 정보를 찾을 수 없습니다.');
+      throw new NotFoundException('참여자의 정보를 찾을 수 없습니다.');
     }
 
     if (participant.gathering.hostId !== hostId) {
       throw new ForbiddenException('방장만 참여자를 노쇼 처리할 수 있습니다.');
     }
 
-    return await this.prisma.participant.update({
+    // 이미 NO_SHOW인 경우 중복 증가 방지
+    if (participant.status === ParticipantStatus.NO_SHOW) {
+      throw new BadRequestException('이미 노쇼 처리된 사용자입니다.');
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      const updatedParticipant = await tx.participant.update({
+        where: { id: participantId },
+        data: { status: ParticipantStatus.NO_SHOW },
+      });
+
+      await tx.user.update({
+        where: { id: participant.userId },
+        data: {
+          noShowCount: { increment: 1 },
+        },
+      });
+
+      return updatedParticipant;
+    });
+  }
+
+  ////////////////////////////////////////////////////////////////
+
+  // 6. 예스쇼 처리 (방장 전용)
+  async yesShowParticipant(participantId: string, hostId: string) {
+    const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
-      data: {
-        status: ParticipantStatus.NO_SHOW,
-      },
+      include: { gathering: true },
+    });
+
+    if (!participant) {
+      throw new NotFoundException('참여자의 정보를 찾을 수 없습니다.');
+    }
+
+    if (participant.gathering.hostId !== hostId) {
+      throw new ForbiddenException('방장만 출석 처리를 할 수 있습니다.');
+    }
+
+    if (participant.status === ParticipantStatus.YES_SHOW) {
+      throw new BadRequestException('이미 출석 처리된 사용자입니다.');
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      const updatedParticipant = await tx.participant.update({
+        where: { id: participantId },
+        data: { status: ParticipantStatus.YES_SHOW },
+      });
+
+      await tx.user.update({
+        where: { id: participant.userId },
+        data: {
+          yesShowCount: { increment: 1 },
+        },
+      });
+
+      return updatedParticipant;
     });
   }
 }

@@ -4,15 +4,17 @@ import { getSocket } from "@/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
   Image,
+  Modal,
   Platform,
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -46,26 +48,26 @@ const formatTime = (dateString: string) => {
 
   if (date.toDateString() === now.toDateString()) {
     return date.toLocaleTimeString("ko-KR", {
-      hour: "numeric", //
-      minute: "2-digit", // 분은 두 자리 고정 (예: 05분 -> 05)
-      hour12: true, // 오전/오후 12시간제 적용
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   }
-  // 올해 보낸 메시지: "3월 15일"
   if (date.getFullYear() === now.getFullYear()) {
     return `${date.getMonth() + 1}월 ${date.getDate()}일`;
   }
-  // 작년 이전에 보낸 메시지: "2025.03.15"
   return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
 };
-
-const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function DMScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  // 1. 들어온 DM 요청 목록 조회 (GET /direct-chat/requests/pending)
+  // 💡 DM 요청 모달 및 닉네임 상태 추가
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [targetNickname, setTargetNickname] = useState("");
+
+  // 1. 들어온 DM 요청 목록 조회
   const {
     data: pendingRequests = [],
     isLoading: isPendingLoading,
@@ -78,7 +80,7 @@ export default function DMScreen() {
     },
   });
 
-  // 2. 수락된 DM 목록 조회 (GET /direct-chat/rooms)
+  // 2. 수락된 DM 목록 조회
   const {
     data: myDMRooms = [],
     isLoading: isRoomsLoading,
@@ -91,7 +93,7 @@ export default function DMScreen() {
     },
   });
 
-  // 3. DM 요청 수락 (PATCH /direct-chat/:roomId/accept)
+  // 3. DM 요청 수락
   const acceptMutation = useMutation({
     mutationFn: (roomId: string) =>
       client.patch(`/direct-chat/${roomId}/accept`),
@@ -108,7 +110,7 @@ export default function DMScreen() {
     },
   });
 
-  // 4. DM 요청 거절 (PATCH /direct-chat/:roomId/reject)
+  // 4. DM 요청 거절
   const rejectMutation = useMutation({
     mutationFn: (roomId: string) =>
       client.patch(`/direct-chat/${roomId}/reject`),
@@ -123,6 +125,42 @@ export default function DMScreen() {
       );
     },
   });
+
+  // 💡 5. DM 요청 보내기 Mutation
+  const requestDmMutation = useMutation({
+    mutationFn: (targetUserId: string) =>
+      client.post(`/direct-chat/request/${targetUserId}`),
+    onSuccess: () => {
+      Alert.alert("성공", "DM 요청을 보냈습니다.");
+      setIsModalVisible(false);
+      setTargetNickname("");
+      queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
+    },
+    onError: (err: any) => {
+      Alert.alert(
+        "오류",
+        err.response?.data?.message || "DM 요청에 실패했습니다.",
+      );
+    },
+  });
+
+  // 💡 닉네임 검색 후 DM 요청 처리
+  const handleSendDmRequest = async () => {
+    if (!targetNickname.trim()) {
+      Alert.alert("알림", "상대방 닉네임을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await client.get(`/user/search/${targetNickname}`);
+      requestDmMutation.mutate(res.data.id);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "존재하지 않거나 검색할 수 없는 유저입니다.";
+      Alert.alert("알림", errorMessage);
+    }
+  };
 
   const isRefreshing = isPendingLoading || isRoomsLoading;
 
@@ -142,7 +180,7 @@ export default function DMScreen() {
     );
   };
 
-  // 내 정보 조회 (소켓 개별 룸 입장용)
+  // 내 정보 조회
   const { data: myInfo } = useQuery<{ id: string }>({
     queryKey: ["me"],
     queryFn: async () => {
@@ -151,7 +189,7 @@ export default function DMScreen() {
     },
   });
 
-  // 💡 화면 포커스 시 자동으로 최신 목록 불러오기
+  // 화면 포커스 시 자동으로 최신 목록 불러오기
   useFocusEffect(
     useCallback(() => {
       refetchRooms();
@@ -159,26 +197,21 @@ export default function DMScreen() {
     }, [refetchRooms, refetchPending]),
   );
 
-
-  
-  // 💡 소켓 연결 및 실시간 DM 목록 업데이트 수신
+  // 소켓 연결 및 실시간 DM 목록 업데이트 수신
   useEffect(() => {
     if (!myInfo?.id) return;
 
     const socket = getSocket();
 
-    // 연결되어 있지 않다면 연결
     if (!socket.connected) {
       socket.connect();
     }
 
-    // 소켓 연결 성공 시 개인 룸 입장
     const handleConnect = () => {
       console.log("🟢 [Socket] Connected:", socket.id);
       socket.emit("joinUserRoom", { userId: myInfo.id });
     };
 
-    // 실시간 DM 목록 업데이트 처리
     const handleDmListUpdate = (payload: {
       roomId: string;
       lastMessage: any;
@@ -203,29 +236,36 @@ export default function DMScreen() {
       });
     };
 
-    // 이미 연결된 상태라면 즉시 룸 입장 요청
     if (socket.connected) {
       socket.emit("joinUserRoom", { userId: myInfo.id });
     }
 
-    // 이벤트 리스너 등록
     socket.on("connect", handleConnect);
     socket.on("dmListUpdated", handleDmListUpdate);
 
     return () => {
-      // 💡 [핵심] 화면을 나갈 때는 socket.disconnect()를 부르지 말고, 리스너만 제거합니다!
       socket.off("connect", handleConnect);
       socket.off("dmListUpdated", handleDmListUpdate);
     };
   }, [myInfo?.id, queryClient]);
 
-
-
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 헤더 */}
+      {/* 헤더 영역 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>💬 다이렉트 메시지</Text>
+        {/* 💡 DM 보내기 아이콘 버튼 추가 */}
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={() => setIsModalVisible(true)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons
+            name="chatbubble-ellipses-outline"
+            size={24}
+            color={Colors.yellow || "#FFD600"}
+          />
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -249,7 +289,6 @@ export default function DMScreen() {
               </View>
             ) : (
               pendingRequests.map((req) => {
-                // 신청한 유저 매핑 (sender 또는 user1)
                 const requester = req.sender || req.user1;
 
                 return (
@@ -288,8 +327,6 @@ export default function DMScreen() {
             </View>
           </View>
         }
-
-
         renderItem={({ item }) => {
           const partner = item.targetUser;
 
@@ -314,7 +351,6 @@ export default function DMScreen() {
               <View style={styles.userInfo}>
                 <View style={styles.avatarContainer}>
                   {renderAvatar(partner?.profileImage)}
-                  {/* 💡 NEW 뱃지 배치 */}
                   {item.hasUnread && (
                     <View style={styles.badgeContainer}>
                       <Text style={styles.badgeText}>N</Text>
@@ -365,6 +401,51 @@ export default function DMScreen() {
           </View>
         }
       />
+
+      {/* 💡 [모달 추가] 닉네임 입력 기반 DM 요청 모달 */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>✉️ DM 요청</Text>
+            <Text style={styles.modalSubtitle}>
+              DM을 요청할 유저의 닉네임을 입력해주세요.
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="닉네임 입력"
+              placeholderTextColor="#888"
+              value={targetNickname}
+              onChangeText={setTargetNickname}
+              autoCapitalize="none"
+            />
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.cancelBtn]}
+                onPress={() => {
+                  setIsModalVisible(false);
+                  setTargetNickname("");
+                }}
+              >
+                <Text style={styles.cancelBtnText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.submitBtn]}
+                onPress={handleSendDmRequest}
+              >
+                <Text style={styles.submitBtnText}>요청 보내기</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -375,6 +456,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background || "#F8F9FA",
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
@@ -385,31 +469,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.text || "#212529",
   },
+  iconBtn: {
+    padding: 6,
+    borderRadius: 12,
+  },
   card: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // 왼쪽(유저정보)과 오른쪽(시간)을 양끝으로 배치
+    justifyContent: "space-between",
     paddingVertical: 12,
     paddingHorizontal: 16,
     backgroundColor: Colors.card || "#FFFFFF",
     borderRadius: 12,
+    marginBottom: 12,
   },
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1, // 상대적으로 큰 영역을 차지하도록 설정
-    marginRight: 8, // 시간 텍스트와 겹치지 않게 여백 부여
+    flex: 1,
+    marginRight: 8,
   },
   textContainer: {
-    flex: 1, // 긴 메시지 말줄임표(...) 처리를 위해 필요
+    flex: 1,
     marginLeft: 12,
   },
-
-  // 💡 timeText 추천 스타일
   timeText: {
     fontSize: 12,
-    color: "#8E8E93", // 은은한 회색
-    alignSelf: "flex-start", // 카드 상단 노출을 원할 경우 (중앙 정렬을 원하면 안 써도 됨)
+    color: "#8E8E93",
+    alignSelf: "flex-start",
     marginTop: 2,
   },
   listContent: {
@@ -423,7 +510,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.text || "#212529",
   },
-
   avatar: {
     width: 44,
     height: 44,
@@ -437,7 +523,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
   nickname: {
     fontSize: 15,
     fontWeight: "600",
@@ -488,7 +573,6 @@ const styles = StyleSheet.create({
   avatarContainer: {
     position: "relative",
   },
-  // 아바타 우측 상단 N 뱃지
   badgeContainer: {
     position: "absolute",
     top: -2,
@@ -507,16 +591,80 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "bold",
   },
-  // 닉네임 옆 작은 빨간 점
   dotBadge: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: "#FF3B30",
   },
-  // 안 읽은 메시지는 텍스트 강조
   unreadMessageText: {
     fontWeight: "600",
     color: "#8E8E93",
+  },
+
+  // 💡 DM 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: Colors.card || "#FFFFFF",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: Colors.text || "#212529",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: Colors.tabIconDefault || "#888",
+    marginBottom: 18,
+    textAlign: "center",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: Colors.tabIconDefault || "#E9ECEF",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.text || "#212529",
+    marginBottom: 20,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelBtn: {
+    backgroundColor: "#F1F1F1",
+  },
+  cancelBtnText: {
+    color: "#333",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  submitBtn: {
+    backgroundColor: Colors.yellow || "#FFD600",
+  },
+  submitBtnText: {
+    color: Colors.card || "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });

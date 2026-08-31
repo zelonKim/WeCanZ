@@ -21,6 +21,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// 신고 사유 Enum (백엔드 ReportReason Enum 매핑)
+enum ReportReason {
+  SPAM = "SPAM",
+  INAPPROPRIATE = "INAPPROPRIATE",
+  ABUSE = "ABUSE",
+  IMPERSONATION = "IMPERSONATION",
+  OTHER = "OTHER",
+}
+
+const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  [ReportReason.SPAM]: "불법 광고 및 도배",
+  [ReportReason.INAPPROPRIATE]: "부적절한 콘텐츠",
+  [ReportReason.ABUSE]: "욕설 및 혐오 발언",
+  [ReportReason.IMPERSONATION]: "사칭 및 허위 정보",
+  [ReportReason.OTHER]: "기타",
+};
+
 // API 요청 함수
 const fetchMyInfo = async () => {
   const { data } = await client.get("/user/me");
@@ -42,6 +59,24 @@ const deleteAccount = async () => {
   return data;
 };
 
+// 닉네임으로 유저 ID 조회 API
+const searchUserByNickname = async (nickname: string) => {
+  const { data } = await client.get(
+    `/user/search/${encodeURIComponent(nickname)}`,
+  );
+  return data;
+};
+
+// 신고 API 요청 함수
+const createReport = async (reportDto: {
+  reportedUserId: string;
+  reason: ReportReason;
+  details: string;
+}) => {
+  const { data } = await client.post("/reports", reportDto);
+  return data;
+};
+
 export default function SettingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -56,11 +91,20 @@ export default function SettingScreen() {
     queryFn: fetchMyInfo,
   });
 
-  // 로컬 UI 상태
+  // 프로필 수정 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nickname, setNickname] = useState("");
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState("");
+
+  // 신고 모달 상태 (ID 대신 닉네임 입력)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [targetNickname, setTargetNickname] = useState("");
+  const [selectedReason, setSelectedReason] = useState<ReportReason>(
+    ReportReason.SPAM,
+  );
+  const [reportDetails, setReportDetails] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   // 마케팅 동의 즉각 반영용 로컬 상태
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
@@ -91,6 +135,26 @@ export default function SettingScreen() {
       }
       const msg = error.response?.data?.message || "수정에 실패했습니다.";
       Alert.alert("오류", msg);
+    },
+  });
+
+  // 신고 Mutation
+  const reportMutation = useMutation({
+    mutationFn: createReport,
+    onSuccess: () => {
+      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+      setIsReportModalOpen(false);
+      setTargetNickname("");
+      setSelectedReason(ReportReason.SPAM);
+      setReportDetails("");
+    },
+    onError: (error: any) => {
+      const msg =
+        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
+      Alert.alert("오류", msg);
+    },
+    onSettled: () => {
+      setIsSubmittingReport(false);
     },
   });
 
@@ -133,12 +197,6 @@ export default function SettingScreen() {
     }
   };
 
-  // 마케팅 수신 동의 토글 (Alert 없이 즉시 반응)
-  const handleToggleMarketing = (value: boolean) => {
-    setIsMarketingAgreed(value);
-    profileMutation.mutate({ isMarketingAgreed: value });
-  };
-
   // 프로필 저장
   const handleSaveProfile = () => {
     if (!nickname.trim()) {
@@ -146,6 +204,44 @@ export default function SettingScreen() {
       return;
     }
     profileMutation.mutate({ nickname, bio, profileImage });
+  };
+
+  // 신고 제출 (닉네임 조회 후 ID 추출 처리)
+  const handleSubmitReport = async () => {
+    if (!targetNickname.trim()) {
+      Alert.alert("경고", "신고할 유저의 닉네임을 입력해주세요.");
+      return;
+    }
+    if (!reportDetails.trim()) {
+      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      return;
+    }
+
+    setIsSubmittingReport(true);
+
+    try {
+      // 1. 닉네임으로 유저 정보 조회
+      const searchedUser = await searchUserByNickname(targetNickname.trim());
+
+      if (!searchedUser || !searchedUser.id) {
+        Alert.alert("오류", "해당 닉네임을 가진 유저를 찾을 수 없습니다.");
+        setIsSubmittingReport(false);
+        return;
+      }
+
+      // 2. 조회된 유저 ID로 신고 API 호출
+      reportMutation.mutate({
+        reportedUserId: searchedUser.id,
+        reason: selectedReason,
+        details: reportDetails.trim(),
+      });
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        "존재하지 않는 유저이거나 조회 실패했습니다.";
+      Alert.alert("조회 실패", msg);
+      setIsSubmittingReport(false);
+    }
   };
 
   // 로그아웃
@@ -214,9 +310,7 @@ export default function SettingScreen() {
           <View style={styles.profileHeader}>
             {user.profileImage ? (
               <Image
-                source={{
-                  uri: user.profileImage,
-                }}
+                source={{ uri: user.profileImage }}
                 style={styles.avatar}
               />
             ) : (
@@ -226,11 +320,7 @@ export default function SettingScreen() {
                   { justifyContent: "center", alignItems: "center" },
                 ]}
               >
-                <Ionicons
-                  name="person"
-                  size={40}
-                  color={Colors.yellow}
-                ></Ionicons>
+                <Ionicons name="person" size={40} color={Colors.yellow} />
               </View>
             )}
 
@@ -254,7 +344,7 @@ export default function SettingScreen() {
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>✨ YesShow</Text>
-              <Text style={[styles.statValue, { color: "#04d304" }]}>
+              <Text style={[styles.statValue, { color: Colors.yellow }]}>
                 {user.yesShowCount ?? 0}회
               </Text>
             </View>
@@ -273,24 +363,6 @@ export default function SettingScreen() {
           <Text style={styles.sectionTitle}>앱 설정</Text>
 
           <View style={styles.cardGroup}>
-            {/* 알림 수신 동의 */}
-            {/* <View style={styles.menuRow}>
-              <View style={styles.menuLabelGroup}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={18}
-                  color={Colors.tabIconDefault}
-                />
-                <Text style={styles.menuLabel}>알림 수신 동의</Text>
-              </View>
-              <Switch
-                value={isMarketingAgreed}
-                onValueChange={handleToggleMarketing}
-                trackColor={{ false: "#3A3A3C", true: Colors.red }}
-                thumbColor="#FFFFFF"
-              />
-            </View> */}
-
             {/* 이용약관 */}
             <TouchableOpacity
               style={styles.menuRow}
@@ -313,7 +385,7 @@ export default function SettingScreen() {
 
             {/* 개인정보 처리방침 */}
             <TouchableOpacity
-              style={[styles.menuRow, { borderBottomWidth: 1 }]}
+              style={styles.menuRow}
               onPress={() => openTerms("https://example.com/privacy")}
             >
               <View style={styles.menuLabelGroup}>
@@ -330,9 +402,11 @@ export default function SettingScreen() {
                 color={Colors.tabIconDefault}
               />
             </TouchableOpacity>
+
+            {/* 신고하기 버튼 */}
             <TouchableOpacity
               style={[styles.menuRow, { borderBottomWidth: 0 }]}
-              onPress={() => openTerms("https://example.com/privacy")}
+              onPress={() => setIsReportModalOpen(true)}
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -414,7 +488,6 @@ export default function SettingScreen() {
             </View>
 
             <View style={styles.modalBody}>
-              {/* 이미지 선택 */}
               <View style={styles.imagePickerContainer}>
                 <TouchableOpacity
                   onPress={pickImage}
@@ -466,6 +539,83 @@ export default function SettingScreen() {
                 <ActivityIndicator color="#000" />
               ) : (
                 <Text style={styles.saveButtonText}>저장하기</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 신고하기 모달 */}
+      <Modal
+        visible={isReportModalOpen}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsReportModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>🚨 유저 신고하기</Text>
+              <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
+                <Ionicons name="close" size={22} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <Text style={styles.inputLabel}>신고할 유저 닉네임</Text>
+              <TextInput
+                style={styles.input}
+                value={targetNickname}
+                onChangeText={setTargetNickname}
+                placeholder="상대방 닉네임을 입력해주세요"
+                placeholderTextColor={Colors.tabIconDefault}
+              />
+
+              <Text style={styles.inputLabel}>신고 사유 선택</Text>
+              <View style={styles.chipContainer}>
+                {Object.values(ReportReason).map((reason) => {
+                  const isSelected = selectedReason === reason;
+                  return (
+                    <TouchableOpacity
+                      key={reason}
+                      style={[styles.chip, isSelected && styles.chipSelected]}
+                      onPress={() => setSelectedReason(reason)}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          isSelected && styles.chipTextSelected,
+                        ]}
+                      >
+                        {REPORT_REASON_LABELS[reason]}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.inputLabel}>상세 내용</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={reportDetails}
+                onChangeText={setReportDetails}
+                placeholder="신고 사유에 대한 상세 내용을 적어주세요."
+                placeholderTextColor={Colors.tabIconDefault}
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, { backgroundColor: Colors.red }]}
+              onPress={handleSubmitReport}
+              disabled={isSubmittingReport}
+            >
+              {isSubmittingReport ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
+                  신고 접수하기
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -562,7 +712,7 @@ const styles = StyleSheet.create({
   menuLabelGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
   menuLabel: { fontSize: 15, color: Colors.text, fontWeight: "500" },
 
-  /* 모달 */
+  /* 모달 공통 및 칩 스타일 */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.75)",
@@ -625,4 +775,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonText: { color: "#000000", fontSize: 16, fontWeight: "700" },
+
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: "#2C2C2E",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  chipSelected: {
+    backgroundColor: "rgba(255, 69, 58, 0.15)",
+    borderColor: Colors.red,
+  },
+  chipText: {
+    fontSize: 13,
+    color: Colors.tabIconDefault,
+  },
+  chipTextSelected: {
+    color: Colors.red,
+    fontWeight: "600",
+  },
 });

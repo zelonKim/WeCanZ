@@ -19,7 +19,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -42,6 +45,8 @@ export default function GatheringChatScreen() {
   const queryClient = useQueryClient();
   const scrollViewRef = useRef<ScrollView>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  const insets = useSafeAreaInsets();
 
   const [messageText, setMessageText] = useState("");
 
@@ -129,8 +134,6 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
-
-
   // 네트워크 변동 감지 및 재연결
   useEffect(() => {
     if (!id) return;
@@ -151,8 +154,6 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
-
-  
   /////////////////////////////////////////////////////////
 
   // 4. 메시지 전송 (웹소켓 방식)
@@ -320,7 +321,12 @@ export default function GatheringChatScreen() {
         )}
 
         {/* 하단 입력 바 */}
-        <View style={styles.inputContainer}>
+        <View
+          style={[
+            styles.inputContainer,
+            { paddingBottom: insets.bottom || 12 },
+          ]}
+        >
           <TextInput
             style={styles.textInput}
             placeholder="메시지를 입력하세요..."
@@ -408,7 +414,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingTop: 12,
-    paddingBottom: Platform.OS === "ios" ? 15 : 12,
     paddingHorizontal: Platform.OS === "ios" ? 20 : 15,
     backgroundColor: Colors.card,
     borderTopWidth: 1,

@@ -39,7 +39,7 @@ interface FriendItem {
 // 차단된 유저 항목 타입
 interface BlockedUserItem {
   id: string;
-  receiver?: User; // 백엔드 응답 형태에 맞춰 조절 (blockedUser 객체 혹은 user 객체)
+  receiver?: User;
   nickname?: string;
   profileImage?: string;
 }
@@ -49,6 +49,7 @@ export default function FriendScreen() {
   const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [friendNickname, setFriendNickname] = useState("");
+  const [blockNickname, setBlockNickname] = useState("");
 
   // 1. 받은 친구 요청 목록 조회
   const {
@@ -76,7 +77,7 @@ export default function FriendScreen() {
     },
   });
 
-  // 💡 3. 내가 차단한 유저 목록 조회 (GET /friendship/blocked)
+  // 💡 3. 내가 차단한 유저 목록 조회 (모달 오픈 시 실행)
   const {
     data: blockedUsers = [],
     isLoading: isBlockedLoading,
@@ -87,7 +88,7 @@ export default function FriendScreen() {
       const { data } = await client.get("/friendship/blocked");
       return data;
     },
-    enabled: isBlockModalVisible, // 모달이 열렸을 때만 쿼리 실행
+    enabled: isBlockModalVisible,
   });
 
   // 4. 친구 요청 수락
@@ -123,7 +124,7 @@ export default function FriendScreen() {
     },
   });
 
-  // 6. 친구 신청 API 호출 함수
+  // 6. 친구 신청
   const handleSendFriendRequest = async () => {
     if (!friendNickname.trim()) {
       Alert.alert("알림", "친구의 닉네임을 입력해주세요");
@@ -131,7 +132,6 @@ export default function FriendScreen() {
     }
 
     try {
-      // 닉네임으로 id를 찾는 API 호출 후 전송
       const res = await client.get(`/user/search/${friendNickname}`);
       await client.post(`/friendship/request/${res.data.id}`);
 
@@ -147,21 +147,7 @@ export default function FriendScreen() {
     }
   };
 
-  // 💡 7. 차단 해제
-  const unblockMutation = useMutation({
-    mutationFn: (targetUserId: string) =>
-      client.patch(`/friendship/unblock/${targetUserId}`),
-    onSuccess: () => {
-      Alert.alert("성공", "차단이 해제되었습니다.");
-      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
-      queryClient.invalidateQueries({ queryKey: ["my-friends"] });
-    },
-    onError: (err: any) => {
-      Alert.alert("오류", err.response?.data?.message || "차단 해제 실패");
-    },
-  });
-
-  // 💡 8. DM 요청 Mutation
+  // 7. DM 요청 Mutation
   const requestDmMutation = useMutation({
     mutationFn: (targetUserId: string) =>
       client.post(`/direct-chat/request/${targetUserId}`),
@@ -176,12 +162,27 @@ export default function FriendScreen() {
     },
   });
 
-  // 💡 9. 유저 차단 Mutation
+  // 8. 차단 해제 Mutation
+  const unblockMutation = useMutation({
+    mutationFn: (targetUserId: string) =>
+      client.patch(`/friendship/unblock/${targetUserId}`),
+    onSuccess: () => {
+      Alert.alert("성공", "차단이 해제되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
+      queryClient.invalidateQueries({ queryKey: ["my-friends"] });
+    },
+    onError: (err: any) => {
+      Alert.alert("오류", err.response?.data?.message || "차단 해제 실패");
+    },
+  });
+
+  // 9. 유저 차단 Mutation
   const blockUserMutation = useMutation({
     mutationFn: (targetUserId: string) =>
       client.patch(`/friendship/block/${targetUserId}`),
     onSuccess: () => {
       Alert.alert("성공", "유저를 차단했습니다.");
+      setBlockNickname("");
       queryClient.invalidateQueries({ queryKey: ["my-friends"] });
       queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
     },
@@ -192,6 +193,24 @@ export default function FriendScreen() {
       );
     },
   });
+
+  // 💡 10. 닉네임으로 검색해서 직접 차단하기
+  const handleBlockByNickname = async () => {
+    if (!blockNickname.trim()) {
+      Alert.alert("알림", "차단할 유저의 닉네임을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await client.get(`/user/search/${blockNickname}`);
+      blockUserMutation.mutate(res.data.id);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        "존재하지 않거나 검색할 수 없는 유저입니다.";
+      Alert.alert("알림", errorMessage);
+    }
+  };
 
   const isRefreshing = isPendingLoading || isFriendsLoading;
 
@@ -213,7 +232,7 @@ export default function FriendScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 💡 헤더 영역: 우측 상단에 차단 목록 아이콘 버튼 추가 */}
+      {/* 헤더 영역 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>👥 나의 친구</Text>
         <View style={{ flexDirection: "row", gap: 12 }}>
@@ -222,7 +241,11 @@ export default function FriendScreen() {
             onPress={() => setIsAddModalVisible(true)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="person-add-outline" size={22} color={Colors.blue} />
+            <Ionicons
+              name="person-add-outline"
+              size={24}
+              color={Colors.yellow}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconBtn}
@@ -231,7 +254,7 @@ export default function FriendScreen() {
           >
             <Ionicons
               name="person-remove-outline"
-              size={22}
+              size={24}
               color={Colors.red}
             />
           </TouchableOpacity>
@@ -305,9 +328,7 @@ export default function FriendScreen() {
                 <Text style={styles.nickname}>{friend.nickname}</Text>
               </View>
 
-              {/* 💡 우측 아이콘 버튼 그룹 */}
               <View style={styles.actionIconGroup}>
-                {/* DM 요청 버튼 */}
                 <TouchableOpacity
                   style={styles.dmActionBtn}
                   onPress={() => requestDmMutation.mutate(targetUserId)}
@@ -320,7 +341,6 @@ export default function FriendScreen() {
                   />
                 </TouchableOpacity>
 
-                {/* 차단하기 버튼 */}
                 <TouchableOpacity
                   style={styles.blockActionBtn}
                   onPress={() =>
@@ -356,6 +376,7 @@ export default function FriendScreen() {
         }
       />
 
+      {/* 친구 추가 모달 */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -400,30 +421,26 @@ export default function FriendScreen() {
         </View>
       </Modal>
 
-      {/* 💡 [모달] 차단한 유저 목록 및 차단 해제 */}
+      {/* 💡 [복합 모달] 차단하기(닉네임 입력) + 차단 유저 목록 확인 및 차단 해제 */}
       <Modal
         visible={isBlockModalVisible}
-        transparent={true} // 1. 배경을 투명하게 허용
-        animationType="fade" // 또는 "slide"
+        transparent={true}
+        animationType="fade"
         onRequestClose={() => setIsBlockModalVisible(false)}
       >
-        {/* 2. 뒷배경 (어두운 반투명 오버레이 & 클릭 시 모달 닫기) */}
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setIsBlockModalVisible(false)}
         >
-          {/* 3. 실제 모달 콘텐츠 영역 (클릭 이벤트 전파 방지) */}
           <TouchableOpacity
             activeOpacity={1}
             style={styles.modalContentCard}
             onPress={(e) => e.stopPropagation()}
           >
-            {/* 모달 핸들 바  */}
-            {/* <View style={styles.modalHandle} /> */}
-
+            {/* 모달 헤더 */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>🚫 차단한 유저 목록</Text>
+              <Text style={styles.modalTitle}>🚫 차단 관리</Text>
               <TouchableOpacity onPress={() => setIsBlockModalVisible(false)}>
                 <Ionicons
                   name="close"
@@ -433,11 +450,37 @@ export default function FriendScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* 1. 닉네임 직접 입력 차단 영역 */}
+            <View style={styles.directBlockContainer}>
+              <TextInput
+                style={styles.directBlockInput}
+                placeholder="닉네임 입력"
+                placeholderTextColor="#888"
+                value={blockNickname}
+                onChangeText={setBlockNickname}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={styles.directBlockBtn}
+                onPress={handleBlockByNickname}
+              >
+                <Text style={styles.directBlockBtnText}>차단 하기</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 구분선 */}
+            <View style={styles.divider} />
+
+            <Text style={styles.subListTitle}>
+              차단된 친구 목록 ({blockedUsers.length})
+            </Text>
+
+            {/* 2. 차단 유저 목록 및 차단 해제 FlatList */}
             <FlatList
               data={blockedUsers}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.modalListContent}
-              style={{ maxHeight: 500 }} // 모달의 최대 높이 지정
+              style={{ maxHeight: 350 }}
               refreshControl={
                 <RefreshControl
                   refreshing={isBlockedLoading}
@@ -512,11 +555,9 @@ const styles = StyleSheet.create({
     color: Colors.text || "#212529",
   },
   iconBtn: {
-    padding: 8,
-    backgroundColor: Colors.card,
+    padding: 6,
     borderRadius: 12,
   },
-
   listContent: {
     padding: 16,
   },
@@ -592,7 +633,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   btnUnblock: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: Colors.tabIconDefault,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -614,35 +655,25 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
   },
 
-  // 💡 반투명 모달용 추가/수정 스타일
+  // 💡 반투명 모달용 스타일
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // 뒷배경 투명도 (어두운 반투명)
-    justifyContent: "center", // 바텀시트처럼 하단에 배치 (중앙 배치를 원하시면 'center'로 변경)
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    paddingHorizontal: 16,
   },
   modalContentCard: {
     backgroundColor: Colors.background || "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     paddingHorizontal: 20,
-
-    paddingBottom: 30,
-    paddingTop: 12,
-    maxHeight: "80%", // 화면의 70% 까지만 차지하도록 설정
-    // 그림자
+    paddingBottom: 24,
+    paddingTop: 16,
+    maxHeight: "80%",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 10,
-  },
-  modalHandle: {
-    width: 36,
-    height: 4,
-    backgroundColor: Colors.border || "#D1D1D6",
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
   modalHeader: {
     flexDirection: "row",
@@ -651,7 +682,7 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border || "#E9ECEF",
-    marginBottom: 12,
+    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 18,
@@ -659,11 +690,48 @@ const styles = StyleSheet.create({
     color: Colors.text || "#212529",
   },
   modalListContent: {
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
-  modalContainer: {
+
+  // 💡 닉네임 즉시 차단 입력 폼 스타일
+  directBlockContainer: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  directBlockInput: {
     flex: 1,
-    backgroundColor: Colors.background || "#F8F9FA",
+    borderWidth: 1,
+    borderColor: Colors.border || "#E9ECEF",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: Colors.text,
+    backgroundColor: Colors.card,
+  },
+  directBlockBtn: {
+    backgroundColor: Colors.red || "#FF3B30",
+    paddingHorizontal: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  directBlockBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border || "#E9ECEF",
+    marginVertical: 12,
+  },
+  subListTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.text || "#212529",
+    marginBottom: 8,
   },
 
   actionIconGroup: {
@@ -676,7 +744,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.yellow,
     borderRadius: 12,
   },
-
   blockActionBtn: {
     padding: 6,
     backgroundColor: Colors.red,
@@ -740,10 +807,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   submitBtn: {
-    backgroundColor: "#007AFF",
+    backgroundColor: Colors.yellow,
   },
   submitBtnText: {
-    color: "#fff",
+    color: Colors.card,
     fontWeight: "bold",
     fontSize: 14,
   },

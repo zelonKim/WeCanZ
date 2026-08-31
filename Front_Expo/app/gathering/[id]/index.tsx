@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Image,
   Modal,
   Platform,
@@ -53,11 +54,7 @@ export interface GatheringDetail {
     id: string;
     userId: string;
     status: string;
-    user: {
-      id: string;
-      nickname: string;
-      profileImage?: string;
-    };
+    user: UserProfile;
   }[];
 }
 
@@ -118,15 +115,21 @@ export default function GatheringDetailScreen() {
   const {
     data: gathering,
     isLoading,
-    refetch,
+    refetch: gatheringRefetch,
   } = useQuery<GatheringDetail>({
     queryKey: ["gathering", id],
     queryFn: async () => {
       const { data } = await client.get(`/gathering/${id}`);
       return data;
     },
+
     enabled: !!id,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    staleTime: 0,
   });
+
+  /////////////////////////////////////////////////////////////
 
   // 모임 수정 모달
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -178,7 +181,7 @@ export default function GatheringDetailScreen() {
     mutationFn: editGathering,
     onSuccess: async () => {
       Alert.alert("성공", "모임이 수정되었습니다!");
-      await refetch();
+      await gatheringRefetch();
       refreshDetail();
       closeEditModal();
     },
@@ -231,6 +234,7 @@ export default function GatheringDetailScreen() {
   const handleDayPress = (day: DateData) => {
     setSelectedDateStr(day.dateString);
   };
+
   ////////////////////////////////////////////////////////
 
   // 내 정보 조회
@@ -249,8 +253,9 @@ export default function GatheringDetailScreen() {
   // 1-1. 참여 신청
   const applyMutation = useMutation({
     mutationFn: async () => client.post(`/participant/apply/${id}`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "참여 신청이 완료되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -260,8 +265,9 @@ export default function GatheringDetailScreen() {
   // 1-2. 참여 취소
   const cancelApplyMutation = useMutation({
     mutationFn: async () => client.delete(`/participant/cancel/${id}`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "참여 신청이 취소되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -272,8 +278,9 @@ export default function GatheringDetailScreen() {
   const approveMutation = useMutation({
     mutationFn: async (participantId: string) =>
       client.patch(`/participant/${participantId}/approve`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "참가자로 승인되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -284,8 +291,9 @@ export default function GatheringDetailScreen() {
   const pendMutation = useMutation({
     mutationFn: async (participantId: string) =>
       client.patch(`/participant/${participantId}/pending`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "대기 상태로 변경되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -296,18 +304,22 @@ export default function GatheringDetailScreen() {
   const banMutation = useMutation({
     mutationFn: async (participantId: string) =>
       client.patch(`/participant/${participantId}/ban`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "강퇴 처리되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
       Alert.alert("오류", err.response?.data?.message || "강퇴 실패"),
   });
 
+  ////////////////////////////////////////////////////////
+
   const startMutation = useMutation({
     mutationFn: async () => client.patch(`/gathering/${id}/start`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "모임이 시작되었습니다! 🚀");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -316,8 +328,9 @@ export default function GatheringDetailScreen() {
 
   const completeMutation = useMutation({
     mutationFn: async () => client.patch(`/gathering/${id}/complete`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "모임이 종료되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
@@ -326,13 +339,53 @@ export default function GatheringDetailScreen() {
 
   const cancelMutation = useMutation({
     mutationFn: async () => client.patch(`/gathering/${id}/cancel`),
-    onSuccess: () => {
+    onSuccess: async () => {
       Alert.alert("성공", "모임이 취소되었습니다.");
+      await gatheringRefetch();
       refreshDetail();
     },
     onError: (err: any) =>
       Alert.alert("오류", err.response?.data?.message || "취소 실패"),
   });
+
+  ////////////////////////////////////////////////////////
+
+  const [isNoShowModalOpen, setIsNoShowModalOpen] = useState(false);
+
+  const noShowMutation = useMutation({
+    mutationFn: async (participantId: string) => {
+      return await client.patch(`/participant/${participantId}/no-show`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gathering", id] });
+    },
+    onError: (err: any) => {
+      Alert.alert("오류", err.response?.data?.message || "노쇼 처리 실패");
+    },
+  });
+
+  const handleCompleteCheck = async () => {
+    const restParticipants = (gathering?.participants || []).filter(
+      (p) => p.status === "APPROVED",
+    );
+
+    try {
+      // 미지정 참가자들을 YES_SHOW로 변경하는 API 요청
+      if (restParticipants.length > 0) {
+        await Promise.all(
+          restParticipants.map((p) =>
+            client.patch(`/participant/${p.id}/yes-show`),
+          ),
+        );
+        queryClient.invalidateQueries({ queryKey: ["gathering", id] });
+      }
+
+      setIsNoShowModalOpen(false);
+      Alert.alert("완료", "참가자 출석 체크가 완료되었습니다.");
+    } catch (error) {
+      Alert.alert("오류", "출석 체크 처리 중 오류가 발생했습니다.");
+    }
+  };
 
   ////////////////////////////////////////////////////////
 
@@ -406,11 +459,14 @@ export default function GatheringDetailScreen() {
   }
 
   const approvedParticipants =
-    gathering.participants?.filter((p) => p.status === "APPROVED") || [];
+    gathering.participants?.filter(
+      (p) => p.status === "APPROVED" || p.status === "YES_SHOW",
+    ) || [];
+
   const pendingParticipants =
     gathering.participants?.filter((p) => p.status === "PENDING") || [];
 
-  const currentCount = 1 + approvedParticipants.length;
+  const currentCount = approvedParticipants.length;
 
   const myParticipant = gathering.participants?.find(
     (p) => p.userId === me?.id,
@@ -424,6 +480,9 @@ export default function GatheringDetailScreen() {
   ) => {
     const isMe = String(user?.id) === String(me?.id);
     const isMenuOpen = activeMenuUserId === user?.id;
+
+    const isUserHost = String(user?.id) === String(gathering?.hostId);
+    const displayRoleTag = roleTag || (isUserHost ? "방장" : undefined);
 
     return (
       <View style={[styles.userCard, { zIndex: isMenuOpen ? 999 : 1 }]}>
@@ -514,15 +573,18 @@ export default function GatheringDetailScreen() {
           <View style={{ flex: 1 }}>
             <View style={styles.nameRow}>
               <Text style={styles.userName}>{user?.nickname}</Text>
-              {roleTag && <Text style={styles.roleBadge}>{roleTag}</Text>}
+              {displayRoleTag && (
+                <Text style={styles.roleBadge}>{displayRoleTag}</Text>
+              )}
             </View>
             <Text style={styles.statsText}>
-              ✨ 예스쇼 {user?.yesShowCount ?? 0}회 | 🚫 노쇼{" "}
+              예스쇼 {user?.yesShowCount ?? 0}회{"  /  "}노쇼{" "}
               {user?.noShowCount ?? 0}회
             </Text>
           </View>
 
           {isHost &&
+            !isUserHost &&
             participantId &&
             (gathering.status === "OPEN" || gathering.status === "FULL") && (
               <View style={styles.actionBtnGroup}>
@@ -531,7 +593,11 @@ export default function GatheringDetailScreen() {
                     style={styles.btnPending}
                     onPress={() => pendMutation.mutate(participantId)}
                   >
-                    <Ionicons name="hourglass-outline" size={16} color="#FFF" />
+                    <Ionicons
+                      name="hourglass-outline"
+                      size={16}
+                      color={Colors.card}
+                    />
                   </TouchableOpacity>
                 )}
 
@@ -540,7 +606,11 @@ export default function GatheringDetailScreen() {
                     style={styles.btnApprove}
                     onPress={() => approveMutation.mutate(participantId)}
                   >
-                    <Ionicons name="checkbox-outline" size={16} color="#FFF" />
+                    <Ionicons
+                      name="checkbox-outline"
+                      size={16}
+                      color={Colors.card}
+                    />
                   </TouchableOpacity>
                 )}
 
@@ -612,14 +682,38 @@ export default function GatheringDetailScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         {gathering.status === "COMPLETED" && (
           <View style={[styles.statusBanner, styles.completedBanner]}>
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color={Colors.orange}
-            />
-            <Text style={[styles.statusBannerText, styles.completedBannerText]}>
-              종료된 모임입니다
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+              }}
+            >
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={20}
+                color={Colors.orange}
+              />
+              <Text
+                style={[styles.statusBannerText, styles.completedBannerText]}
+              >
+                종료된 모임입니다
+              </Text>
+            </View>
+            {isHost &&
+              (gathering.participants || []).some(
+                (p) => p.status === "APPROVED",
+              ) && (
+                <TouchableOpacity
+                  style={styles.noShowButton}
+                  onPress={() => setIsNoShowModalOpen(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="ban-outline" size={18} color={Colors.text} />
+                  <Text style={styles.noShowButtonText}>노쇼 체크하기</Text>
+                </TouchableOpacity>
+              )}
           </View>
         )}
 
@@ -691,7 +785,7 @@ export default function GatheringDetailScreen() {
             <Text style={styles.infoText}>{gathering.location}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="people-outline" size={18} color={"white"} />
+            <Ionicons name="people-outline" size={18} color={Colors.yellow} />
             <Text style={styles.infoText}>
               참여 인원:{" "}
               <Text style={styles.highlightText}>{currentCount}</Text> /{" "}
@@ -730,12 +824,24 @@ export default function GatheringDetailScreen() {
                           styles.hostBtn,
                           { backgroundColor: Colors.yellow },
                         ]}
-                        onPress={() => startMutation.mutate()}
+                        onPress={() =>
+                          Alert.alert(
+                            "모임 시작 🚀",
+                            "정말로 모임을 시작하시겠습니까?",
+                            [
+                              { text: "아니오" },
+                              {
+                                text: "예",
+                                onPress: () => startMutation.mutate(),
+                              },
+                            ],
+                          )
+                        }
                       >
                         <Text
                           style={[styles.hostBtnText, { color: Colors.card }]}
                         >
-                          시작하기
+                          시작하기 🚀
                         </Text>
                       </TouchableOpacity>
 
@@ -746,7 +852,7 @@ export default function GatheringDetailScreen() {
                         ]}
                         onPress={() =>
                           Alert.alert(
-                            "모임 취소",
+                            "모임 취소 🗑️",
                             "정말로 모임을 취소하시겠습니까?",
                             [
                               { text: "아니오" },
@@ -758,7 +864,7 @@ export default function GatheringDetailScreen() {
                           )
                         }
                       >
-                        <Text style={styles.hostBtnText}>취소하기</Text>
+                        <Text style={styles.hostBtnText}>취소하기 🗑️</Text>
                       </TouchableOpacity>
                     </>
                   )}
@@ -769,9 +875,21 @@ export default function GatheringDetailScreen() {
                         styles.hostBtn,
                         { backgroundColor: Colors.orange },
                       ]}
-                      onPress={() => completeMutation.mutate()}
+                      onPress={() =>
+                        Alert.alert(
+                          "모임 종료 👋",
+                          "정말로 모임을 종료하시겠습니까?",
+                          [
+                            { text: "아니오" },
+                            {
+                              text: "예",
+                              onPress: () => completeMutation.mutate(),
+                            },
+                          ],
+                        )
+                      }
                     >
-                      <Text style={styles.hostBtnText}>종료하기</Text>
+                      <Text style={styles.hostBtnText}>종료하기 👋 </Text>
                     </TouchableOpacity>
                   )}
                 </View>
@@ -781,7 +899,7 @@ export default function GatheringDetailScreen() {
 
         <View style={styles.divider} />
 
-        <View
+        {/* <View
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -790,30 +908,30 @@ export default function GatheringDetailScreen() {
             marginBottom: 8,
           }}
         >
-          <Ionicons name="flash-outline" size={16} color={Colors.text} />
-          <Text style={styles.listSectionTitle}>방장</Text>
+       
+          <Text style={styles.listSectionTitle}>👑 방장</Text>
         </View>
-        {renderUserCard(gathering.host, "방장")}
+        {renderUserCard(gathering.host, "방장")} */}
 
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            marginTop: 12,
+            marginTop: 20,
             marginBottom: 8,
           }}
         >
-          <Ionicons name="checkbox-outline" size={16} color={Colors.text} />
-          <Text style={styles.listSectionTitle}>참가자</Text>
+          {/* <Ionicons name="checkbox-outline" size={16} color={Colors.text} /> */}
+          <Text style={styles.listSectionTitle}>✅ 참가자</Text>
         </View>
         {approvedParticipants.length === 0 ? (
           <Text style={styles.emptyText}>참가 승인된 멤버가 없습니다.</Text>
         ) : (
           approvedParticipants.map((p) => (
-            <React.Fragment key={p.id}>
+            <View key={p.id}>
               {renderUserCard(p.user, undefined, p.id, "APPROVED")}
-            </React.Fragment>
+            </View>
           ))
         )}
 
@@ -822,20 +940,20 @@ export default function GatheringDetailScreen() {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            marginTop: 12,
+            marginTop: 20,
             marginBottom: 8,
           }}
         >
-          <Ionicons name="hourglass-outline" size={16} color={Colors.text} />
-          <Text style={styles.listSectionTitle}>대기자</Text>
+          {/* <Ionicons name="hourglass-outline" size={16} color={Colors.text} /> */}
+          <Text style={styles.listSectionTitle}>⏳ 대기자</Text>
         </View>
         {pendingParticipants.length === 0 ? (
           <Text style={styles.emptyText}>대기 중인 멤버가 없습니다.</Text>
         ) : (
           pendingParticipants.map((p) => (
-            <React.Fragment key={p.id}>
+            <View key={p.id}>
               {renderUserCard(p.user, undefined, p.id, "PENDING")}
-            </React.Fragment>
+            </View>
           ))
         )}
 
@@ -872,7 +990,9 @@ export default function GatheringDetailScreen() {
                   style={styles.applyButton}
                   onPress={() => applyMutation.mutate()}
                 >
-                  <Text style={styles.applyButtonText}>모임 참여 신청하기</Text>
+                  <Text style={styles.applyButtonText}>
+                    모임 참여 신청하기 ⚡️
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1071,6 +1191,85 @@ export default function GatheringDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* 노쇼 체크하기 모달 */}
+      <Modal
+        visible={isNoShowModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsNoShowModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>참가자 노쇼 체크</Text>
+              <TouchableOpacity onPress={() => setIsNoShowModalOpen(false)}>
+                <Ionicons name="close" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={(gathering.participants || []).filter(
+                (item) =>
+                  item.userId !== me?.id &&
+                  (item.status === "APPROVED" ||
+                    item.status === "YES_SHOW" ||
+                    item.status === "NO_SHOW"),
+              )}
+              keyExtractor={(item) => String(item.id)}
+              renderItem={({ item }) => (
+                <View style={styles.participantRow}>
+                  <View style={styles.userInfo}>
+                    <Text style={styles.participantName}>
+                      {item.user?.nickname || "참가자"}
+                    </Text>
+                    {item.status === "NO_SHOW" && (
+                      <Text style={styles.noShowBadge}>노쇼 처리됨</Text>
+                    )}
+                    {item.status === "YES_SHOW" && (
+                      <Text style={styles.yesShowBadge}>예스쇼 처리됨</Text>
+                    )}
+                  </View>
+
+                  {/* 방장 자신 제외 & 이미 노쇼가 아닌 유저만 버튼 표시 */}
+                  {item.userId !== me?.id && item.status !== "NO_SHOW" && (
+                    <TouchableOpacity
+                      style={styles.noShowBtn}
+                      onPress={() =>
+                        Alert.alert(
+                          "노쇼 처리",
+                          `${item.user?.nickname} 님을 노쇼 처리하시겠습니까?`,
+                          [
+                            { text: "취소", style: "cancel" },
+                            {
+                              text: "확인",
+                              style: "destructive",
+                              onPress: () => noShowMutation.mutate(item.id),
+                            },
+                          ],
+                        )
+                      }
+                    >
+                      <Text style={styles.noShowBtnText}>노쇼 지정</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+            />
+
+            {/* 🚀 하단 체크 완료 버튼 */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.completeBtn}
+                onPress={handleCompleteCheck}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.completeBtnText}>체크 완료</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1195,7 +1394,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 4,
   },
-  categoryText: { color: Colors.red, fontWeight: "bold", fontSize: 13 },
+  categoryText: { color: Colors.yellow, fontWeight: "bold", fontSize: 13 },
   title: {
     fontSize: 22,
     fontWeight: "bold",
@@ -1251,7 +1450,7 @@ const styles = StyleSheet.create({
   userName: { color: Colors.text, fontWeight: "bold", fontSize: 14 },
   roleBadge: {
     backgroundColor: Colors.yellow,
-    color: "#000",
+    color: Colors.card,
     fontSize: 10,
     fontWeight: "bold",
     paddingHorizontal: 6,
@@ -1265,12 +1464,12 @@ const styles = StyleSheet.create({
   },
   actionBtnGroup: { flexDirection: "row", gap: 6 },
   btnPending: {
-    backgroundColor: Colors.orange,
+    backgroundColor: Colors.yellow,
     padding: 8,
     borderRadius: 6,
   },
   btnApprove: {
-    backgroundColor: Colors.green,
+    backgroundColor: Colors.yellow,
     padding: 8,
     borderRadius: 6,
   },
@@ -1285,26 +1484,30 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   applyButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.red,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
   },
   applyButtonText: {
     color: Colors.text,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "bold",
   },
 
   statusBanner: {
     flexDirection: "row",
     alignItems: "center",
+
     gap: 8,
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
   },
-  completedBanner: { backgroundColor: "rgba(255, 149, 0, 0.15)" },
+  completedBanner: {
+    backgroundColor: "rgba(255, 149, 0, 0.15)",
+    justifyContent: "space-between",
+  },
   completedBannerText: { color: Colors.orange },
   canceledBanner: { backgroundColor: "rgba(255, 59, 48, 0.15)" },
   canceledBannerText: { color: Colors.red },
@@ -1392,4 +1595,95 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   submitButtonText: { color: Colors.card, fontSize: 16, fontWeight: "bold" },
+  noShowButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.red,
+    padding: 12,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#3A3A3A",
+  },
+  noShowButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  modalContent: {
+    backgroundColor: "#1E1E1E",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: "70%",
+  },
+
+  participantRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: "#2C2C2C",
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  participantName: {
+    fontSize: 15,
+    color: "#FFFFFF",
+    fontWeight: "500",
+  },
+  noShowBadge: {
+    fontSize: 12,
+    color: "#FF5252",
+    backgroundColor: "#3A1E1E",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  noShowBtn: {
+    backgroundColor: "#D32F2F",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  noShowBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  yesShowBadge: {
+    fontSize: 12,
+    color: "#4CAF50",
+    backgroundColor: "#1E3A2B",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+
+  // 모달 하단 버튼 영역
+  modalFooter: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderColor: "#2A2A2A",
+  },
+  completeBtn: {
+    backgroundColor: Colors.blue, // 강조 색상 (프로젝트 테마에 맞게 조정)
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  completeBtnText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });

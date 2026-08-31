@@ -16,13 +16,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // 모임 및 참여 정보 타입 정의
-interface Gathering {
+export interface Gathering {
   id: string;
   title: string;
   description?: string;
   location?: string;
   dateTime?: string;
   hostId: string;
+  status: "OPEN" | "FULL" | "IN_PROGRESS" | "CANCELED" | "COMPLETED";
   participants?: {
     userId: string;
     status: "PENDING" | "APPROVED" | "BANNED" | "YES_SHOW" | "NO_SHOW";
@@ -54,6 +55,11 @@ export default function FlashScreen() {
       return data;
     },
     enabled: !!me?.id,
+
+    select: (data) =>
+      data.filter((gathering) =>
+        ["OPEN", "FULL", "IN_PROGRESS"].includes(gathering.status),
+      ),
   });
 
   // 3. 모임 상세 페이지로 이동
@@ -80,7 +86,7 @@ export default function FlashScreen() {
     if (myParticipant?.status === "APPROVED") {
       return (
         <View style={[styles.badge, { backgroundColor: Colors.blue }]}>
-          <Text style={styles.badgeText}>참여중</Text>
+          <Text style={styles.badgeText}>✅ 참여중</Text>
         </View>
       );
     }
@@ -89,7 +95,7 @@ export default function FlashScreen() {
       return (
         <View style={[styles.badge, { backgroundColor: Colors.yellow }]}>
           <Text style={[styles.badgeText, { color: Colors.card }]}>
-            승인 대기중
+            ⏳ 승인 대기중
           </Text>
         </View>
       );
@@ -101,10 +107,19 @@ export default function FlashScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       {/* 헤더 */}
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>⚡ 나의 벙개</Text>
-      </View>
 
+        {/* 🚀 우측 아이콘 버튼 */}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => router.push("/flash/done")}
+          activeOpacity={0.5}
+        >
+          <Ionicons name="time-outline" size={25} color={Colors.yellow} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.divider} />
 
       {/* 목록 콘텐츠 */}
@@ -126,13 +141,13 @@ export default function FlashScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons
+              {/* <Ionicons
                 name="flash-off-outline"
                 size={48}
                 color={Colors.tabIconDefault}
-              />
+              /> */}
               <Text style={styles.emptyText}>
-                참여 중이거나 생성한 모임이 없습니다.
+                현재 참여 중인 벙개가 없습니다.
               </Text>
             </View>
           }
@@ -174,17 +189,27 @@ export default function FlashScreen() {
 }
 
 const styles = StyleSheet.create({
+  iconButton: {
+    padding: 4, // 터치 영역 확보
+  },
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: { paddingHorizontal: 16, paddingVertical: 12 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // 양쪽 끝 배치
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   headerTitle: { fontSize: 22, fontWeight: "bold", color: Colors.text },
   divider: { height: 1, backgroundColor: Colors.border },
 
   listContent: { padding: 16, gap: 12 },
   emptyContainer: {
+    textAlign: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 120,
+    marginTop: 280,
     gap: 12,
   },
   emptyText: { color: Colors.tabIconDefault, fontSize: 15 },

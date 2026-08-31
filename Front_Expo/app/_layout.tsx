@@ -57,6 +57,7 @@ function RootLayoutNav() {
             <Stack.Screen name="gathering" options={{ headerShown: false }} />
             <Stack.Screen name="DM" options={{ headerShown: false }} />
             <Stack.Screen name="commercial" options={{ headerShown: false }} />
+            <Stack.Screen name="flash" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: "modal" }} />
           </Stack>
         </ThemeProvider>

@@ -20,7 +20,6 @@ export class GatheringController {
   constructor(private readonly gatheringService: GatheringService) {}
 
   // 1. 모임 생성
-
   @Post()
   create(
     @GetUser() user: User,
@@ -48,7 +47,6 @@ export class GatheringController {
   }
 
   // 4. 모임 수정
-
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -63,14 +61,12 @@ export class GatheringController {
   }
 
   // 5. 모임 시작 (방장 전용)
-
   @Patch(':id/start')
   startGathering(@Param('id') gatheringId: string, @GetUser() user: User) {
     return this.gatheringService.startGathering(gatheringId, user.id);
   }
 
   // 6. 모임 종료 (방장 전용)
-
   @Patch(':id/complete')
   completeGathering(
     @Param('id') gatheringId: string,
@@ -80,7 +76,6 @@ export class GatheringController {
   }
 
   // 7. 모임 취소 (방장 전용)
-
   @Patch(':id/cancel')
   cancelGathering(
     @Param('id') gatheringId: string,

@@ -42,7 +42,7 @@ export class DirectChatService {
     if (friendship) {
       if (friendship.status === FriendshipStatus.BLOCKED) {
         // 차단된 유저인 경우
-        throw new ForbiddenException(
+        throw new BadRequestException(
           '차단된 사용자에게는 대화를 신청할 수 없습니다.',
         );
       }
@@ -267,9 +267,6 @@ export class DirectChatService {
       throw new BadRequestException('메시지 내용을 입력해 주세요.');
     }
 
-    // 방 존재 및 ACCEPTED 상태 검증
-    await this.validateAcceptedRoom(roomId, senderId);
-
     return await this.prisma.directChatMessage.create({
       data: {
         roomId,
@@ -286,9 +283,9 @@ export class DirectChatService {
 
   ////////////////////////////////////////////////////////////
 
-  // 7. 다이렉트 메시지 조회
+  // 7. 다이렉트 메시지 조회 (이전 대화 기록 조회 가능)
   async getMessages(roomId: string, userId: string) {
-    // 참여자 및 수락 상태 검증
+    // 방 참여자 및 수락 상태만 검증 (차단 검증 조건 제거)
     await this.validateAcceptedRoom(roomId, userId);
 
     return await this.prisma.directChatMessage.findMany({
