@@ -25,8 +25,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  termsAgreedAt     DateTime // 서비스 이용약관 동의 일시
-  privacyAgreedAt   DateTime // 개인정보 처리방침 동의 일시
+  termsAgreedAt     DateTime? // 서비스 이용약관 동의 일시
+  privacyAgreedAt   DateTime? // 개인정보 처리방침 동의 일시
   marketingAgreedAt DateTime? // 마케팅 수신 동의 일시 (선택)
 
   hostGatherings        Gathering[]            @relation("HostGatherings")
@@ -79,7 +79,7 @@ model Gathering {
   updatedAt DateTime        @updatedAt
 
   hostId String
-  host   User   @relation("HostGatherings", fields: [hostId], references: [id])
+  host   User   @relation("HostGatherings", fields: [hostId], references: [id], onDelete: Cascade)
 
   participants       Participant[]
   gatheringChatRooms GatheringChatRoom[]
@@ -101,10 +101,10 @@ model Participant {
   status   ParticipantStatus @default(PENDING) // 기본값은 대기 중
   joinedAt DateTime?
   userId   String
-  user     User              @relation(fields: [userId], references: [id])
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   gatheringId           String
-  gathering             Gathering              @relation(fields: [gatheringId], references: [id])
+  gathering             Gathering              @relation(fields: [gatheringId], references: [id], onDelete: Cascade)
   gatheringChatMessages GatheringChatMessage[]
 
   @@unique([userId, gatheringId]) // 한 모임에 중복 신청 방지
@@ -118,7 +118,7 @@ model GatheringChatRoom {
   createdAt DateTime @default(now())
 
   gatheringId String
-  gathering   Gathering @relation(fields: [gatheringId], references: [id])
+  gathering   Gathering @relation(fields: [gatheringId], references: [id], onDelete: Cascade)
 
   messages GatheringChatMessage[]
 }
@@ -130,12 +130,12 @@ model GatheringChatMessage {
   createdAt DateTime @default(now())
 
   roomId String
-  room   GatheringChatRoom @relation(fields: [roomId], references: [id])
+  room   GatheringChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   senderId String?
-  sender   Participant? @relation(fields: [senderId], references: [id])
+  sender   Participant? @relation(fields: [senderId], references: [id], onDelete: SetNull)
 
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId String?
 }
 
@@ -174,18 +174,18 @@ enum DirectChatRoomStatus {
   REJECTED // 대화 거절됨
 }
 
-// 일대일 채팅방 모델
+// 일대일 채팅방 모델 
 model DirectChatRoom {
   id        String               @id @default(uuid())
   status    DirectChatRoomStatus @default(PENDING)
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
 
-  user1Id String
-  user1   User   @relation("DirectChatUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user1Id String?
+  user1   User?   @relation("DirectChatUser1", fields: [user1Id], references: [id], onDelete: SetNull)
 
-  user2Id String
-  user2   User   @relation("DirectChatUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  user2Id String?
+  user2   User?   @relation("DirectChatUser2", fields: [user2Id], references: [id], onDelete: SetNull)
 
   messages DirectChatMessage[]
 
@@ -201,8 +201,8 @@ model DirectChatMessage {
   roomId String
   room   DirectChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  senderId String
-  sender   User   @relation("DirectChatMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String?
+  sender   User?   @relation("DirectChatMessages", fields: [senderId], references: [id], onDelete: SetNull)
 }
 
 ///////////////////////////////////////////////////////////////
@@ -221,15 +221,15 @@ enum ReportStatus {
   DISMISSED // 무효 기각 
 }
 
-// 신고하기 모델
+// 신고하기 모델 (신고자가 탈퇴하더라도 신고 내역은 관리자가 볼 수 있게 SetNull 처리)
 model Report {
   id String @id @default(uuid())
 
-  reporterId String
-  reporter   User   @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reporterId String?
+  reporter   User?   @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: SetNull)
 
-  reportedUserId String
-  reportedUser   User   @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  reportedUserId String?
+  reportedUser   User?   @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
 
   reason  ReportReason
   details String
@@ -238,8 +238,6 @@ model Report {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // 동일 유저가 같은 상대를 중복 신고하는 것을 방지 
-  @@unique([reporterId, reportedUserId])
   @@index([status])
   @@index([reportedUserId])
 }

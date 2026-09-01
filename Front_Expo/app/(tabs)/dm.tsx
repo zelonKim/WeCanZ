@@ -344,7 +344,11 @@ export default function DMScreen() {
                 );
                 router.push({
                   pathname: "/DM/[id]",
-                  params: { id: item.id, name: partner?.nickname },
+                  params: {
+                    id: item.id,
+                    name: partner?.nickname,
+                    profileImage: partner?.profileImage,
+                  },
                 });
               }}
             >

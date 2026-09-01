@@ -58,6 +58,7 @@ function RootLayoutNav() {
             <Stack.Screen name="DM" options={{ headerShown: false }} />
             <Stack.Screen name="commercial" options={{ headerShown: false }} />
             <Stack.Screen name="flash" options={{ headerShown: false }} />
+            <Stack.Screen name="agreement" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: "modal" }} />
           </Stack>
         </ThemeProvider>

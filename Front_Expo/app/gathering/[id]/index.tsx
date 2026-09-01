@@ -1589,12 +1589,12 @@ const styles = StyleSheet.create({
   timeChipText: { color: Colors.text, fontSize: 13 },
   timeChipTextActive: { color: Colors.card, fontWeight: "bold" },
   submitButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.red,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
   },
-  submitButtonText: { color: Colors.card, fontSize: 16, fontWeight: "bold" },
+  submitButtonText: { color: Colors.text, fontSize: 16, fontWeight: "bold" },
   noShowButton: {
     flexDirection: "row",
     alignItems: "center",

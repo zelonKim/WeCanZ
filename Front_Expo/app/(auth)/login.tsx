@@ -1,9 +1,14 @@
 import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
+import { CustomAppleLoginButton } from "@/components/CustomAppleLoginButton";
+import { CustomGoogleLoginButton } from "@/components/CustomGoogleLoginButton";
 import Colors from "@/constants/Colors";
-import { CustomAppleLoginButton } from "@/utils/CustomAppleLoginButton";
-import { CustomGoogleLoginButton } from "@/utils/CustomGoogleLoginButton";
+import {
+  GoogleSignin,
+  statusCodes,
+} from "@react-native-google-signin/google-signin";
 import { useMutation } from "@tanstack/react-query";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -20,9 +25,23 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// 💡 구글 네이티브 로그인 초기화 설정
+GoogleSignin.configure({
+  webClientId:
+    "277459634612-9psmm9h2mp6r2ngse42qhv64urfg2h8j.apps.googleusercontent.com",
+  iosClientId:
+    "277459634612-2sq917cvk9iv5he2jpfceahno01aqug4.apps.googleusercontent.com",
+  offlineAccess: true,
+});
+
 interface LoginData {
   email: string;
   password: string;
+}
+
+interface SocialLoginData {
+  idToken: string;
+  provider: "google" | "apple";
 }
 
 export default function LoginScreen() {
@@ -31,6 +50,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // 1. 이메일 로그인 Mutation
   const loginUser = async (loginData: LoginData) => {
     const { data } = await client.post("/auth/login", loginData);
     return data;
@@ -45,21 +65,134 @@ export default function LoginScreen() {
       router.replace("/(tabs)");
     },
     onError: (error: any) => {
+      // 백엔드에서 반환하는 전체 에러 응답 객체를 통째로 찍어봅니다.
+      console.log("=== 백엔드 소셜 로그인 에러 상세 ===", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+
       const errorMessage =
-        error.response?.data?.message || "로그인 중 오류가 발생했습니다.";
-      alert(errorMessage);
+        error.response?.data?.message || "소셜 로그인 중 오류가 발생했습니다.";
+      Alert.alert("오류", errorMessage);
     },
   });
 
-  // 이메일 로그인 처리
+  // 2. 소셜 로그인 Mutation (NestJS 백엔드로 idToken 전달)
+  const socialLoginUser = async ({ idToken, provider }: SocialLoginData) => {
+    const { data } = await client.post("/auth/social-login", {
+      token: idToken,
+      provider: provider,
+    });
+    return data;
+  };
+
+  const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation(
+    {
+      mutationFn: socialLoginUser,
+      onSuccess: async (data) => {
+        if (data.accessToken) {
+          await setAccessToken(data.accessToken);
+        }
+        if (data.isNewUser) {
+          // 신규 가입자라면 약관 동의 및 추가 정보 입력 페이지로 이동
+          router.replace("/agreement");
+        } else {
+          // 기존 유저는 바로 메인으로
+          router.replace("/(tabs)");
+        }
+      },
+      onError: (error: any) => {
+        // 백엔드에서 반환하는 전체 에러 응답 객체를 통째로 찍어봅니다.
+        console.log("=== 백엔드 소셜 로그인 에러 상세 ===", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+
+        const errorMessage =
+          error.response?.data?.message ||
+          "소셜 로그인 중 오류가 발생했습니다.";
+        Alert.alert("오류", errorMessage);
+      },
+    },
+  );
+
+  // 3. 네이티브 구글 로그인 핸들러
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      // 최신 라이브러리 버전 응답 구조 대응
+      const idToken = response.data?.idToken || (response as any).idToken;
+
+      if (idToken) {
+        socialLoginMutate({ idToken, provider: "google" });
+      } else {
+        Alert.alert("오류", "구글 인증 토큰을 가져오지 못했습니다.");
+      }
+    } catch (error: any) {
+      console.log("=== 구글 로그인 네이티브 에러 상세 ===", {
+        code: error.code,
+        message: error.message,
+        fullError: JSON.stringify(error, null, 2),
+      });
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // 사용자가 로그인을 취소함
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // 로그인 진행 중
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert("오류", "Google Play Services를 사용할 수 없습니다.");
+      } else {
+        Alert.alert(
+          "오류",
+          error.message || "구글 로그인 중 문제가 발생했습니다.",
+        );
+      }
+    }
+  };
+
+  // 4. 네이티브 애플 로그인 핸들러
+  const handleAppleLogin = async () => {
+    if (Platform.OS !== "ios") {
+      Alert.alert("안내", "애플 로그인은 iOS기기에서만 지원됩니다.");
+      return;
+    }
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (credential.identityToken) {
+        socialLoginMutate({
+          idToken: credential.identityToken,
+          provider: "apple",
+        });
+      } else {
+        Alert.alert("오류", "애플 인증 토큰을 가져오지 못했습니다.");
+      }
+    } catch (e: any) {
+      if (e.code === "ERR_REQUEST_CANCELED") {
+        // 사용자가 취소함
+      } else {
+        Alert.alert("오류", "애플 로그인 중 문제가 발생했습니다.");
+      }
+    }
+  };
+
+  // 이메일 로그인 제출 핸들러
   const handleEmailLogin = () => {
     if (!email.trim()) {
-      alert("이메일을 입력해 주세요.");
+      Alert.alert("경고", "이메일을 입력해 주세요.");
       return;
     }
 
     if (!password.trim()) {
-      alert("비밀번호를 입력해주세요.");
+      Alert.alert("경고", "비밀번호를 입력해 주세요.");
       return;
     }
 
@@ -69,12 +202,6 @@ export default function LoginScreen() {
       return;
     }
     loginMutate({ email, password });
-  };
-
-  // 소셜 로그인 처리
-  const handleSocialLogin = (provider: string) => {
-    console.log(`${provider} 로그인 시도`);
-    router.push("/(auth)/signup");
   };
 
   return (
@@ -127,7 +254,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={[styles.loginBtn, { backgroundColor: Colors.yellow }]}
               onPress={handleEmailLogin}
-              disabled={isPending}
+              disabled={isPending || isSocialPending}
             >
               {isPending ? (
                 <ActivityIndicator size="small" color="#000" />
@@ -154,24 +281,18 @@ export default function LoginScreen() {
             <View style={styles.divider} />
           </View>
 
-          {/* {socialLoginMutation.isPending ? ( */}
-          {/* <ActivityIndicator color={Colors.yellow} size="large" /> */}
-          {/* ) : ( */}
-          <View style={styles.socialButtonRow}>
-            {/* 구글 로그인 */}
-            <CustomGoogleLoginButton
-              onPress={() => console.log("구글 로그인")}
-            />
-
-            {/* 애플 로그인 */}
-            <CustomAppleLoginButton
-              onPress={() => console.log("애플 로그인")}
-            />
-          </View>
-
-          {/* )} */}
-
           {/* 4. 하단 간편 소셜 로그인 */}
+          {isSocialPending ? (
+            <ActivityIndicator color={Colors.text} size="large" />
+          ) : (
+            <View style={styles.socialButtonRow}>
+              {/* 구글 로그인 */}
+              <CustomGoogleLoginButton onPress={handleGoogleLogin} />
+
+              {/* 애플 로그인 */}
+              <CustomAppleLoginButton onPress={handleAppleLogin} />
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -179,19 +300,6 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  socialButtonRow: {
-    flexDirection: "column",
-    justifyContent: "center",
-    gap: 20,
-  },
-  googleIcon: { width: 48, height: 48 },
-  appleIcon: {
-    width: 48,
-    height: 48,
-    borderColor: Colors.text,
-    borderWidth: 1,
-    borderRadius: 24,
-  },
   container: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
@@ -208,7 +316,7 @@ const styles = StyleSheet.create({
   subText: {
     fontSize: Platform.OS === "ios" ? 14 : 13,
     color: "#A1A1A6",
-    fontWeight: Platform.OS === "ios" ? 500 : 400,
+    fontWeight: Platform.OS === "ios" ? "500" : "400",
   },
 
   formSection: { gap: 12 },
@@ -240,11 +348,11 @@ const styles = StyleSheet.create({
   signupPrompt: {
     color: "#8E8E93",
     fontSize: Platform.OS === "ios" ? 14 : 13,
-    fontWeight: Platform.OS === "ios" ? 500 : 400,
+    fontWeight: Platform.OS === "ios" ? "500" : "400",
   },
   signupLinkText: {
     fontSize: 14,
-    fontWeight: Platform.OS === "ios" ? 600 : 500,
+    fontWeight: Platform.OS === "ios" ? "600" : "500",
     textDecorationLine: "underline",
   },
 
@@ -261,13 +369,9 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  socialSection: { gap: 10 },
-  socialBtn: {
-    height: 50,
-    borderRadius: 10,
+  socialButtonRow: {
+    flexDirection: "column",
     justifyContent: "center",
-    alignItems: "center",
+    gap: 12,
   },
-  kakaoText: { fontSize: 15, color: "#191919", fontWeight: "bold" },
-  appleText: { fontSize: 15, color: "#000000", fontWeight: "bold" },
 });

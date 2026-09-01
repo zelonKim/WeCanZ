@@ -4,7 +4,7 @@ import { formatDateTime } from "@/utils/formatDateTime";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -104,6 +104,22 @@ export default function HomeScreen() {
     new Date().getHours(),
   );
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
+
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: async () => {
+      const { data } = await client.get("/user/me");
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (me) {
+      if (!me.termsAgreedAt || !me.privacyAgreedAt) {
+        router.replace("/login");
+      }
+    }
+  }, [me]);
 
   // 모임 목록 Query
   const {

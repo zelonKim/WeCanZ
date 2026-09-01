@@ -291,7 +291,6 @@ export default function DirectChatRoomScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    // 💡 edges를 ["top"]으로 설정하여 하단 패딩 여백을 제거합니다.
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
@@ -310,9 +309,10 @@ export default function DirectChatRoomScreen() {
             <Image source={{ uri: profileImage }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
-              <Ionicons name="person" size={16} color="#A0A0A0" />
+              <Ionicons name="person" size={20} color={Colors.text} />
             </View>
           )}
+
           <Text style={styles.headerNickname} numberOfLines={1}>
             {name || "알 수 없음"}
           </Text>

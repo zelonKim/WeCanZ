@@ -1,6 +1,7 @@
 import { client } from "@/api/client";
 import { removeAccessToken } from "@/api/token";
 import Colors from "@/constants/Colors";
+import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
@@ -55,8 +56,16 @@ const updateProfile = async (updateDto: {
 };
 
 const deleteAccount = async () => {
-  const { data } = await client.delete("/user/account");
-  return data;
+  try {
+    const { data } = await client.delete("/user/account");
+    return data;
+  } catch (error: any) {
+    console.log(
+      "=== 회원탈퇴 에러 상세 ===",
+      error.response?.status,
+      error.response?.data,
+    );
+  }
 };
 
 // 닉네임으로 유저 ID 조회 API
@@ -129,13 +138,11 @@ export default function SettingScreen() {
       }
       queryClient.invalidateQueries({ queryKey: ["myInfo"] });
     },
-    onError: (error: any, variables) => {
-      if (variables.isMarketingAgreed !== undefined) {
-        setIsMarketingAgreed((prev) => !prev);
-      }
-      const msg = error.response?.data?.message || "수정에 실패했습니다.";
-      Alert.alert("오류", msg);
-    },
+    onError: (error: any) => {
+         const message = error.response?.data?.message;
+         const displayMessage = Array.isArray(message) ? message[0] : message;
+         Alert.alert("알림", displayMessage || "처리 중 오류가 발생했습니다.");
+       },
   });
 
   // 신고 Mutation
@@ -198,12 +205,36 @@ export default function SettingScreen() {
   };
 
   // 프로필 저장
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!nickname.trim()) {
       Alert.alert("경고", "닉네임을 입력해 주세요.");
       return;
     }
-    profileMutation.mutate({ nickname, bio, profileImage });
+
+    let finalImageUrl = profileImage;
+
+    try {
+      if (
+        profileImage &&
+        (profileImage.startsWith("file://") ||
+          profileImage.startsWith("content://"))
+      ) {
+        const data = await uploadProfileImage(profileImage);
+        if (data?.imageUrl) {
+          finalImageUrl = data.imageUrl; // R2에서 받아온 공개 URL로 교체
+        }
+      }
+
+      // 💡 R2 업로드가 끝난 최종 URL을 담아 기존 mutation 실행
+      profileMutation.mutate({
+        nickname,
+        bio,
+        profileImage: finalImageUrl,
+      });
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      Alert.alert("오류", "프로필 이미지 업로드 중 문제가 발생했습니다.");
+    }
   };
 
   // 신고 제출 (닉네임 조회 후 ID 추출 처리)
@@ -320,7 +351,7 @@ export default function SettingScreen() {
                   { justifyContent: "center", alignItems: "center" },
                 ]}
               >
-                <Ionicons name="person" size={40} color={Colors.yellow} />
+                <Ionicons name="person" size={40} color={Colors.text} />
               </View>
             )}
 
@@ -489,22 +520,43 @@ export default function SettingScreen() {
 
             <View style={styles.modalBody}>
               <View style={styles.imagePickerContainer}>
-                <TouchableOpacity
-                  onPress={pickImage}
-                  style={styles.avatarPicker}
-                >
-                  <Image
-                    source={{
-                      uri:
-                        profileImage ||
-                        "https://via.placeholder.com/100/2C2C2E/FFFFFF?text=User",
-                    }}
-                    style={styles.modalAvatar}
-                  />
-                  <View style={styles.cameraBadge}>
-                    <Ionicons name="camera" size={14} color="#000" />
-                  </View>
-                </TouchableOpacity>
+                <View style={{ position: "relative" }}>
+                  <TouchableOpacity
+                    onPress={pickImage}
+                    style={styles.avatarPicker}
+                  >
+                    {profileImage ? (
+                      <Image
+                        source={{ uri: profileImage }}
+                        style={styles.avatar}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.avatar,
+                          { justifyContent: "center", alignItems: "center" },
+                        ]}
+                      >
+                        <Ionicons name="person" size={40} color={Colors.text} />
+                      </View>
+                    )}
+
+                    {/* 카메라 뱃지 - 기존과 동일 */}
+                    <View style={styles.cameraBadge}>
+                      <Ionicons name="camera" size={14} color="#000" />
+                    </View>
+                  </TouchableOpacity>
+
+                  {profileImage && (
+                    <TouchableOpacity
+                      onPress={() => setProfileImage("")} // 이미지 비우기
+                      style={styles.deleteBadge}
+                    >
+                      <Ionicons name="close" size={16} color="#FFF" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
                 <Text style={styles.imagePickerHint}>
                   이미지를 터치하여 갤러리에서 선택하세요
                 </Text>
@@ -800,5 +852,17 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: Colors.red,
     fontWeight: "600",
+  },
+  deleteBadge: {
+    position: "absolute",
+    top: -5, // 오른쪽 상단 구석
+    right: -5,
+    backgroundColor: "rgba(0,0,0,0.6)", // 반투명 검은색 배경
+    width: 24, // 터치 영역을 위해 아이콘보다 넉넉하게
+    height: 24,
+    borderRadius: 13, // 동그랗게
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20, // 다른 요소보다 위에 표시
   },
 });

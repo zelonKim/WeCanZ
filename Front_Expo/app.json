@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Front_Expo",
-    "slug": "Front_Expo",
+    "name": "jongtaewon",
+    "slug": "jongtaewon",
+    "scheme": "jongtaewon",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontexpo",
     "userInterfaceStyle": "dark",
     "androidNavigationBar": {
       "backgroundColor": "#121212",
@@ -17,7 +17,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zelon.jongtaewon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +30,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.zelon.jongtaewon"
     },
     "web": {
       "bundler": "metro",
@@ -36,10 +41,23 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-web-browser",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.277459634612-2sq917cvk9iv5he2jpfceahno01aqug4"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "704ff0b6-ec80-4082-b937-a6f340dc9d2a"
+      }
     }
   }
 }

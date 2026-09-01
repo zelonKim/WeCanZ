@@ -1,8 +1,9 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, MinLength } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
+  @MinLength(2, { message: '닉네임은 최소 2글자 이상이어야 합니다.' }) 
   nickname?: string;
 
   @IsOptional()
@@ -14,6 +15,10 @@ export class UpdateUserDto {
   profileImage?: string;
 
   @IsOptional()
-  @IsBoolean()
-  isMarketingAgreed?: boolean;
+  @IsString()
+  termsAgreedAt?: string;
+
+  @IsOptional()
+  @IsString()
+  privacyAgreedAt?: string;
 }

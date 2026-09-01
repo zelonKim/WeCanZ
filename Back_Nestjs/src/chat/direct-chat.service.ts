@@ -169,6 +169,10 @@ export class DirectChatService {
     }
 
     const targetUserId = room.user1Id;
+    
+    if (!targetUserId) {
+      return;
+    }
 
     const friendship = await this.prisma.friendship.findFirst({
       where: {

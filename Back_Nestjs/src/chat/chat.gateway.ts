@@ -137,6 +137,10 @@ export class ChatGateway {
       const receiverId =
         room.user1Id === data.senderId ? room.user2Id : room.user1Id;
 
+      if (!receiverId) {
+        return;
+      }
+
       // 2. 상대방(receiver)이 나(sender)를 차단했는지 확인
       const isBlockedByReceiver = await this.prisma.friendship.findFirst({
         where: {
@@ -225,6 +229,10 @@ export class ChatGateway {
 
       const receiverId =
         room.user1Id === data.userId ? room.user2Id : room.user1Id;
+
+      if (!receiverId) {
+        return;
+      }
 
       // 2. 양방향 차단 여부 확인 (내가 상대를 차단했거나 OR 상대가 나를 차단했거나)
       const isBlockedRelation = await this.prisma.friendship.findFirst({

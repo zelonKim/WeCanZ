@@ -271,11 +271,13 @@ export default function GatheringChatScreen() {
                             style={styles.profileImage}
                           />
                         ) : (
-                          <Ionicons
-                            name="person-circle-outline"
-                            size={30}
-                            color={Colors.text}
-                          />
+                          <View style={styles.avatarPlaceholder}>
+                            <Ionicons
+                              name="person"
+                              size={16}
+                              color={Colors.text}
+                            />
+                          </View>
                         )}
                         <Text style={styles.senderName}>
                           {msg.user?.nickname || "알 수 없음"}
@@ -459,5 +461,14 @@ const styles = StyleSheet.create({
   senderName: {
     fontSize: 12,
     color: Colors.text,
+    fontWeight: Platform.OS === "ios" ? "600" : "500",
+  },
+  avatarPlaceholder: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.border,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
