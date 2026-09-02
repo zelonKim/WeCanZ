@@ -182,38 +182,36 @@ export class FriendshipService {
       throw new BadRequestException('자신은 차단할 수 없습니다.');
     }
 
-    // 차단 대상 유저가 실제로 존재하는지 검증
     const targetUser = await this.prisma.user.findUnique({
       where: { id: targetUserId },
     });
-
     if (!targetUser) {
       throw new NotFoundException('존재하지 않는 사용자입니다.');
     }
 
-    // 2) 기존 관계 존재 여부 확인
-    const existing = await this.prisma.friendship.findFirst({
+    // 내가 상대를 차단한 기록이 이미 있는지 확인
+    const myBlockRecord = await this.prisma.friendship.findFirst({
       where: {
-        OR: [
-          { senderId: userId, receiverId: targetUserId },
-          { senderId: targetUserId, receiverId: userId },
-        ],
+        senderId: userId,
+        receiverId: targetUserId,
+        status: FriendshipStatus.BLOCKED,
       },
     });
 
-    // 3) 이미 관계가 존재하는 경우 BLOCKED로 상태 업데이트 및 주체/대상 명확히 지정
-    if (existing) {
-      return await this.prisma.friendship.update({
-        where: { id: existing.id },
-        data: {
-          senderId: userId, // 차단 요청자
-          receiverId: targetUserId, // 차단 당한 자
-          status: FriendshipStatus.BLOCKED,
-        },
-      });
+    if (myBlockRecord) {
+      throw new BadRequestException('이미 차단한 사용자입니다.');
     }
 
-    // 4) 기존 관계가 없으면 새로운 차단 레코드 생성
+    // 기존 친구 관계가 있다면 삭제 또는 상태 변경 처리
+    // (상대방이 나를 차단한 기록은 건드리지 않고, 내가 상대를 향해 걸었던 관계만 처리)
+    await this.prisma.friendship.deleteMany({
+      where: {
+        senderId: userId,
+        receiverId: targetUserId,
+      },
+    });
+
+    // 새로운 '내가 상대를 차단함' 상태의 레코드 생성
     return await this.prisma.friendship.create({
       data: {
         senderId: userId,
@@ -226,7 +224,8 @@ export class FriendshipService {
 
   // 7. 친구 차단 해제
   async unblockFriend(targetUserId: string, userId: string) {
-    const friendship = await this.prisma.friendship.findFirst({
+    // 1. 오직 '내가(userId) 상대방을(targetUserId)' 차단한 레코드만 정확히 찾기
+    const myBlockRecord = await this.prisma.friendship.findFirst({
       where: {
         senderId: userId,
         receiverId: targetUserId,
@@ -234,15 +233,16 @@ export class FriendshipService {
       },
     });
 
-    if (!friendship) {
+    if (!myBlockRecord) {
       throw new NotFoundException(
         '차단 목록에서 해당 사용자를 찾을 수 없습니다.',
       );
     }
 
-    // DB 레코드를 삭제하여 관계 초기화
+    // 2. 상대방이 나를 차단한 레코드(senderId: targetUserId, receiverId: userId)는 절대 건드리지 않고,
+    // 오직 내가 생성한 차단 레코드만 삭제하여 원점(요청 전 상태)으로 돌립니다.
     return await this.prisma.friendship.delete({
-      where: { id: friendship.id },
+      where: { id: myBlockRecord.id },
     });
   }
 

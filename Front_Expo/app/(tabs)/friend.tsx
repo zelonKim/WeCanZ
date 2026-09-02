@@ -2,6 +2,7 @@ import { client } from "@/api/client";
 import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -46,6 +47,7 @@ interface BlockedUserItem {
 
 export default function FriendScreen() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [friendNickname, setFriendNickname] = useState("");
@@ -149,15 +151,33 @@ export default function FriendScreen() {
 
   // 7. DM 요청 Mutation
   const requestDmMutation = useMutation({
-    mutationFn: (targetUserId: string) =>
-      client.post(`/direct-chat/request/${targetUserId}`),
-    onSuccess: () => {
-      Alert.alert("성공", "DM 요청을 보냈습니다.");
+    mutationFn: async ({
+      targetUserId,
+      friend,
+    }: {
+      targetUserId: string;
+      friend: User;
+    }) => {
+      const response = await client.post(
+        `/direct-chat/request/${targetUserId}`,
+      );
+      return { roomData: response.data, friend };
+    },
+    onSuccess: ({ roomData, friend }) => {
+      const chatRoomId = roomData.id;
+      router.push({
+        pathname: "/DM/[id]",
+        params: {
+          id: chatRoomId,
+          name: friend.nickname,
+          profileImage: friend.profileImage || "",
+        },
+      });
     },
     onError: (err: any) => {
       Alert.alert(
         "오류",
-        err.response?.data?.message || "DM 요청에 실패했습니다.",
+        err.response?.data?.message || "DM 이동에 실패했습니다.",
       );
     },
   });
@@ -331,7 +351,9 @@ export default function FriendScreen() {
               <View style={styles.actionIconGroup}>
                 <TouchableOpacity
                   style={styles.dmActionBtn}
-                  onPress={() => requestDmMutation.mutate(targetUserId)}
+                  onPress={() =>
+                    requestDmMutation.mutate({ targetUserId, friend })
+                  }
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
                   <Ionicons
@@ -385,7 +407,7 @@ export default function FriendScreen() {
       >
         <View style={styles.addModalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.addModalTitle}>🔍 친구 추가</Text>
+            <Text style={styles.addModalTitle}>👋 친구 추가</Text>
             <Text style={styles.modalSubtitle}>
               추가할 친구의 닉네임을 입력해주세요.
             </Text>
@@ -709,6 +731,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text,
     backgroundColor: Colors.card,
+    height: 42,
   },
   directBlockBtn: {
     backgroundColor: Colors.red || "#FF3B30",
@@ -779,13 +802,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: Colors.tabIconDefault,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: Colors.text,
+    backgroundColor: "#2C2C2E",
+    height: 42,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    color: "#FFF",
+    fontSize: 15,
     marginBottom: 20,
   },
   modalButtonRow: {

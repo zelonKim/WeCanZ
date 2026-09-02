@@ -3,6 +3,8 @@ import {
   Injectable,
   ConflictException,
   BadRequestException,
+  HttpException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SignupDto } from './dto/signup.dto';
@@ -61,7 +63,7 @@ export class AuthService {
     ]);
 
     if (existingEmail) {
-      throw new ConflictException('이미 사용 중인 이메일입니다.');
+      throw new ConflictException('이미 사용 중인 아이디입니다.');
     }
     if (existingNickname) {
       throw new ConflictException('이미 사용 중인 닉네임입니다.');
@@ -104,38 +106,54 @@ export class AuthService {
   /////////////////////////////////////////////////
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
 
-    if (!user) {
-      throw new UnauthorizedException(
-        '이메일 혹은 비밀번호가 일치하지 않습니다.',
+      if (!user) {
+        throw new UnauthorizedException(
+          '아이디 혹은 비밀번호가 일치하지 않습니다.',
+        );
+      }
+
+      // 만약 소셜 로그인 유저라 비밀번호가 없는 경우 방어 코드
+      if (!user.password) {
+        throw new UnauthorizedException('간편 로그인 계정입니다.');
+      }
+
+      // 비밀번호 일치 여부 확인
+      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedException(
+          '아이디 혹은 비밀번호가 일치하지 않습니다.',
+        );
+      }
+
+      // 토큰 발급
+      const payload = { sub: user.id, email: user.email };
+      const accessToken = this.jwtService.sign(payload);
+
+      return {
+        message: '로그인에 성공했습니다.',
+        accessToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          nickname: user.nickname,
+        },
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      console.error('Login Unexpected Error:', error);
+      throw new InternalServerErrorException(
+        '로그인 처리 중 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
       );
     }
-
-    // 비밀번호 일치 여부 확인
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password!);
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(
-        '이메일 혹은 비밀번호가 일치하지 않습니다.',
-      );
-    }
-
-    // 토큰 발급
-    const payload = { sub: user.id, email: user.email };
-    const accessToken = this.jwtService.sign(payload);
-
-    return {
-      message: '로그인에 성공했습니다.',
-      accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        nickname: user.nickname,
-      },
-    };
   }
 
   ////////////////////////////////////////////////

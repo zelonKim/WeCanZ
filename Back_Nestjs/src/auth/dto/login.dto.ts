@@ -1,8 +1,8 @@
-import { IsEmail, IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 
 export class LoginDto {
-  @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
-  @IsNotEmpty({ message: '이메일을 입력해주세요' })
+  @IsString()
+  @IsNotEmpty({ message: '아이디를 입력해주세요' })
   email!: string;
 
   @IsString()

@@ -70,4 +70,10 @@ export class UserController {
       imageUrl,
     };
   }
+
+  // 6. 특정 유저 프로필 조회
+  @Get(':id')
+  async getUserProfile(@Param('id') id: string) {
+    return await this.userService.getUserProfile(id);
+  }
 }

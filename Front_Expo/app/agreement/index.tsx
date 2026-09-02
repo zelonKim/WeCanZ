@@ -1,5 +1,7 @@
 import { client } from "@/api/client";
+import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -21,6 +23,9 @@ export default function AgreementScreen() {
   const [nickname, setNickname] = useState("");
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+
+  // 💡 모달 상태 관리 ('terms' | 'privacy' | null)
+  const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -86,9 +91,9 @@ export default function AgreementScreen() {
       style={[styles.container, { backgroundColor: Colors.background }]}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>거의 다 완료되었습니다! 🚀</Text>
+        <Text style={styles.title}>거의 다 완료됬어요⚡️</Text>
         <Text style={styles.subtitle}>
-          서비스 이용을 위해 닉네임과 약관 동의가 필요해요.
+          서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.
         </Text>
 
         {/* 닉네임 입력 */}
@@ -96,11 +101,12 @@ export default function AgreementScreen() {
           <Text style={styles.label}>닉네임</Text>
           <TextInput
             style={styles.input}
-            placeholder="사용하실 닉네임을 입력하세요"
+            placeholder="최소 2자 이상 입력"
             placeholderTextColor="#666"
             value={nickname}
             onChangeText={setNickname}
             maxLength={12}
+            autoCapitalize="none"
           />
         </View>
 
@@ -110,42 +116,57 @@ export default function AgreementScreen() {
             style={styles.agreementRow}
             onPress={handleAllAgree}
           >
-            <Text
-              style={[
-                styles.checkbox,
-                termsAgreed && privacyAgreed && styles.checkedBox,
-              ]}
-            >
-              {termsAgreed && privacyAgreed ? "✓" : ""}
-            </Text>
-            <Text style={styles.allAgreeText}>전체 약관 동의하기</Text>
+            <Ionicons
+              name={
+                termsAgreed && privacyAgreed ? "checkbox" : "square-outline"
+              }
+              size={20}
+              color={termsAgreed && privacyAgreed ? Colors.red : "#666"}
+            />
+            <Text style={styles.allAgreeText}>전체 동의하기</Text>
           </TouchableOpacity>
 
           <View style={styles.divider} />
 
-          <TouchableOpacity
-            style={styles.agreementRow}
-            onPress={() => setTermsAgreed(!termsAgreed)}
-          >
-            <Text style={[styles.checkbox, termsAgreed && styles.checkedBox]}>
-              {termsAgreed ? "✓" : ""}
-            </Text>
-            <Text style={styles.agreementText}>
-              [필수] 서비스 이용약관 동의
-            </Text>
-          </TouchableOpacity>
+          {/* 서비스 이용약관 */}
+          <View style={styles.rowContainer}>
+            <TouchableOpacity
+              style={styles.agreementRow}
+              onPress={() => setTermsAgreed(!termsAgreed)}
+            >
+              <Ionicons
+                name={termsAgreed ? "checkmark-circle" : "ellipse-outline"}
+                size={20}
+                color={termsAgreed ? Colors.red : "#666"}
+              />
+              <Text style={styles.agreementText}>
+                [필수] 서비스 이용약관 동의
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalType("terms")}>
+              <Text style={styles.viewLinkText}>보기</Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.agreementRow}
-            onPress={() => setPrivacyAgreed(!privacyAgreed)}
-          >
-            <Text style={[styles.checkbox, privacyAgreed && styles.checkedBox]}>
-              {privacyAgreed ? "✓" : ""}
-            </Text>
-            <Text style={styles.agreementText}>
-              [필수] 개인정보 처리방침 동의
-            </Text>
-          </TouchableOpacity>
+          {/* 개인정보 처리방침 */}
+          <View style={styles.rowContainer}>
+            <TouchableOpacity
+              style={styles.agreementRow}
+              onPress={() => setPrivacyAgreed(!privacyAgreed)}
+            >
+              <Ionicons
+                name={privacyAgreed ? "checkmark-circle" : "ellipse-outline"}
+                size={20}
+                color={privacyAgreed ? Colors.red : "#666"}
+              />
+              <Text style={styles.agreementText}>
+                [필수] 개인정보 처리방침 동의
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setModalType("privacy")}>
+              <Text style={styles.viewLinkText}>보기</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 시작하기 버튼 */}
@@ -171,6 +192,13 @@ export default function AgreementScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* 💡 약관 및 개인정보 처리방침 모달 컴포넌트 장착 */}
+      <TermsModal
+        visible={modalType !== null}
+        type={modalType}
+        onClose={() => setModalType(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -196,25 +224,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 14,
   },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   agreementRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 1.5,
-    borderColor: "#666",
-    borderRadius: 6,
-    textAlign: "center",
-    textAlignVertical: "center",
-    color: "#000",
-    fontWeight: "bold",
-    backgroundColor: "transparent",
-  },
-  checkedBox: {
-    backgroundColor: "#E6F4FE",
-    borderColor: "#E6F4FE",
-  },
   allAgreeText: { color: "#FFF", fontSize: 15, fontWeight: "bold" },
   agreementText: { color: "#CCC", fontSize: 14 },
+  viewLinkText: {
+    color: "#8E8E93",
+    fontSize: 13,
+    textDecorationLine: "underline",
+  },
   divider: { height: 1, backgroundColor: "#2C2C2E", marginVertical: 4 },
   submitBtn: {
     height: 52,

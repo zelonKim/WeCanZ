@@ -50,46 +50,48 @@ export class UserService {
     const { nickname, termsAgreedAt, privacyAgreedAt, ...profileData } = dto;
 
     if (nickname) {
-    if (nickname.trim().length < 2) {
-      throw new BadRequestException('닉네임은 최소 2글자 이상이어야 합니다.'); 
-    }
+      if (nickname.trim().length < 2) {
+        throw new BadRequestException('닉네임은 최소 2글자 이상이어야 합니다.');
+      }
 
-    // 닉네임 중복 검사 로직 (기존 그대로 유지)
-    if (nickname) {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          nickname,
-          NOT: { id: userId },
+      // 닉네임 중복 검사 로직 (기존 그대로 유지)
+      if (nickname) {
+        const existingUser = await this.prisma.user.findFirst({
+          where: {
+            nickname,
+            NOT: { id: userId },
+          },
+        });
+
+        if (existingUser) {
+          throw new ConflictException('이미 사용 중인 닉네임입니다.');
+        }
+      }
+
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(nickname && { nickname }),
+          ...profileData,
+          // 문자열로 넘어온 날짜를 Date 객체로 변환하여 저장
+          ...(termsAgreedAt && { termsAgreedAt: new Date(termsAgreedAt) }),
+          ...(privacyAgreedAt && {
+            privacyAgreedAt: new Date(privacyAgreedAt),
+          }),
+        },
+        select: {
+          email: true,
+          nickname: true,
+          profileImage: true,
+          bio: true,
+          yesShowCount: true,
+          noShowCount: true,
+          termsAgreedAt: true,
+          privacyAgreedAt: true,
         },
       });
-
-      if (existingUser) {
-        throw new ConflictException('이미 사용 중인 닉네임입니다.');
-      }
     }
-
-    return await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(nickname && { nickname }),
-        ...profileData,
-        // 문자열로 넘어온 날짜를 Date 객체로 변환하여 저장
-        ...(termsAgreedAt && { termsAgreedAt: new Date(termsAgreedAt) }),
-        ...(privacyAgreedAt && { privacyAgreedAt: new Date(privacyAgreedAt) }),
-      },
-      select: {
-        email: true,
-        nickname: true,
-        profileImage: true,
-        bio: true,
-        yesShowCount: true,
-        noShowCount: true,
-        termsAgreedAt: true,
-        privacyAgreedAt: true,
-      },
-    });
   }
-
   ////////////////////////////////////
 
   async deleteAccount(userId: string) {
@@ -144,5 +146,29 @@ export class UserService {
         '프로필 이미지 업로드 중 오류가 발생했습니다.',
       );
     }
+  }
+
+  ////////////////////////////////////
+
+  async getUserProfile(id: string) {
+    // 💡 숫자형 ID인 경우 Number(id)로 변환 필요 (UUID라면 그대로 id 사용)
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        nickname: true,
+        profileImage: true,
+        bio: true,
+        noShowCount: true,
+        yesShowCount: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('해당 유저를 찾을 수 없습니다.');
+    }
+
+    return user;
   }
 }

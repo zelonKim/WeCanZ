@@ -43,7 +43,7 @@ export class DirectChatService {
       if (friendship.status === FriendshipStatus.BLOCKED) {
         // 차단된 유저인 경우
         throw new BadRequestException(
-          '차단된 사용자에게는 대화를 신청할 수 없습니다.',
+          '차단된 사용자에게는 DM을 요청할 수 없습니다.',
         );
       }
 
@@ -64,9 +64,15 @@ export class DirectChatService {
     });
 
     if (existingRoom) {
-      // 이미 수락된 상태면 기존 대화방 반환
+      // 이미 수락된 상태면 기존 대화방 반환 (💡 include 추가)
       if (existingRoom.status === DirectChatRoomStatus.ACCEPTED) {
-        return existingRoom;
+        return await this.prisma.directChatRoom.findUnique({
+          where: { id: existingRoom.id },
+          include: {
+            user1: { select: { id: true, nickname: true, profileImage: true } },
+            user2: { select: { id: true, nickname: true, profileImage: true } },
+          },
+        });
       }
 
       // 대기 중(PENDING) 상태면 예외 발생
@@ -79,9 +85,13 @@ export class DirectChatService {
         return await this.prisma.directChatRoom.update({
           where: { id: existingRoom.id },
           data: {
-            user1Id: myId, // 신청한 사람을 user1로
+            user1Id: myId,
             user2Id: targetUserId,
             status: DirectChatRoomStatus.PENDING,
+          },
+          include: {
+            user1: { select: { id: true, nickname: true, profileImage: true } },
+            user2: { select: { id: true, nickname: true, profileImage: true } },
           },
         });
       }
@@ -169,7 +179,7 @@ export class DirectChatService {
     }
 
     const targetUserId = room.user1Id;
-    
+
     if (!targetUserId) {
       return;
     }

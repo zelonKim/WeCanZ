@@ -1,5 +1,6 @@
 import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
+import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
@@ -22,20 +23,38 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // 랜덤 닉네임 생성 단어 목록
 const ADJECTIVES = [
   "끼떠는",
-  "일틱한",
   "훈훈한",
-  "기갈부리는",
   "귀여운",
-  "건장한",
+  "도도한",
+  "다정한",
+  "매력적인",
+  "수줍은",
+  "시크한",
+  "발랄한",
+  "설레는",
+  "상큼한",
+  "풋풋한",
 ];
-const NOUNS = ["바텀", "탑", "올바텀", "올탑", "올", "비선호"];
+
+const NOUNS = [
+  "메이트",
+  "스위티",
+  "베이글",
+  "베이비",
+  "러버",
+  "뉴페이스",
+  "큐티",
+  "공주",
+  "요정",
+  "천사",
+];
 
 // 랜덤 닉네임 생성 함수
 const generateRandomNickname = (): string => {
   const randomAdj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
   const randomNoun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
   const randomNumber = Math.floor(1000 + Math.random() * 9000);
-  return `${randomAdj}${randomNoun}_${randomNumber}`;
+  return `${randomAdj}${randomNoun}${randomNumber}`;
 };
 
 //////////////////////////////////////
@@ -65,10 +84,12 @@ export default function SignupScreen() {
   const [isPrivacyAgreed, setIsPrivacyAgreed] = useState(false);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
 
-  // 닉네임 새로고침
-  // const handleRefreshNickname = () => {
-  //   setNickname(generateRandomNickname());
-  // };
+  // 모달 상태 관리 ('terms' | 'privacy' | null)
+  const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
+
+  const handleRefreshNickname = () => {
+    setNickname(generateRandomNickname());
+  };
 
   // 전체 동의 토글
   const handleAllAgree = () => {
@@ -103,10 +124,8 @@ export default function SignupScreen() {
 
   // 회원가입
   const handleSignup = async () => {
-    // 1. 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("알림", "올바른 이메일 형식이 아닙니다.");
+    if (email.trim().length < 5) {
+      Alert.alert("알림", "아이디는 최소 5글자 이상이어야 합니다.");
       return;
     }
 
@@ -178,14 +197,14 @@ export default function SignupScreen() {
 
           {/* 입력 폼 영역 */}
           <View style={styles.form}>
-            {/* 이메일 */}
+            {/* 아이디 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>이메일</Text>
+              <Text style={styles.label}>아이디</Text>
               <TextInput
                 style={styles.input}
-                placeholder="example@email.com"
+                placeholder="최소 5자 이상 입력"
                 placeholderTextColor="#666"
-                keyboardType="email-address"
+                // keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -197,7 +216,7 @@ export default function SignupScreen() {
               <Text style={styles.label}>비밀번호</Text>
               <TextInput
                 style={styles.input}
-                placeholder="영문, 숫자 포함 8자 이상"
+                placeholder="영문 + 숫자 8자 이상 입력"
                 placeholderTextColor="#666"
                 secureTextEntry
                 value={password}
@@ -232,7 +251,7 @@ export default function SignupScreen() {
                   onChangeText={setNickname}
                   autoCapitalize="none"
                 />
-                {/* <TouchableOpacity
+                <TouchableOpacity
                   style={styles.refreshBtn}
                   onPress={handleRefreshNickname}
                 >
@@ -240,7 +259,7 @@ export default function SignupScreen() {
                   <Text style={[styles.refreshText, { color: Colors.red }]}>
                     랜덤 생성
                   </Text>
-                </TouchableOpacity> */}
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -269,54 +288,57 @@ export default function SignupScreen() {
 
               <View style={styles.divider} />
 
-              {/* 서비스 이용약관 (필수) */}
-              <TouchableOpacity
-                style={styles.checkRow}
-                onPress={() => setIsTermsAgreed(!isTermsAgreed)}
-              >
-                <Ionicons
-                  name={isTermsAgreed ? "checkmark-circle" : "ellipse-outline"}
-                  size={20}
-                  color={isTermsAgreed ? Colors.red : "#666"}
-                />
-                <Text style={styles.checkText}>
-                  [필수] 서비스 이용 약관 동의
-                </Text>
-              </TouchableOpacity>
+              {/* 서비스 이용약관 */}
+              <View style={styles.checkRowContainer}>
+                <TouchableOpacity
+                  style={styles.checkRow}
+                  onPress={() => setIsTermsAgreed(!isTermsAgreed)}
+                >
+                  <Ionicons
+                    name={
+                      isTermsAgreed ? "checkmark-circle" : "ellipse-outline"
+                    }
+                    size={20}
+                    color={isTermsAgreed ? Colors.red : "#666"}
+                  />
+                  <Text style={styles.checkText}>
+                    [필수] 서비스 이용 약관 동의
+                  </Text>
+                </TouchableOpacity>
 
-              {/* 개인정보 처리방침 (필수) */}
-              <TouchableOpacity
-                style={styles.checkRow}
-                onPress={() => setIsPrivacyAgreed(!isPrivacyAgreed)}
-              >
-                <Ionicons
-                  name={
-                    isPrivacyAgreed ? "checkmark-circle" : "ellipse-outline"
-                  }
-                  size={20}
-                  color={isPrivacyAgreed ? Colors.red : "#666"}
-                />
-                <Text style={styles.checkText}>
-                  [필수] 개인정보 처리 방침 동의
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => setModalType("terms")}>
+                  <Text style={styles.viewLinkText}>보기</Text>
+                </TouchableOpacity>
+              </View>
 
-              {/* 마케팅 정보 수신 (선택) */}
-              {/* <TouchableOpacity
-                style={styles.checkRow}
-                onPress={() => setIsMarketingAgreed(!isMarketingAgreed)}
-              >
-                <Ionicons
-                  name={
-                    isMarketingAgreed ? "checkmark-circle" : "ellipse-outline"
-                  }
-                  size={20}
-                  color={isMarketingAgreed ? Colors.red : "#666"}
+              {/* 개인정보 처리방침  */}
+              <View style={styles.checkRowContainer}>
+                <TouchableOpacity
+                  style={styles.checkRow}
+                  onPress={() => setIsPrivacyAgreed(!isPrivacyAgreed)}
+                >
+                  <Ionicons
+                    name={
+                      isPrivacyAgreed ? "checkmark-circle" : "ellipse-outline"
+                    }
+                    size={20}
+                    color={isPrivacyAgreed ? Colors.red : "#666"}
+                  />
+                  <Text style={styles.checkText}>
+                    [필수] 개인정보 처리 방침 동의
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setModalType("privacy")}>
+                  <Text style={styles.viewLinkText}>보기</Text>
+                </TouchableOpacity>
+
+                <TermsModal
+                  visible={modalType !== null}
+                  type={modalType}
+                  onClose={() => setModalType(null)}
                 />
-                <Text style={styles.checkText}>
-                  [선택] 마케팅 정보 수신 동의
-                </Text>
-              </TouchableOpacity> */}
+              </View>
             </View>
           </View>
 
@@ -401,4 +423,59 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   submitBtnText: { color: Colors.text, fontSize: 16, fontWeight: "bold" },
+  checkRowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 3,
+  },
+
+  viewLinkText: {
+    fontSize: 13,
+    color: "#666",
+    textDecorationLine: "underline",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)", // 어두운 반투명 배경
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: "85%",
+    maxHeight: "75%",
+    backgroundColor: "#1E1E1E", // 다크 테마 카드 배경색
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#2C2C2C",
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FFFFFF", // 타이틀 흰색
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  modalScroll: {
+    marginVertical: 6,
+  },
+  modalText: {
+    fontSize: 13,
+    color: "#B0B0B0", // 본문 가독성 좋은 밝은 회색
+    lineHeight: 20,
+  },
+  closeButton: {
+    marginTop: 16,
+    backgroundColor: Colors.red, // 포인트 컬러 유지
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
 });

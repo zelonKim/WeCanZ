@@ -1,7 +1,7 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength, Matches, IsBoolean, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength, Matches, IsBoolean, IsOptional } from 'class-validator';
 
 export class SignupDto {
-  @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })
+  @IsString()
   @IsNotEmpty()
   email!: string;
 

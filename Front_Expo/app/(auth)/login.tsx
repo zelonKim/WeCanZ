@@ -65,15 +65,23 @@ export default function LoginScreen() {
       router.replace("/(tabs)");
     },
     onError: (error: any) => {
-      // 백엔드에서 반환하는 전체 에러 응답 객체를 통째로 찍어봅니다.
-      console.log("=== 백엔드 소셜 로그인 에러 상세 ===", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
+      const errorData = error.response?.data;
+      let errorMessage = "오류가 발생했습니다.";
 
-      const errorMessage =
-        error.response?.data?.message || "소셜 로그인 중 오류가 발생했습니다.";
+      if (errorData) {
+        if (typeof errorData.message === "string") {
+          errorMessage = errorData.message;
+        } else if (Array.isArray(errorData.message)) {
+          errorMessage = errorData.message.join("\n");
+        } else if (typeof errorData === "string") {
+          errorMessage = errorData;
+        } else {
+          errorMessage = JSON.stringify(errorData, null, 2);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       Alert.alert("오류", errorMessage);
     },
   });
@@ -187,7 +195,7 @@ export default function LoginScreen() {
   // 이메일 로그인 제출 핸들러
   const handleEmailLogin = () => {
     if (!email.trim()) {
-      Alert.alert("경고", "이메일을 입력해 주세요.");
+      Alert.alert("경고", "아이디를 입력해 주세요.");
       return;
     }
 
@@ -196,11 +204,6 @@ export default function LoginScreen() {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("안내", "올바른 이메일 형식이 아닙니다.");
-      return;
-    }
     loginMutate({ email, password });
   };
 
@@ -229,9 +232,9 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <TextInput
                 style={styles.input}
-                placeholder="이메일 주소"
+                placeholder="아이디"
                 placeholderTextColor="#666"
-                keyboardType="email-address"
+                // keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}

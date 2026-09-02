@@ -476,15 +476,15 @@ export default function HomeScreen() {
                   [selectedDateStr]: {
                     selected: true,
                     selectedColor: Colors.red,
-                    selectedTextColor: "#FFFFFF",
+                    selectedTextColor: Colors.text,
                   },
                 }}
                 theme={{
                   backgroundColor: "#2C2C2E",
                   calendarBackground: "#2C2C2E",
                   textSectionTitleColor: Colors.tabIconDefault,
-                  selectedDayBackgroundColor: Colors.red,
-                  selectedDayTextColor: "#FFFFFF",
+                  selectedDayBackgroundColor: Colors.yellow,
+                  selectedDayTextColor: Colors.card,
                   todayTextColor: Colors.yellow,
                   dayTextColor: "#FFFFFF",
                   textDisabledColor: "#48484A",
@@ -782,7 +782,7 @@ const styles = StyleSheet.create({
     color: Colors.tabIconDefault,
     fontWeight: "600",
   },
-  modalCategoryTextActive: { color: "#000", fontWeight: "bold" },
+  modalCategoryTextActive: { color: Colors.background, fontWeight: "bold" },
 
   /* 인라인 캘린더 */
   inlineCalendar: {
@@ -821,7 +821,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   timeChipActive: {
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.yellow,
   },
   timeChipText: {
     fontSize: 13,
@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   timeChipTextActive: {
-    color: "#FFFFFF",
+    color: Colors.background,
     fontWeight: "bold",
   },
 

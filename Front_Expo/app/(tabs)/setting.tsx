@@ -89,6 +89,34 @@ const createReport = async (reportDto: {
 export default function SettingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  // 프로필 조회 모달 상태
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchNickname, setSearchNickname] = useState("");
+
+  const handleSearchUser = async () => {
+    if (!searchNickname.trim()) {
+      Alert.alert("알림", "유저 닉네임을 입력해주세요.");
+      return;
+    }
+
+    try {
+      // 백엔드의 GET /users/search/:nickname 호출
+      const { data } = await client.get(
+        `/user/search/${searchNickname.trim()}`,
+      );
+
+      if (data && data.id) {
+        setIsModalVisible(false);
+        setSearchNickname("");
+        // 유저 ID를 이용해 프로필 페이지로 이동
+        router.push(`/profile/${data.id}`);
+      }
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "존재하지 않는 유저입니다.";
+      Alert.alert("오류", message);
+    }
+  };
 
   // 내 정보 조회
   const {
@@ -139,10 +167,10 @@ export default function SettingScreen() {
       queryClient.invalidateQueries({ queryKey: ["myInfo"] });
     },
     onError: (error: any) => {
-         const message = error.response?.data?.message;
-         const displayMessage = Array.isArray(message) ? message[0] : message;
-         Alert.alert("알림", displayMessage || "처리 중 오류가 발생했습니다.");
-       },
+      const message = error.response?.data?.message;
+      const displayMessage = Array.isArray(message) ? message[0] : message;
+      Alert.alert("알림", displayMessage || "처리 중 오류가 발생했습니다.");
+    },
   });
 
   // 신고 Mutation
@@ -334,6 +362,14 @@ export default function SettingScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>⚙️ 환경 설정</Text>
+
+          {/* 💡 우측 프로필 보기 아이콘 버튼 */}
+          <TouchableOpacity
+            onPress={() => setIsModalVisible(true)}
+            style={styles.profileSearchBtn}
+          >
+            <Ionicons name="search-outline" size={26} color={Colors.yellow} />
+          </TouchableOpacity>
         </View>
 
         {/* 프로필 카드 */}
@@ -374,14 +410,14 @@ export default function SettingScreen() {
           {/* 신뢰도/매너 배지 */}
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>✨ YesShow</Text>
+              <Text style={styles.statLabel}>예스쇼</Text>
               <Text style={[styles.statValue, { color: Colors.yellow }]}>
                 {user.yesShowCount ?? 0}회
               </Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>🚫 NoShow</Text>
+              <Text style={styles.statLabel}>노쇼</Text>
               <Text style={[styles.statValue, { color: Colors.red }]}>
                 {user.noShowCount ?? 0}회
               </Text>
@@ -673,15 +709,120 @@ export default function SettingScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* 💡 닉네임 검색 모달 */}
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>🔍 유저 프로필 찾기</Text>
+            <Text style={styles.modalSubtitle}>
+              찾고 싶은 유저의 닉네임을 입력하세요.
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="닉네임 입력"
+              placeholderTextColor="#666"
+              value={searchNickname}
+              onChangeText={setSearchNickname}
+              autoCapitalize="none"
+            />
+
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.cancelBtn]}
+                onPress={() => setIsModalVisible(false)}
+              >
+                <Text style={styles.cancelBtnText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.confirmBtn]}
+                onPress={handleSearchUser}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#000" size="small" />
+                ) : (
+                  <Text style={styles.confirmBtnText}>검색</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
+  profileSearchBtn: { padding: 4 },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  modalContainer: {
+    width: "100%",
+    backgroundColor: "#1C1C1E",
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFF",
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: "#8E8E93",
+    marginTop: -8,
+    textAlign: "center",
+  },
+  input: {
+    backgroundColor: "#2C2C2E",
+    height: 42,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    color: "#FFF",
+    fontSize: 15,
+  },
+  modalBtnRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelBtn: { backgroundColor: "#2C2C2E" },
+  cancelBtnText: { color: "#FFF", fontWeight: "600" },
+  confirmBtn: { backgroundColor: Colors.yellow || "#FFD700" },
+  confirmBtnText: { color: "#000", fontWeight: "bold" },
+
   center: { justifyContent: "center", alignItems: "center" },
   scrollContent: { paddingBottom: 40 },
-  header: { paddingHorizontal: 20, paddingVertical: 16 },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   headerTitle: { fontSize: 22, fontWeight: "800", color: Colors.text },
 
   profileCard: {
@@ -735,7 +876,7 @@ const styles = StyleSheet.create({
   statBox: { flex: 1, alignItems: "center" },
   statDivider: { width: 1, height: "60%", backgroundColor: Colors.border },
   statLabel: { fontSize: 12, color: Colors.tabIconDefault, marginBottom: 4 },
-  statValue: { fontSize: 15, fontWeight: "700" },
+  statValue: { fontSize: 16, fontWeight: "700" },
 
   section: { marginHorizontal: 16, marginBottom: 20 },
   sectionTitle: {
@@ -770,21 +911,14 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.75)",
     justifyContent: "flex-end",
   },
-  modalContainer: {
-    backgroundColor: Colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-  },
+
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },
+
   modalBody: { gap: 12, marginBottom: 20 },
 
   imagePickerContainer: { alignItems: "center", marginBottom: 12 },

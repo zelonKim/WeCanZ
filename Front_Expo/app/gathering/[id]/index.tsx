@@ -514,6 +514,18 @@ export default function GatheringDetailScreen() {
                 style={styles.popoverItem}
                 onPress={() => {
                   handleCloseMenu();
+                  router.push(`/profile/${user.id}`);
+                }}
+              >
+                <Text style={styles.popoverText}>프로필 보기</Text>
+              </TouchableOpacity>
+
+              <View style={styles.popoverDivider} />
+
+              <TouchableOpacity
+                style={styles.popoverItem}
+                onPress={() => {
+                  handleCloseMenu();
                   sendFriendRequestMutation.mutate(user.id);
                 }}
               >
@@ -554,17 +566,6 @@ export default function GatheringDetailScreen() {
               >
                 <Text style={[styles.popoverText, { color: "#FF5252" }]}>
                   차단
-                </Text>
-              </TouchableOpacity>
-
-              <View style={styles.popoverDivider} />
-
-              <TouchableOpacity
-                style={styles.popoverItem}
-                onPress={handleCloseMenu}
-              >
-                <Text style={[styles.popoverText, { color: "#888" }]}>
-                  취소
                 </Text>
               </TouchableOpacity>
             </View>
