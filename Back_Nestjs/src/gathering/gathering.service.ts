@@ -13,19 +13,45 @@ import { GatheringStatus, ParticipantStatus } from '@prisma/client';
 export class GatheringService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private generateRandomCode(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  private async generateUniqueRoomCode(tx: any): Promise<string> {
+    while (true) {
+      const code = this.generateRandomCode();
+
+      // DB에 해당 코드가 이미 존재하는지 확인
+      const existing = await tx.gathering.findUnique({
+        where: { roomCode: code },
+      });
+
+      // 중복이 없다면 해당 코드 반환
+      if (!existing) {
+        return code;
+      }
+    }
+  }
   // 1. 모임 생성
   async createGathering(
     hostId: string,
     createGatheringDto: CreateGatheringDto,
   ) {
     return await this.prisma.$transaction(async (tx) => {
+      const roomCode = await this.generateUniqueRoomCode(tx);
+
       const gathering = await tx.gathering.create({
         data: {
           ...createGatheringDto,
           hostId,
-          // 모임 생성 시 채팅방도 동시에 생성 (1:N 연동)
+          roomCode,
           gatheringChatRooms: {
-            create: {}, // 기본값(id, createdAt)으로 1개 생성
+            create: {},
           },
         },
         include: {
@@ -43,6 +69,8 @@ export class GatheringService {
           status: ParticipantStatus.APPROVED,
         },
       });
+
+      return gathering;
     });
   }
   //////////////////////////////////////////////////////////////////
@@ -58,10 +86,56 @@ export class GatheringService {
       },
     });
   }
-
   //////////////////////////////////////////////////////////////////
 
-  // 3. 단일 모임 상세 조회
+  // 3. 나의 모임 조회
+  async getMyGatherings(userId: string) {
+    return await this.prisma.gathering.findMany({
+      where: {
+        OR: [
+          // 1. 내가 방장인 모임
+          { hostId: userId },
+          // 2. 내가 참여 신청했거나 참여 중인 모임
+          {
+            participants: {
+              some: {
+                userId,
+                status: {
+                  in: [
+                    ParticipantStatus.PENDING,
+                    ParticipantStatus.APPROVED,
+                    ParticipantStatus.YES_SHOW,
+                  ],
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        // 프런트엔드 뱃지 처리를 위한 참여자 정보 포함
+        participants: {
+          select: {
+            userId: true,
+            status: true,
+          },
+        },
+        host: {
+          select: {
+            id: true,
+            nickname: true,
+            profileImage: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc', // 최신순 정렬
+      },
+    });
+  }
+  //////////////////////////////////////////////////////////////////
+
+  // 4. 단일 모임 상세 조회
   async findOneGathering(id: string) {
     const gathering = await this.prisma.gathering.findUnique({
       where: { id },
@@ -100,7 +174,7 @@ export class GatheringService {
 
   //////////////////////////////////////////////////////////////////
 
-  // 4. 모임 수정
+  // 5. 모임 수정
   async updateGathering(
     id: string,
     userId: string,
@@ -165,7 +239,7 @@ export class GatheringService {
 
   //////////////////////////////////////////////////////////////////
 
-  // 5. 모임 시작 (진행)
+  // 6. 모임 시작 (진행)
   async startGathering(gatheringId: string, userId: string) {
     // 1. 모임 존재 여부 확인
     const gathering = await this.prisma.gathering.findUnique({
@@ -216,7 +290,7 @@ export class GatheringService {
 
   //////////////////////////////////////////////////////////////////
 
-  // 6. 모임 종료
+  // 7. 모임 종료
   async completeGathering(gatheringId: string, hostId: string) {
     // 모임 존재 여부 확인
     const gathering = await this.prisma.gathering.findUnique({
@@ -244,13 +318,13 @@ export class GatheringService {
     // 종료 처리
     return await this.prisma.gathering.update({
       where: { id: gatheringId },
-      data: { status: GatheringStatus.COMPLETED },
+      data: { status: GatheringStatus.COMPLETED, roomCode: null },
     });
   }
 
   //////////////////////////////////////////////////////////////////
 
-  // 7. 모임 취소
+  // 8. 모임 취소
   async cancelGathering(gatheringId: string, hostId: string) {
     // 모임 존재 여부 확인
     const gathering = await this.prisma.gathering.findUnique({
@@ -284,55 +358,25 @@ export class GatheringService {
     // 취소 처리
     return await this.prisma.gathering.update({
       where: { id: gatheringId },
-      data: { status: GatheringStatus.CANCELED },
+      data: { status: GatheringStatus.CANCELED, roomCode: null },
     });
   }
 
-  //////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
 
-  // 8. 나의 모임 조회
-  async getMyGatherings(userId: string) {
-    return await this.prisma.gathering.findMany({
-      where: {
-        OR: [
-          // 1. 내가 방장인 모임
-          { hostId: userId },
-          // 2. 내가 참여 신청했거나 참여 중인 모임
-          {
-            participants: {
-              some: {
-                userId,
-                status: {
-                  in: [
-                    ParticipantStatus.PENDING,
-                    ParticipantStatus.APPROVED,
-                    ParticipantStatus.YES_SHOW,
-                  ],
-                },
-              },
-            },
-          },
-        ],
-      },
-      include: {
-        // 프런트엔드 뱃지 처리를 위한 참여자 정보 포함
-        participants: {
-          select: {
-            userId: true,
-            status: true,
-          },
-        },
-        host: {
-          select: {
-            id: true,
-            nickname: true,
-            profileImage: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc', // 최신순 정렬
-      },
+  // 9. 모임 찾기
+  async searchGathering(userId: string, roomCode: string) {
+    const cleanCode = roomCode?.trim().toLowerCase();
+
+    const gathering = await this.prisma.gathering.findUnique({
+      where: { roomCode: cleanCode },
+      select: { id: true, title: true },
     });
+
+    if (!gathering) {
+      throw new NotFoundException('존재하지 않거나 만료된 초대 코드입니다.');
+    }
+
+    return gathering;
   }
 }

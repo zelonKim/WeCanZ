@@ -1,46 +1,35 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
+  // 💡 기기별 하단 안전 영역(소프트키/제스처바 높이)을 가져옵니다.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: "#FFE600", // 포인트 컬러
         tabBarInactiveTintColor: "#8E8E93",
         headerShown: false,
+        // 💡 탭바 스타일 및 높이/패딩 동적 처리
+        tabBarLabelStyle: {
+          fontSize: Platform.OS === "ios" ? 12 : 10, // 폰트 크기 (원하는 사이즈로 조절)
+          fontWeight: Platform.OS === "ios" ? 600 : 500, // 폰트 굵기
+          marginTop: 3, // 아이콘과 글자 사이의 간격 조절
+        },
+        tabBarStyle: {
+          backgroundColor: "#000000",
+          borderTopColor: "#1C1C1E",
+          // 기본 탭바 높이(약 60px)에 안드로이드 하단 소프트키 높이(insets.bottom)를 더해줍니다.
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+          paddingTop: 8,
+        },
       }}
     >
-      {/* 1. 홈 */}
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "홈",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      {/* 2. 나의 번개 */}
-      <Tabs.Screen
-        name="flash"
-        options={{
-          title: "벙개",
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "flash" : "flash-outline"}
-              size={24}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      {/* 4.  친구 */}
+      {/* 4. 친구 */}
       <Tabs.Screen
         name="friend"
         options={{
@@ -55,7 +44,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 3.  DM */}
+      {/* 3. DM */}
       <Tabs.Screen
         name="dm"
         options={{
@@ -70,7 +59,52 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 5. 설정  */}
+      {/* 6. 스팟 */}
+      <Tabs.Screen
+        name="spot"
+        options={{
+          title: "스팟",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "location" : "location-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* 1. 홈 */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "벙개",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "flash" : "flash-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* 2. 나의 번개 */}
+      <Tabs.Screen
+        name="flash"
+        options={{
+          title: "참여",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "checkmark-circle" : "checkmark-circle-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+
+      {/* 5. 설정 */}
       <Tabs.Screen
         name="setting"
         options={{

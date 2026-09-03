@@ -28,25 +28,25 @@ export class GatheringController {
     return this.gatheringService.createGathering(user.id, createGatheringDto);
   }
 
-  // 2-1. 모임 전체 조회
+  // 2. 모임 전체 조회
   @Get()
   findAll() {
     return this.gatheringService.findAllGathering();
   }
 
-  // 2-2. 나의 모임 조회
+  // 3. 나의 모임 조회
   @Get('my')
   async getMyGatherings(@GetUser() user: User) {
     return await this.gatheringService.getMyGatherings(user.id);
   }
 
-  // 3. 모임 상세 조회
+  // 4. 모임 상세 조회
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.gatheringService.findOneGathering(id);
   }
 
-  // 4. 모임 수정
+  // 5. 모임 수정
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -60,13 +60,13 @@ export class GatheringController {
     );
   }
 
-  // 5. 모임 시작 (방장 전용)
+  // 6. 모임 시작 (방장 전용)
   @Patch(':id/start')
   startGathering(@Param('id') gatheringId: string, @GetUser() user: User) {
     return this.gatheringService.startGathering(gatheringId, user.id);
   }
 
-  // 6. 모임 종료 (방장 전용)
+  // 7. 모임 종료 (방장 전용)
   @Patch(':id/complete')
   completeGathering(
     @Param('id') gatheringId: string,
@@ -75,12 +75,21 @@ export class GatheringController {
     return this.gatheringService.completeGathering(gatheringId, hostId);
   }
 
-  // 7. 모임 취소 (방장 전용)
+  // 8. 모임 취소 (방장 전용)
   @Patch(':id/cancel')
   cancelGathering(
     @Param('id') gatheringId: string,
     @GetUser('id') hostId: string,
   ) {
     return this.gatheringService.cancelGathering(gatheringId, hostId);
+  }
+
+  // 9. 모임 찾기
+  @Get('search/:roomCode')
+  async searchGathering(
+    @GetUser() user: User,
+    @Param('roomCode') roomCode: string,
+  ) {
+    return await this.gatheringService.searchGathering(user.id, roomCode);
   }
 }

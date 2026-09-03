@@ -368,7 +368,7 @@ export default function SettingScreen() {
             onPress={() => setIsModalVisible(true)}
             style={styles.profileSearchBtn}
           >
-            <Ionicons name="search-outline" size={26} color={Colors.yellow} />
+            <Ionicons name="person-outline" size={26} color={Colors.yellow} />
           </TouchableOpacity>
         </View>
 
@@ -789,14 +789,7 @@ const styles = StyleSheet.create({
     marginTop: -8,
     textAlign: "center",
   },
-  input: {
-    backgroundColor: "#2C2C2E",
-    height: 42,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    color: "#FFF",
-    fontSize: 15,
-  },
+
   modalBtnRow: {
     flexDirection: "row",
     gap: 10,

@@ -71,8 +71,8 @@ export default function FlashScreen() {
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.orange }]}>
-          <Text style={[styles.badgeText, { color: Colors.text }]}>
+        <View style={[styles.badge, { backgroundColor: Colors.yellow }]}>
+          <Text style={[styles.badgeText, { color: Colors.card }]}>
             👑 방장
           </Text>
         </View>
@@ -85,7 +85,7 @@ export default function FlashScreen() {
 
     if (myParticipant?.status === "APPROVED") {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.blue }]}>
+        <View style={[styles.badge, { backgroundColor: Colors.green }]}>
           <Text style={styles.badgeText}>✅ 참여중</Text>
         </View>
       );
@@ -93,7 +93,7 @@ export default function FlashScreen() {
 
     if (myParticipant?.status === "PENDING") {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.yellow }]}>
+        <View style={[styles.badge, { backgroundColor: Colors.orange }]}>
           <Text style={[styles.badgeText, { color: Colors.card }]}>
             ⏳ 승인 대기중
           </Text>
@@ -109,7 +109,7 @@ export default function FlashScreen() {
       {/* 헤더 */}
 
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>⚡ 나의 벙개</Text>
+        <Text style={styles.headerTitle}>✅ 참여중인 벙개</Text>
 
         {/* 🚀 우측 아이콘 버튼 */}
         <TouchableOpacity

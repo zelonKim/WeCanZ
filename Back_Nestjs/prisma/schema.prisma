@@ -73,6 +73,7 @@ model Gathering {
   latitude    Float?
   longitude   Float?
   dateTime    DateTime
+  roomCode    String?           @unique
 
   status    GatheringStatus @default(OPEN)
   createdAt DateTime        @default(now())

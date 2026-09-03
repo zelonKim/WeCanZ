@@ -13,16 +13,13 @@ import {
   ChatbubblesOutline,
   Settings,
   SettingsOutline,
+  Location,
+  LocationOutline,
+  CheckmarkCircle,
+  CheckmarkCircleOutline,
 } from "react-ionicons";
 
 const navItems = [
-  { name: "홈", href: "/", activeIcon: Home, inactiveIcon: HomeOutline },
-  {
-    name: "벙개",
-    href: "/flash",
-    activeIcon: Flash,
-    inactiveIcon: FlashOutline,
-  },
   {
     name: "친구",
     href: "/friend",
@@ -34,6 +31,24 @@ const navItems = [
     href: "/dm",
     activeIcon: Chatbubbles,
     inactiveIcon: ChatbubblesOutline,
+  },
+  {
+    name: "스팟",
+    href: "/spot",
+    activeIcon: Location,
+    inactiveIcon: LocationOutline,
+  },
+  {
+    name: "벙개",
+    href: "/",
+    activeIcon: Flash,
+    inactiveIcon: FlashOutline,
+  },
+  {
+    name: "참여",
+    href: "/join",
+    activeIcon: CheckmarkCircle,
+    inactiveIcon: CheckmarkCircleOutline,
   },
   {
     name: "설정",

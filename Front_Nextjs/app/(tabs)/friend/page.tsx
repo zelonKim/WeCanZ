@@ -154,7 +154,7 @@ export default function FriendScreen() {
     onSuccess: ({ roomData, friend }) => {
       const chatRoomId = roomData.id;
       router.push(
-        `/DM/${chatRoomId}?name=${encodeURIComponent(friend.nickname)}&profileImage=${encodeURIComponent(friend.profileImage || "")}`,
+        `/dm/${chatRoomId}?name=${encodeURIComponent(friend.nickname)}&profileImage=${encodeURIComponent(friend.profileImage || "")}`,
       );
     },
     onError: (err: any) => {

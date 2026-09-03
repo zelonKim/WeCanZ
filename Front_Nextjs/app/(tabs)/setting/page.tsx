@@ -280,7 +280,7 @@ export default function SettingScreen() {
       (async () => {
         await removeAccessToken();
         queryClient.clear();
-        router.replace("/(auth)/login");
+        router.replace("/login");
       })();
     }
   };
@@ -317,7 +317,7 @@ export default function SettingScreen() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white max-w-xl mx-auto pb-10">
+    <div className="flex flex-col min-h-screen bg-black text-white max-w-4xl w-full mx-auto pb-10">
       <div className="flex items-center justify-between px-5 py-4">
         <h1 className="text-2xl font-extrabold">⚙️ 환경 설정</h1>
         <button

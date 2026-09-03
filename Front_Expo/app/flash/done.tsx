@@ -53,7 +53,7 @@ export default function DoneGatheringsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>지난 모임 내역</Text>
+        <Text style={styles.headerTitle}>지난 벙개 내역</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -72,7 +72,7 @@ export default function DoneGatheringsScreen() {
               activeTab === "COMPLETED" && styles.activeCompleteTabText,
             ]}
           >
-            종료된 모임
+            종료된 벙개
           </Text>
         </TouchableOpacity>
 
@@ -89,7 +89,7 @@ export default function DoneGatheringsScreen() {
               activeTab === "CANCELED" && styles.activeCancelTabText,
             ]}
           >
-            취소된 모임
+            취소된 벙개
           </Text>
         </TouchableOpacity>
       </View>

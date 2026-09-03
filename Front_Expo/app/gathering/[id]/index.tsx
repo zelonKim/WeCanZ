@@ -48,6 +48,7 @@ export interface GatheringDetail {
   location: string;
   dateTime: string;
   status: "OPEN" | "FULL" | "IN_PROGRESS" | "CANCELED" | "COMPLETED";
+  roomCode?: string;
   hostId: string;
   host?: UserProfile;
   participants: {
@@ -83,9 +84,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  OPEN: { bg: Colors.green, text: Colors.text },
+  OPEN: { bg: Colors.blue, text: Colors.text },
   FULL: { bg: Colors.red, text: Colors.text },
-  IN_PROGRESS: { bg: Colors.yellow, text: Colors.card },
+  IN_PROGRESS: { bg: Colors.red, text: Colors.text },
   CANCELED: { bg: Colors.red, text: Colors.text },
   COMPLETED: { bg: Colors.orange, text: Colors.text },
 };
@@ -93,7 +94,7 @@ const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 // 카테고리 한글 매핑
 const CATEGORY_LABEL: Record<string, string> = {
   DRINK: "🍺 술벙",
-  CLUB: Platform.OS === "ios" ? "🪩 클럽벙" : "💃 클럽벙",
+  CLUB: Platform.OS === "ios" ? "🪩 클럽벙" : "🎉 클럽벙",
   DRINK_CLUB: "🔥 술+클럽벙",
 };
 
@@ -482,7 +483,7 @@ export default function GatheringDetailScreen() {
     const isMenuOpen = activeMenuUserId === user?.id;
 
     const isUserHost = String(user?.id) === String(gathering?.hostId);
-    const displayRoleTag = roleTag || (isUserHost ? "방장" : undefined);
+    const displayRoleTag = roleTag || (isUserHost ? "👑 방장" : undefined);
 
     return (
       <View style={[styles.userCard, { zIndex: isMenuOpen ? 999 : 1 }]}>
@@ -652,7 +653,7 @@ export default function GatheringDetailScreen() {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>모임 상세 정보</Text>
+        <Text style={styles.headerTitle}>벙개 상세 정보</Text>
 
         <TouchableOpacity
           style={[styles.chatButton, styles.chatButtonActive]}
@@ -793,6 +794,12 @@ export default function GatheringDetailScreen() {
               {gathering.maxPeople}명
             </Text>
           </View>
+          {gathering.roomCode && (
+            <View style={styles.roomCodeContainer}>
+              <Text style={styles.roomCodeLabel}> 룸 코드</Text>
+              <Text style={styles.roomCodeText}>{gathering.roomCode}</Text>
+            </View>
+          )}
 
           {isHost &&
             !(
@@ -900,20 +907,6 @@ export default function GatheringDetailScreen() {
 
         <View style={styles.divider} />
 
-        {/* <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-            marginTop: 5,
-            marginBottom: 8,
-          }}
-        >
-       
-          <Text style={styles.listSectionTitle}>👑 방장</Text>
-        </View>
-        {renderUserCard(gathering.host, "방장")} */}
-
         <View
           style={{
             flexDirection: "row",
@@ -969,7 +962,7 @@ export default function GatheringDetailScreen() {
                       onPress={() =>
                         Alert.alert(
                           "참여 취소",
-                          "정말 모임 참여를 취소하시겠습니까?",
+                          "정말 벙개 참여를 취소하시겠습니까?",
                           [
                             { text: "아니오" },
                             {
@@ -981,7 +974,7 @@ export default function GatheringDetailScreen() {
                       }
                     >
                       <Text style={styles.applyButtonText}>
-                        모임 참여 취소하기
+                        벙개 참여 취소하기
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -992,7 +985,7 @@ export default function GatheringDetailScreen() {
                   onPress={() => applyMutation.mutate()}
                 >
                   <Text style={styles.applyButtonText}>
-                    모임 참여 신청하기 ⚡️
+                    벙개 참여 신청하기 ⚡️
                   </Text>
                 </TouchableOpacity>
               )}
@@ -1485,13 +1478,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   applyButton: {
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.yellow,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
   },
   applyButtonText: {
-    color: Colors.text,
+    color: Colors.card,
     fontSize: 15,
     fontWeight: "bold",
   },
@@ -1686,5 +1679,27 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  roomCodeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 8, // statusRow와의 상하 간격
+  },
+  roomCodeLabel: {
+    fontSize: 12,
+    color: "#8E8E93",
+    fontWeight: "500",
+  },
+  roomCodeText: {
+    fontSize: 13,
+    color: Colors.yellow, // 포인트 컬러 (노란색)
+    fontWeight: "bold",
+    backgroundColor: "#2C2C2E", // 약간 밝은 카드 배경
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: "hidden",
+    letterSpacing: 1, // 4자리 문자가 잘 보이도록 자간 조정
   },
 });

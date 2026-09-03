@@ -106,25 +106,18 @@ export default function CommercialScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 상단 커스텀 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.headerIconBtn}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>📍 인기 스팟</Text>
 
-        <Text style={styles.headerTitle}>가게 정보</Text>
-
+        {/* 우측 아이콘 버튼 */}
         <TouchableOpacity
+          style={styles.iconButton}
           onPress={() => setModalVisible(true)}
-          style={styles.headerIconBtn}
-          activeOpacity={0.7}
+          activeOpacity={0.5}
         >
           <Ionicons
             name="information-circle-outline"
-            size={24}
-            color={Colors.text}
+            size={26}
+            color={Colors.yellow}
           />
         </TouchableOpacity>
       </View>
@@ -150,9 +143,9 @@ export default function CommercialScreen() {
             )}
 
             <View style={styles.cardContent}>
-              <View style={styles.badgeContainer}>
+              {/* <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>제휴 광고</Text>
-              </View>
+              </View> */}
 
               <Text style={styles.title}>{item.title}</Text>
               <Text style={styles.description}>{item.content}</Text>
@@ -232,9 +225,12 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 22,
     fontWeight: "bold",
     color: Colors.text,
+  },
+  iconButton: {
+    padding: 4, // 터치 영역 확보
   },
   center: {
     flex: 1,

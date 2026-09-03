@@ -121,6 +121,39 @@ export default function HomeScreen() {
     }
   }, [me]);
 
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [isInviteLoading, setIsInviteLoading] = useState(false);
+
+  // 초대 코드로 모임 검색 후 이동
+  const handleEnterRoom = async () => {
+    const cleanCode = inviteCode.trim().toLowerCase();
+
+    if (!cleanCode || cleanCode.length !== 4) {
+      Alert.alert("알림", "4자리 룸코드를 올바르게 입력해 주세요.");
+      return;
+    }
+
+    try {
+      setIsInviteLoading(true);
+
+      // 백엔드 @Get('search/:roomCode') 경로로 요청
+      const response = await client.get(`/gathering/search/${cleanCode}`);
+      const gatheringId = response.data.id;
+
+      // 모달 닫기 및 입력값 초기화 후 이동
+      setInviteCode("");
+      setIsInviteModalOpen(false);
+      router.push(`/gathering/${gatheringId}`);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "벙개를 찾을 수 없습니다.";
+      Alert.alert("오류", message);
+    } finally {
+      setIsInviteLoading(false);
+    }
+  };
+
   // 모임 목록 Query
   const {
     data: gatherings = [],
@@ -135,25 +168,26 @@ export default function HomeScreen() {
   const createMutation = useMutation({
     mutationFn: createGathering,
     onSuccess: () => {
-      Alert.alert("성공", "모임이 생성되었습니다! 🎉");
+      Alert.alert("성공", "벙개가 생성되었습니다! 🎉");
       queryClient.invalidateQueries({ queryKey: ["gatherings"] });
       closeAndResetModal();
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message || "모임 생성에 실패했습니다.";
+      const msg = error.response?.data?.message || "벙개 생성에 실패했습니다.";
       Alert.alert("오류", Array.isArray(msg) ? msg[0] : msg);
     },
   });
 
   const filteredGatherings = gatherings.filter((item) => {
     // 1. 상태 조건: OPEN 또는 FULL 상태인 모임만 노출
-    const isOpenOrFull = item.status === "OPEN" || item.status === "FULL";
+    const isNotFinished =
+      item.status !== "COMPLETED" && item.status !== "CANCELED";
 
     // 2. 카테고리 조건
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 
-    return isOpenOrFull && matchesCategory;
+    return isNotFinished && matchesCategory;
   });
 
   const closeAndResetModal = () => {
@@ -209,7 +243,7 @@ export default function HomeScreen() {
       case GatheringCategory.DRINK:
         return "🍺 술벙";
       case GatheringCategory.CLUB:
-        return Platform.OS === "ios" ? "🪩 클럽벙" : "💃 클럽벙";
+        return Platform.OS === "ios" ? "🪩 클럽벙" : "🎉 클럽벙";
       case GatheringCategory.DRINK_CLUB:
         return "🔥 술+클럽벙";
       default:
@@ -225,20 +259,43 @@ export default function HomeScreen() {
     return `${year}-${month}-${day}`;
   };
 
+  // 💡 상태별 텍스트 및 스타일 매핑
+  const STATUS_CONFIG: Record<
+    string,
+    { label: string; badgeStyle: any; textStyle: any }
+  > = {
+    OPEN: {
+      label: "모집중",
+      badgeStyle: styles.statusOpen,
+      textStyle: styles.statusOpenText,
+    },
+    FULL: {
+      label: "인원 마감",
+      badgeStyle: styles.statusFull,
+      textStyle: styles.statusFullText,
+    },
+    IN_PROGRESS: {
+      label: "진행 중",
+      badgeStyle: styles.statusInProgress,
+      textStyle: styles.statusInProgressText,
+    },
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* 상단 타이틀 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>👋 벙개의 광장</Text>
+        <Text style={styles.headerTitle}>⚡️ 벙개의 광장</Text>
 
-        {/* 💡 3. 오른쪽 끝에 배치할 광고/제휴 페이지 이동 버튼 */}
         <TouchableOpacity
-          style={styles.commercialButton}
+          style={styles.roomSearchButton}
           activeOpacity={0.5}
-          onPress={() => router.push("/commercial")}
+          onPress={() => {
+            setIsInviteModalOpen(true);
+            setInviteCode("");
+          }}
         >
-          <Ionicons name="storefront-outline" size={22} color={Colors.card} />
-          {/* <Text style={styles.commercialButtonText}></Text> */}
+          <Ionicons name="enter-outline" size={25} color={Colors.yellow} />
         </TouchableOpacity>
       </View>
 
@@ -299,20 +356,16 @@ export default function HomeScreen() {
                   <View
                     style={[
                       styles.statusBadge,
-                      item.status === "OPEN"
-                        ? styles.statusOpen
-                        : styles.statusFull,
+                      STATUS_CONFIG[item.status]?.badgeStyle,
                     ]}
                   >
                     <Text
                       style={[
                         styles.statusBadgeText,
-                        item.status === "OPEN"
-                          ? styles.statusOpenText
-                          : styles.statusFullText,
+                        STATUS_CONFIG[item.status]?.textStyle,
                       ]}
                     >
-                      {item.status === "OPEN" ? "모집중" : "인원 마감"}
+                      {STATUS_CONFIG[item.status]?.label || item.status}
                     </Text>
                   </View>
 
@@ -585,25 +638,74 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* 💡 초대 코드 입력 모달 */}
+      <Modal
+        visible={isInviteModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setInviteCode("");
+          setIsInviteModalOpen(false);
+        }}
+      >
+        <View style={styles.inviteModalOverlay}>
+          <View style={styles.inviteModalContainer}>
+            <Text style={styles.inviteModalTitle}>🔡 룸 코드 입장</Text>
+            <Text style={styles.inviteModalSubTitle}>
+              방의 4자리 룸 코드를 입력해 주세요.
+            </Text>
+
+            <TextInput
+              style={styles.codeInput}
+              value={inviteCode}
+              onChangeText={(text) => setInviteCode(text.toLowerCase())}
+              placeholder="____"
+              placeholderTextColor="#666666"
+              maxLength={4}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.cancelBtn]}
+                onPress={() => {
+                  setInviteCode("");
+                  setIsInviteModalOpen(false);
+                }}
+              >
+                <Text style={styles.cancelBtnText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.submitBtn]}
+                onPress={handleEnterRoom}
+                disabled={isInviteLoading}
+              >
+                <Text style={styles.submitBtnText}>
+                  {isInviteLoading ? "확인 중..." : "입장하기"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  commercialButton: {
+  roomSearchButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.yellow,
+
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 20,
     gap: 4, // 아이콘과 텍스트 사이 간격 (RN 0.71+)
   },
-  commercialButtonText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#444",
-  },
+
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -620,25 +722,32 @@ const styles = StyleSheet.create({
   /* 뱃지 스타일 */
   statusBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: Platform.OS === "ios" ? 4 : 3,
     borderRadius: 6,
   },
   statusBadgeText: {
     fontSize: 11,
     fontWeight: "bold",
   },
-  // 모집중 (초록 톤)
+  // 모집중
   statusOpen: {
-    backgroundColor: Colors.green,
+    backgroundColor: Colors.blue,
   },
   statusOpenText: {
     color: Colors.text,
   },
-  // 인원 마감 (주황 톤)
+  // 인원 마감
   statusFull: {
     backgroundColor: Colors.red,
   },
   statusFullText: {
+    color: Colors.text,
+  },
+  // 진행 중
+  statusInProgress: {
+    backgroundColor: Colors.red,
+  },
+  statusInProgressText: {
     color: Colors.text,
   },
   container: { flex: 1, backgroundColor: Colors.background },
@@ -867,5 +976,71 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.border,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  inviteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  inviteModalContainer: {
+    width: "100%",
+    maxWidth: 320,
+    backgroundColor: "#1C1C1E",
+    borderRadius: 16,
+    padding: 20,
+    alignItems: "center",
+  },
+  inviteModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 6,
+  },
+  inviteModalSubTitle: {
+    fontSize: Platform.OS === "ios" ? 13 : 12,
+    color: "#8E8E93",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  codeInput: {
+    width: "100%",
+    height: 48,
+    backgroundColor: "#2C2C2E",
+    borderRadius: 8,
+    color: "#FFE600",
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    letterSpacing: 6,
+    marginBottom: 20,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelBtn: {
+    backgroundColor: "#2C2C2E",
+  },
+  cancelBtnText: {
+    color: "#8E8E93",
+    fontWeight: "600",
+  },
+  submitBtn: {
+    backgroundColor: "#FFE600",
+  },
+  submitBtnText: {
+    color: "#000000",
+    fontWeight: "bold",
   },
 });

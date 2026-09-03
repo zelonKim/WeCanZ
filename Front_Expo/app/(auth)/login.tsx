@@ -164,7 +164,7 @@ export default function LoginScreen() {
   // 4. 네이티브 애플 로그인 핸들러
   const handleAppleLogin = async () => {
     if (Platform.OS !== "ios") {
-      Alert.alert("안내", "애플 로그인은 iOS기기에서만 지원됩니다.");
+      Alert.alert("안내", "Apple 로그인은 iOS기기에서만 지원됩니다.");
       return;
     }
     try {
@@ -221,7 +221,9 @@ export default function LoginScreen() {
         >
           {/* 1. 상단 로고 & 타이틀 */}
           <View style={styles.brandSection}>
-            <Text style={[styles.logoText, { color: Colors.red }]}>⚡️ </Text>
+            <Text style={[styles.logoText, { color: Colors.red }]}>
+              ⚡️ 종태원
+            </Text>
             <Text style={styles.subText}>
               오늘 밤, 가장 핫한 술번개 & 클럽번개
             </Text>

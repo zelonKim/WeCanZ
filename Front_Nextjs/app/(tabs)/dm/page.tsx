@@ -311,7 +311,7 @@ export default function DMScreen() {
                           ),
                       );
                       router.push(
-                        `/DM/${item.id}?name=${encodeURIComponent(partner?.nickname || "")}&profileImage=${encodeURIComponent(partner?.profileImage || "")}`,
+                        `/dm/${item.id}?name=${encodeURIComponent(partner?.nickname || "")}&profileImage=${encodeURIComponent(partner?.profileImage || "")}`,
                       );
                     }}
                     className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl cursor-pointer hover:border-[#FFE600] transition flex items-center justify-between"

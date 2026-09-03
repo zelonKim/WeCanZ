@@ -57,7 +57,7 @@ export default function FlashScreen() {
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
-        <span className="px-2.5 py-1 rounded-md bg-orange-500 text-black text-xs font-bold">
+        <span className="px-2.5 py-1 rounded-md bg-yellow-500 text-black text-xs font-bold">
           👑 방장
         </span>
       );
@@ -69,7 +69,7 @@ export default function FlashScreen() {
 
     if (myParticipant?.status === "APPROVED") {
       return (
-        <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-xs font-bold">
+        <span className="px-2.5 py-1 rounded-md bg-green-600 text-white text-xs font-bold">
           ✅ 참여중
         </span>
       );
@@ -77,7 +77,7 @@ export default function FlashScreen() {
 
     if (myParticipant?.status === "PENDING") {
       return (
-        <span className="px-2.5 py-1 rounded-md bg-yellow-400 text-black text-xs font-bold">
+        <span className="px-2.5 py-1 rounded-md bg-orange-400 text-black text-xs font-bold">
           ⏳ 승인 대기중
         </span>
       );
@@ -90,11 +90,11 @@ export default function FlashScreen() {
     <div className="flex flex-col min-h-screen bg-black text-white max-w-5xl mx-auto px-4 py-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between py-3">
-        <h1 className="text-2xl font-bold">⚡ 나의 벙개</h1>
+        <h1 className="text-2xl font-bold">✅ 참여중인 벙개</h1>
 
         {/* 🚀 우측 아이콘 버튼 */}
         <button
-          onClick={() => router.push("/flash/done")}
+          onClick={() => router.push("/join/done")}
           className="p-2 hover:bg-zinc-800 rounded-full transition"
         >
           <TimeOutline color="#FFE600" height="25px" width="25px" />
