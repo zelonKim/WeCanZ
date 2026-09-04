@@ -256,7 +256,7 @@ export default function GatheringChatPage() {
                   {(isMyMessage || isHost) && (
                     <button
                       onClick={() => handleDeletePrompt(msg)}
-                      className="opacity-90 group-hover:opacity-80 p-1 text-red-400 hover:text-red-500 transition"
+                      className="opacity-0 group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 transition"
                       title="메시지 삭제"
                     >
                       <IoTrashOutline size={14} />
@@ -268,7 +268,7 @@ export default function GatheringChatPage() {
                       e.preventDefault();
                       handleDeletePrompt(msg);
                     }}
-                    className={`px-3.5 py-2.5 rounded-2xl text-[15px] leading-relaxed break-words max-w-full ${
+                    className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words max-w-full ${
                       isMyMessage
                         ? "bg-yellow-400 text-neutral-900 rounded-br-sm font-medium"
                         : "bg-neutral-800 text-neutral-100 rounded-bl-sm border border-neutral-700/60"
@@ -279,7 +279,7 @@ export default function GatheringChatPage() {
                 </div>
 
                 <span
-                  className={`text-xs text-neutral-500 mt-1 px-1 ${
+                  className={`text-[10px] text-neutral-500 mt-1 px-1 ${
                     isMyMessage ? "text-right" : "text-left"
                   }`}
                 >
@@ -293,7 +293,7 @@ export default function GatheringChatPage() {
       </main>
 
       {/* 하단 입력 영역 */}
-      <footer className="p-3 bg-[#121212] border-t border-neutral-700 shrink-0">
+      <footer className="p-3 bg-neutral-800 border-t border-neutral-700 shrink-0">
         <div className="flex items-center gap-2">
           <textarea
             value={messageText}
@@ -302,7 +302,7 @@ export default function GatheringChatPage() {
             placeholder="메시지를 입력하세요..."
             rows={1}
             maxLength={500}
-            className="mt-1 flex-1 bg-neutral-800 text-neutral-100 placeholder-neutral-500 text-[15px] rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none"
+            className="flex-1 bg-neutral-900 text-neutral-100 placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none"
           />
           <button
             onClick={handleSend}

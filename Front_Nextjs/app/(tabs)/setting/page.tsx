@@ -100,7 +100,7 @@ export default function SettingScreen() {
 
     try {
       const { data } = await client.get(
-        `/user/search/${searchNickname.trim()}`,
+        `/user/search/${encodeURIComponent(searchNickname.trim())}`,
       );
 
       if (data && data.id) {

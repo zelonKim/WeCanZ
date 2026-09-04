@@ -515,7 +515,7 @@ export default function GatheringDetailPage() {
   };
 
   return (
-    <div className="min-h-screen  max-w-4xl mx-auto relative pb-10 shadow-2xl">
+    <div className="  max-w-4xl mx-auto relative pb-6 shadow-2xl">
       {/* 헤더 */}
       <header className="sticky top-0 z-30 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
         <button
