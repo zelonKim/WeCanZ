@@ -237,7 +237,7 @@ function LoginContent() {
                   alt="Download on the App Store"
                   width={120}
                   height={36}
-                  className="h-12 w-auto"
+                  className="h-11.5 w-auto"
                 />
               </button>
             </div>

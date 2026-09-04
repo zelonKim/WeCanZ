@@ -96,7 +96,7 @@ export default function SignupScreen() {
         await setAccessToken(data.accessToken);
       }
       alert("회원가입이 완료되었습니다! ⚡️");
-      router.replace("/dashboard");
+      router.replace("/");
     },
     onError: (error: any) => {
       const errorMessage =
