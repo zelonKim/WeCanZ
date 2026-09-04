@@ -394,7 +394,7 @@ export default function HomeScreen() {
           onClick={closeAndResetModal}
         >
           <div
-            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] flex flex-col mb-12 scrollbar-none"
+            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] overflow-y-auto flex flex-col mb-12 scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
@@ -407,7 +407,7 @@ export default function HomeScreen() {
               </button>
             </div>
 
-            <div className="overflow-y-auto space-y-4 pr-1">
+            <div className="overflow-y-auto space-y-4 pr-1 ">
               {/* 카테고리 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-400 mb-2">
@@ -448,7 +448,7 @@ export default function HomeScreen() {
                   placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                  className=" font-bold w-full bg-[#2C2C2E] rounded-lg  px-3.5 py-2.5 text-sm text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
                 />
               </div>
 
