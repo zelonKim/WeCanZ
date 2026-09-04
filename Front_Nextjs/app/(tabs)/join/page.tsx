@@ -57,7 +57,7 @@ export default function FlashScreen() {
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
-        <span className="px-2.5 py-1 rounded-md bg-yellow-500 text-black text-xs font-bold">
+        <span className="px-2.5 py-1 rounded-md bg-yellow-500 text-black text-xs font-bold ">
           👑 방장
         </span>
       );
@@ -120,11 +120,11 @@ export default function FlashScreen() {
               className="bg-[#1e1e1e] border border-[#333] p-5 rounded-2xl cursor-pointer hover:border-yellow-400 transition flex flex-col justify-between"
             >
               <div>
-                <div className="flex justify-between items-center mb-2">
+                {renderStatusBadge(item)}
+                <div className="flex justify-between items-center my-1">
                   <h2 className="text-lg font-bold text-white truncate mr-2">
                     {item.title}
                   </h2>
-                  {renderStatusBadge(item)}
                 </div>
 
                 {item.description ? (
