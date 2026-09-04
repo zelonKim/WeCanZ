@@ -10,6 +10,7 @@ import {
   Image,
   Linking,
   Modal,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -143,15 +144,18 @@ export default function CommercialScreen() {
             )}
 
             <View style={styles.cardContent}>
-              {/* <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>제휴 광고</Text>
-              </View> */}
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>광고</Text>
+              </View>
 
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.description}>{item.content}</Text>
+              <Text style={styles.description} numberOfLines={5}>
+                {item.content}
+              </Text>
 
               <View style={styles.infoRow}>
                 <Text style={styles.storeName}> {item.store.name}</Text>
+
                 <Text style={styles.infoText}>📍 {item.store.address}</Text>
                 <Text style={styles.infoText}>
                   ⏰ 영업시간: {item.store.openTime} ~ {item.store.closeTime}
@@ -219,7 +223,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
-    marginBottom: 8,
   },
   headerIconBtn: {
     padding: 4,
@@ -229,6 +232,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.text,
   },
+
   iconButton: {
     padding: 4, // 터치 영역 확보
   },
@@ -240,7 +244,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    marginBottom: 16,
+    marginBottom: 24,
     overflow: "hidden",
     backgroundColor: Colors.card,
     elevation: 2,
@@ -249,24 +253,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+
   cardImage: {
     width: "100%",
-    height: 180,
+    aspectRatio: 1,
   },
+
   cardContent: {
     padding: 16,
   },
   badgeContainer: {
     alignSelf: "flex-start",
-    backgroundColor: "#E8F5E9",
+    backgroundColor: Colors.border,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
     marginBottom: 8,
   },
   badgeText: {
-    color: "#2E7D32",
-    fontSize: 10,
+    color: Colors.tabIconDefault,
+    fontSize: 9,
     fontWeight: "bold",
   },
   storeName: {
@@ -276,20 +282,21 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   title: {
-    fontSize: 18,
+    fontSize: Platform.OS === "ios" ? 18 : 17,
     fontWeight: "bold",
     color: Colors.text,
     marginBottom: 6,
   },
   description: {
-    fontSize: 14,
+    fontSize: Platform.OS === "ios" ? 13.5 : 12.5,
     color: Colors.tabIconDefault,
     lineHeight: 20,
-    maxHeight: 100,
+    maxHeight: 200,
+    marginBottom: 10,
   },
   infoRow: {
     borderTopWidth: 1,
-    borderTopColor: Colors.tabIconDefault,
+    borderTopColor: Colors.border,
     paddingTop: 10,
     gap: 4,
   },

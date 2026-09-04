@@ -1,5 +1,4 @@
 import { client } from "@/api/client";
-import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -7,6 +6,7 @@ import React from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -71,10 +71,8 @@ export default function FlashScreen() {
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.yellow }]}>
-          <Text style={[styles.badgeText, { color: Colors.card }]}>
-            👑 방장
-          </Text>
+        <View style={[styles.badge, styles.badgeHost]}>
+          <Text style={styles.badgeTextHost}>👑 방장</Text>
         </View>
       );
     }
@@ -85,18 +83,16 @@ export default function FlashScreen() {
 
     if (myParticipant?.status === "APPROVED") {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.green }]}>
-          <Text style={styles.badgeText}>✅ 참여중</Text>
+        <View style={[styles.badge, styles.badgeApproved]}>
+          <Text style={styles.badgeTextApproved}>✅ 참여중</Text>
         </View>
       );
     }
 
     if (myParticipant?.status === "PENDING") {
       return (
-        <View style={[styles.badge, { backgroundColor: Colors.orange }]}>
-          <Text style={[styles.badgeText, { color: Colors.card }]}>
-            ⏳ 승인 대기중
-          </Text>
+        <View style={[styles.badge, styles.badgePending]}>
+          <Text style={styles.badgeTextPending}>⏳ 승인 대기중</Text>
         </View>
       );
     }
@@ -106,26 +102,26 @@ export default function FlashScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      {/* 헤더 */}
-
+      {/* 1. 모던 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>✅ 참여중인 벙개</Text>
+        <Text style={styles.headerTitle}>
+          <Text style={styles.headerTitleHighlight}>✅</Text> 참여중인 벙개
+        </Text>
 
-        {/* 🚀 우측 아이콘 버튼 */}
+        {/* 히스토리 페이지 이동 버튼 */}
         <TouchableOpacity
-          style={styles.iconButton}
+          style={styles.historyButton}
           onPress={() => router.push("/flash/done")}
-          activeOpacity={0.5}
+          activeOpacity={0.7}
         >
-          <Ionicons name="time-outline" size={25} color={Colors.yellow} />
+          <Ionicons name="time-outline" size={25} color="#FFE600" />
         </TouchableOpacity>
       </View>
-      <View style={styles.divider} />
 
-      {/* 목록 콘텐츠 */}
+      {/* 2. 목록 콘텐츠 */}
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.yellow} />
+          <ActivityIndicator size="large" color="#FFE600" />
         </View>
       ) : (
         <FlatList
@@ -136,25 +132,21 @@ export default function FlashScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={Colors.tabIconDefault}
+              tintColor="#FFE600"
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              {/* <Ionicons
-                name="flash-off-outline"
-                size={48}
-                color={Colors.tabIconDefault}
-              /> */}
+              <Text style={styles.emptyEmoji}>⚡️</Text>
               <Text style={styles.emptyText}>
-                현재 참여 중인 벙개가 없습니다.
+                현재 참여 중인 벙개가 없어요{"\n"}새로운 벙개에 참여해보세요!
               </Text>
             </View>
           }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
-              activeOpacity={0.7}
+              activeOpacity={0.85}
               onPress={() => handlePressGathering(item.id)}
             >
               <View style={styles.cardHeader}>
@@ -171,13 +163,18 @@ export default function FlashScreen() {
               ) : null}
 
               {item.location && (
-                <View style={styles.infoRow}>
-                  <Ionicons
-                    name="location-outline"
-                    size={14}
-                    color={Colors.red}
-                  />
-                  <Text style={styles.infoText}>{item.location}</Text>
+                <View style={styles.cardFooter}>
+                  <View style={styles.infoRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={14}
+                      color="#FF453A"
+                    />
+                    <Text style={styles.infoText} numberOfLines={1}>
+                      {item.location}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#52525B" />
                 </View>
               )}
             </TouchableOpacity>
@@ -189,74 +186,155 @@ export default function FlashScreen() {
 }
 
 const styles = StyleSheet.create({
-  iconButton: {
-    padding: 4, // 터치 영역 확보
+  container: {
+    flex: 1,
+    backgroundColor: "#09090B", // 다크 메인 배경
   },
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  /* 헤더 */
   header: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // 양쪽 끝 배치
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    justifyContent: "space-between",
   },
-  headerTitle: { fontSize: 22, fontWeight: "bold", color: Colors.text },
-  divider: { height: 1, backgroundColor: Colors.border },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: Platform.OS === "ios" ? "900" : "700",
+    color: "#FFFFFF",
+    letterSpacing: -0.5,
+  },
+  headerTitleHighlight: {
+    fontSize: 20,
+  },
+  historyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    // backgroundColor: "#18181B",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    gap: 6,
+    borderWidth: 1,
+    // borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  historyButtonText: {
+    color: "#FFE600",
+    fontSize: 13,
+    fontWeight: "700",
+  },
 
-  listContent: { padding: 16, gap: 12 },
+  /* 리스트 */
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
   emptyContainer: {
-    textAlign: "center",
+    paddingVertical: 120,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 280,
-    gap: 12,
   },
-  emptyText: { color: Colors.tabIconDefault, fontSize: 15 },
+  emptyEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyText: {
+    color: "#71717A",
+    fontSize: 15,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 22,
+  },
 
+  /* 모던 카드 디자인 */
   card: {
-    backgroundColor: Colors.card,
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#18181B",
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
+    gap: 10,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: Colors.text,
+    fontSize: 18,
+    fontWeight: Platform.OS === "ios" ? "800" : "600",
+    color: "#FFFFFF",
     flex: 1,
-    marginRight: 8,
+    letterSpacing: -0.3,
   },
   cardDescription: {
     fontSize: 14,
-    color: Colors.tabIconDefault,
-    marginBottom: 10,
+    color: "#A1A1AA",
+    lineHeight: 20,
+    marginBottom: 14,
+  },
+
+  /* 메타 정보 풋터 */
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.05)",
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
+    flex: 1,
+    marginRight: 8,
   },
   infoText: {
-    fontSize: 12,
-    color: Colors.text,
+    fontSize: 13,
+    color: "#D4D4D8",
+    fontWeight: "500",
   },
 
+  /* 모던 뱃지 스타일링 */
   badge: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  badgeText: {
+  badgeHost: {
+    backgroundColor: "rgba(255, 230, 0, 0.15)",
+  },
+  badgeTextHost: {
     fontSize: 11,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+    fontWeight: "800",
+    color: "#FFE600",
+  },
+  badgeApproved: {
+    backgroundColor: "rgba(34, 197, 94, 0.15)",
+  },
+  badgeTextApproved: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#4ADE80",
+  },
+  badgePending: {
+    backgroundColor: "rgba(249, 115, 22, 0.15)",
+  },
+  badgeTextPending: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#FB923C",
   },
 });

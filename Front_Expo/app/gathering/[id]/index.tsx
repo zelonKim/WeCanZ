@@ -1391,7 +1391,7 @@ const styles = StyleSheet.create({
   categoryText: { color: Colors.yellow, fontWeight: "bold", fontSize: 13 },
   title: {
     fontSize: 22,
-    fontWeight: "bold",
+    fontWeight: Platform.OS === "ios" ? "800" : "600",
     color: Colors.text,
     marginBottom: 8,
   },

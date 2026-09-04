@@ -13,6 +13,7 @@ import {
   Alert,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,7 +21,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // 신고 사유 Enum (백엔드 ReportReason Enum 매핑)
 enum ReportReason {
@@ -89,6 +94,8 @@ const createReport = async (reportDto: {
 export default function SettingScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
+
   // 프로필 조회 모달 상태
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchNickname, setSearchNickname] = useState("");
@@ -545,92 +552,102 @@ export default function SettingScreen() {
         transparent={true}
         onRequestClose={() => setIsModalOpen(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>프로필 수정</Text>
-              <TouchableOpacity onPress={() => setIsModalOpen(false)}>
-                <Ionicons name="close" size={22} color={Colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <View style={styles.imagePickerContainer}>
-                <View style={{ position: "relative" }}>
-                  <TouchableOpacity
-                    onPress={pickImage}
-                    style={styles.avatarPicker}
-                  >
-                    {profileImage ? (
-                      <Image
-                        source={{ uri: profileImage }}
-                        style={styles.avatar}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.avatar,
-                          { justifyContent: "center", alignItems: "center" },
-                        ]}
-                      >
-                        <Ionicons name="person" size={40} color={Colors.text} />
-                      </View>
-                    )}
-
-                    {/* 카메라 뱃지 - 기존과 동일 */}
-                    <View style={styles.cameraBadge}>
-                      <Ionicons name="camera" size={14} color="#000" />
-                    </View>
-                  </TouchableOpacity>
-
-                  {profileImage && (
-                    <TouchableOpacity
-                      onPress={() => setProfileImage("")} // 이미지 비우기
-                      style={styles.deleteBadge}
-                    >
-                      <Ionicons name="close" size={16} color="#FFF" />
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                <Text style={styles.imagePickerHint}>
-                  이미지를 터치하여 갤러리에서 선택하세요
-                </Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -40}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>프로필 수정</Text>
+                <TouchableOpacity onPress={() => setIsModalOpen(false)}>
+                  <Ionicons name="close" size={22} color={Colors.text} />
+                </TouchableOpacity>
               </View>
 
-              <Text style={styles.inputLabel}>닉네임</Text>
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="닉네임을 입력하세요"
-                placeholderTextColor={Colors.tabIconDefault}
-              />
+              <View style={styles.modalBody}>
+                <View style={styles.imagePickerContainer}>
+                  <View style={{ position: "relative" }}>
+                    <TouchableOpacity
+                      onPress={pickImage}
+                      style={styles.avatarPicker}
+                    >
+                      {profileImage ? (
+                        <Image
+                          source={{ uri: profileImage }}
+                          style={styles.avatar}
+                        />
+                      ) : (
+                        <View
+                          style={[
+                            styles.avatar,
+                            { justifyContent: "center", alignItems: "center" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="person"
+                            size={40}
+                            color={Colors.text}
+                          />
+                        </View>
+                      )}
 
-              <Text style={styles.inputLabel}>자기소개</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={bio}
-                onChangeText={setBio}
-                placeholder="자기소개를 입력하세요"
-                placeholderTextColor={Colors.tabIconDefault}
-                multiline
-              />
+                      {/* 카메라 뱃지 - 기존과 동일 */}
+                      <View style={styles.cameraBadge}>
+                        <Ionicons name="camera" size={14} color="#000" />
+                      </View>
+                    </TouchableOpacity>
+
+                    {profileImage && (
+                      <TouchableOpacity
+                        onPress={() => setProfileImage("")} // 이미지 비우기
+                        style={styles.deleteBadge}
+                      >
+                        <Ionicons name="close" size={16} color="#FFF" />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <Text style={styles.imagePickerHint}>
+                    이미지를 터치하여 갤러리에서 선택하세요
+                  </Text>
+                </View>
+
+                <Text style={styles.inputLabel}>닉네임</Text>
+                <TextInput
+                  style={styles.input}
+                  value={nickname}
+                  onChangeText={setNickname}
+                  placeholder="닉네임을 입력하세요"
+                  placeholderTextColor={Colors.tabIconDefault}
+                />
+
+                <Text style={styles.inputLabel}>자기소개</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={bio}
+                  onChangeText={setBio}
+                  placeholder="자기소개를 입력하세요"
+                  placeholderTextColor={Colors.tabIconDefault}
+                  multiline
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveProfile}
+                disabled={profileMutation.isPending}
+              >
+                {profileMutation.isPending ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Text style={styles.saveButtonText}>저장하기</Text>
+                )}
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSaveProfile}
-              disabled={profileMutation.isPending}
-            >
-              {profileMutation.isPending ? (
-                <ActivityIndicator color="#000" />
-              ) : (
-                <Text style={styles.saveButtonText}>저장하기</Text>
-              )}
-            </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 신고하기 모달 */}
@@ -640,74 +657,80 @@ export default function SettingScreen() {
         transparent={true}
         onRequestClose={() => setIsReportModalOpen(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>🚨 유저 신고하기</Text>
-              <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
-                <Ionicons name="close" size={22} color={Colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <Text style={styles.inputLabel}>신고할 유저 닉네임</Text>
-              <TextInput
-                style={styles.input}
-                value={targetNickname}
-                onChangeText={setTargetNickname}
-                placeholder="상대방 닉네임을 입력해주세요"
-                placeholderTextColor={Colors.tabIconDefault}
-              />
-
-              <Text style={styles.inputLabel}>신고 사유 선택</Text>
-              <View style={styles.chipContainer}>
-                {Object.values(ReportReason).map((reason) => {
-                  const isSelected = selectedReason === reason;
-                  return (
-                    <TouchableOpacity
-                      key={reason}
-                      style={[styles.chip, isSelected && styles.chipSelected]}
-                      onPress={() => setSelectedReason(reason)}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          isSelected && styles.chipTextSelected,
-                        ]}
-                      >
-                        {REPORT_REASON_LABELS[reason]}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+        <KeyboardAvoidingView
+          behavior={"padding"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? -10 : -50}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>🚨 유저 신고하기</Text>
+                <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
+                  <Ionicons name="close" size={22} color={Colors.text} />
+                </TouchableOpacity>
               </View>
 
-              <Text style={styles.inputLabel}>상세 내용</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={reportDetails}
-                onChangeText={setReportDetails}
-                placeholder="신고 사유에 대한 상세 내용을 적어주세요."
-                placeholderTextColor={Colors.tabIconDefault}
-                multiline
-              />
-            </View>
+              <View style={styles.modalBody}>
+                <Text style={styles.inputLabel}>신고할 유저 닉네임</Text>
+                <TextInput
+                  style={styles.input}
+                  value={targetNickname}
+                  onChangeText={setTargetNickname}
+                  placeholder="상대방 닉네임을 입력해주세요"
+                  placeholderTextColor={Colors.tabIconDefault}
+                />
 
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: Colors.red }]}
-              onPress={handleSubmitReport}
-              disabled={isSubmittingReport}
-            >
-              {isSubmittingReport ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
-                  신고 접수하기
-                </Text>
-              )}
-            </TouchableOpacity>
+                <Text style={styles.inputLabel}>신고 사유 선택</Text>
+                <View style={styles.chipContainer}>
+                  {Object.values(ReportReason).map((reason) => {
+                    const isSelected = selectedReason === reason;
+                    return (
+                      <TouchableOpacity
+                        key={reason}
+                        style={[styles.chip, isSelected && styles.chipSelected]}
+                        onPress={() => setSelectedReason(reason)}
+                      >
+                        <Text
+                          style={[
+                            styles.chipText,
+                            isSelected && styles.chipTextSelected,
+                          ]}
+                        >
+                          {REPORT_REASON_LABELS[reason]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <Text style={styles.inputLabel}>상세 내용</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={reportDetails}
+                  onChangeText={setReportDetails}
+                  placeholder="신고 사유에 대한 상세 내용을 적어주세요."
+                  placeholderTextColor={Colors.tabIconDefault}
+                  multiline
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.saveButton, { backgroundColor: Colors.red }]}
+                onPress={handleSubmitReport}
+                disabled={isSubmittingReport}
+              >
+                {isSubmittingReport ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
+                    신고 접수하기
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 💡 닉네임 검색 모달 */}
@@ -717,44 +740,50 @@ export default function SettingScreen() {
         animationType="fade"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>🔍 유저 프로필 찾기</Text>
-            <Text style={styles.modalSubtitle}>
-              찾고 싶은 유저의 닉네임을 입력하세요.
-            </Text>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={"padding"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>🔍 유저 프로필 찾기</Text>
+              <Text style={styles.modalSubtitle}>
+                찾고 싶은 유저의 닉네임을 입력하세요.
+              </Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="닉네임 입력"
-              placeholderTextColor="#666"
-              value={searchNickname}
-              onChangeText={setSearchNickname}
-              autoCapitalize="none"
-            />
+              <TextInput
+                style={styles.input}
+                placeholder="닉네임 입력"
+                placeholderTextColor="#666"
+                value={searchNickname}
+                onChangeText={setSearchNickname}
+                autoCapitalize="none"
+              />
 
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.cancelBtn]}
-                onPress={() => setIsModalVisible(false)}
-              >
-                <Text style={styles.cancelBtnText}>취소</Text>
-              </TouchableOpacity>
+              <View style={styles.modalBtnRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  onPress={() => setIsModalVisible(false)}
+                >
+                  <Text style={styles.cancelBtnText}>취소</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.confirmBtn]}
-                onPress={handleSearchUser}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#000" size="small" />
-                ) : (
-                  <Text style={styles.confirmBtnText}>검색</Text>
-                )}
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.confirmBtn]}
+                  onPress={handleSearchUser}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color="#000" size="small" />
+                  ) : (
+                    <Text style={styles.confirmBtnText}>검색</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -776,6 +805,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     gap: 16,
+    marginBottom: Platform.OS === "ios" ? 0 : 32,
   },
   modalTitle: {
     fontSize: 18,

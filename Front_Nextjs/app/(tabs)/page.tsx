@@ -12,6 +12,7 @@ import {
   IoLocationOutline,
   IoPerson,
   IoRefreshOutline,
+  IoQrCodeOutline,
 } from "react-icons/io5";
 
 export enum GatheringCategory {
@@ -246,17 +247,17 @@ export default function HomeScreen() {
     { label: string; badgeClass: string; textClass: string }
   > = {
     OPEN: {
-      label: "모집중",
+      label: "모집 중",
       badgeClass: "bg-blue-600",
       textClass: "text-white",
     },
     FULL: {
       label: "인원 마감",
-      badgeClass: "bg-red-600",
+      badgeClass: "bg-red-500",
       textClass: "text-white",
     },
     IN_PROGRESS: {
-      label: "진행중",
+      label: "진행 중",
       badgeClass: "bg-red-500",
       textClass: "text-white",
     },
@@ -275,7 +276,7 @@ export default function HomeScreen() {
           }}
           aria-label="룸 코드 입장"
         >
-          <IoLogInOutline size={25} className="text-[#FFD700]" />
+          <IoQrCodeOutline size={22} className="text-[#FFD700]" />
         </button>
       </header>
 
@@ -374,7 +375,7 @@ export default function HomeScreen() {
         <div className="max-w-5xl mx-auto px-6 flex justify-end">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="pointer-events-auto w-14 h-14 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-red-700 transition-transform active:scale-95"
+            className="pointer-events-auto w-14 h-14 bg-yellow-300 rounded-full flex items-center justify-center text-gray-800 shadow-xs hover:bg-yellow-400 shadow-yellow-100 transition-transform active:scale-95"
             aria-label="새 벙개 만들기"
           >
             <IoAdd size={32} />

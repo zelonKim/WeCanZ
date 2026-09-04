@@ -6,6 +6,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-reanimated";
 
 export {
@@ -48,22 +49,27 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <APIProvider>
-      <ActionSheetProvider>
-        <ThemeProvider value={DarkTheme}>
-          <Stack>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="gathering" options={{ headerShown: false }} />
-            <Stack.Screen name="DM" options={{ headerShown: false }} />
-            <Stack.Screen name="commercial" options={{ headerShown: false }} />
-            <Stack.Screen name="flash" options={{ headerShown: false }} />
-            <Stack.Screen name="agreement" options={{ headerShown: false }} />
-            <Stack.Screen name="profile" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-          </Stack>
-        </ThemeProvider>
-      </ActionSheetProvider>
-    </APIProvider>
+    <ThemeProvider value={DarkTheme}>
+      <KeyboardProvider>
+        <APIProvider>
+          <ActionSheetProvider>
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="gathering" options={{ headerShown: false }} />
+              <Stack.Screen name="DM" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="commercial"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen name="flash" options={{ headerShown: false }} />
+              <Stack.Screen name="agreement" options={{ headerShown: false }} />
+              <Stack.Screen name="profile" options={{ headerShown: false }} />
+              <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+            </Stack>
+          </ActionSheetProvider>
+        </APIProvider>
+      </KeyboardProvider>
+    </ThemeProvider>
   );
 }

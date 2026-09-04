@@ -18,6 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface User {
@@ -413,42 +414,48 @@ export default function DMScreen() {
         visible={isModalVisible}
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>✉️ DM 요청</Text>
-            <Text style={styles.modalSubtitle}>
-              DM을 요청할 유저의 닉네임을 입력해주세요.
-            </Text>
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>✉️ DM 요청</Text>
+              <Text style={styles.modalSubtitle}>
+                DM을 요청할 유저의 닉네임을 입력해주세요.
+              </Text>
 
-            <TextInput
-              style={styles.modalInput}
-              placeholder="닉네임 입력"
-              placeholderTextColor="#888"
-              value={targetNickname}
-              onChangeText={setTargetNickname}
-              autoCapitalize="none"
-            />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="닉네임 입력"
+                placeholderTextColor="#888"
+                value={targetNickname}
+                onChangeText={setTargetNickname}
+                autoCapitalize="none"
+              />
 
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.cancelBtn]}
-                onPress={() => {
-                  setIsModalVisible(false);
-                  setTargetNickname("");
-                }}
-              >
-                <Text style={styles.cancelBtnText}>취소</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  onPress={() => {
+                    setIsModalVisible(false);
+                    setTargetNickname("");
+                  }}
+                >
+                  <Text style={styles.cancelBtnText}>취소</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.submitBtn]}
-                onPress={handleSendDmRequest}
-              >
-                <Text style={styles.submitBtnText}>요청 보내기</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.submitBtn]}
+                  onPress={handleSendDmRequest}
+                >
+                  <Text style={styles.submitBtnText}>요청 보내기</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -615,7 +622,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: Colors.card || "#FFFFFF",
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 24,
     width: "100%",

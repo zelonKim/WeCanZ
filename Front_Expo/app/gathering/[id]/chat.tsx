@@ -1,8 +1,8 @@
 import { client } from "@/api/client";
-import Colors from "@/constants/Colors";
 import { getSocket } from "@/lib/socket";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"; // 💡 탭바 높이 가져오기
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,13 +19,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
-
-const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
 interface ChatMessage {
   id: string;
@@ -47,6 +42,14 @@ export default function GatheringChatScreen() {
   const socketRef = useRef<Socket | null>(null);
 
   const insets = useSafeAreaInsets();
+
+  // 💡 탭바 높이 동적 구하기 (탭 스크린이 아니면 0으로 예외 처리)
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    tabBarHeight = 0;
+  }
 
   const [messageText, setMessageText] = useState("");
 
@@ -72,9 +75,7 @@ export default function GatheringChatScreen() {
     me?.id && gathering?.hostId && String(me.id) === String(gathering.hostId),
   );
 
-  /////////////////////////////////////////////////////////
-
-  // 2. 초기 과거 메시지 목록 조회
+  // 2. 메시지 목록 조회
   const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: ["gathering-messages", id],
     queryFn: async () => {
@@ -84,13 +85,10 @@ export default function GatheringChatScreen() {
     enabled: !!id,
   });
 
-  /////////////////////////////////////////////////////////
-
-  // 3. 웹소켓 실시간 연결 및 이벤트 핸들링
+  // 3. 웹소켓 핸들링
   useEffect(() => {
     if (!id) return;
 
-    // 💡 전역 소켓 인스턴스 가져오기
     const socket = getSocket();
 
     if (!socket.connected) {
@@ -98,11 +96,8 @@ export default function GatheringChatScreen() {
     }
 
     socketRef.current = socket;
-
-    // 모임 채팅방 입장 이벤트 발송
     socket.emit("joinGatheringRoom", { gatheringId: id });
 
-    // 실시간 신규 메시지 수신
     const handleNewMessage = (newMessage: ChatMessage) => {
       queryClient.setQueryData<ChatMessage[]>(
         ["gathering-messages", id],
@@ -115,7 +110,6 @@ export default function GatheringChatScreen() {
       );
     };
 
-    // 메시지 삭제 수신
     const handleDeletedMessage = ({ messageId }: { messageId: string }) => {
       queryClient.setQueryData<ChatMessage[]>(
         ["gathering-messages", id],
@@ -126,7 +120,6 @@ export default function GatheringChatScreen() {
     socket.on("newGatheringMessage", handleNewMessage);
     socket.on("gatheringMessageDeleted", handleDeletedMessage);
 
-    // 💡 클린업: disconnect()를 부르지 말고, 방 퇴장과 이벤트 해제만 수행
     return () => {
       socket.emit("leaveGatheringRoom", { gatheringId: id });
       socket.off("newGatheringMessage", handleNewMessage);
@@ -134,15 +127,13 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
-  // 네트워크 변동 감지 및 재연결
+  // 네트워크 감지
   useEffect(() => {
     if (!id) return;
 
     const unsubscribe = NetInfo.addEventListener((state) => {
       const socket = socketRef.current;
       if (state.isConnected && socket && !socket.connected) {
-        console.log("네트워크 감지: 소켓 재연결 및 메시지 갱신");
-
         socket.connect();
         socket.emit("joinGatheringRoom", { gatheringId: id });
         queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
@@ -154,13 +145,10 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
-  /////////////////////////////////////////////////////////
-
-  // 4. 메시지 전송 (웹소켓 방식)
+  // 메시지 전송
   const handleSend = () => {
     if (!messageText.trim() || !socketRef.current || !me?.id) return;
 
-    // ChatGateway의 handleSendMessage 구조에 맞춰 소켓 이벤트 발송
     socketRef.current.emit("sendGatheringMessage", {
       gatheringId: id,
       userId: me.id,
@@ -170,9 +158,7 @@ export default function GatheringChatScreen() {
     setMessageText("");
   };
 
-  /////////////////////////////////////////////////////////
-
-  // 5. 메시지 삭제 (웹소켓 방식)
+  // 메시지 삭제
   const handleDeletePrompt = (msg: ChatMessage) => {
     const isMyMessage = String(msg.userId) === String(me?.id);
 
@@ -191,7 +177,6 @@ export default function GatheringChatScreen() {
         onPress: () => {
           if (!socketRef.current || !me?.id) return;
 
-          // 웹소켓 이벤트 발송
           socketRef.current.emit("deleteGatheringMessage", {
             gatheringId: id,
             messageId: msg.id,
@@ -202,52 +187,65 @@ export default function GatheringChatScreen() {
     ]);
   };
 
-  /////////////////////////////////////////////////////////
-
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.text} />
+        <TouchableOpacity
+          style={styles.navIconButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {gathering ? `${gathering.title}` : "모임 채팅방"}
-        </Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerTitleCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {gathering ? gathering.title : "모임 채팅방"}
+          </Text>
+          {gathering && (
+            <Text style={styles.headerSubTitle}>
+              참가자 {gathering.participants?.length || 1}명
+            </Text>
+          )}
+        </View>
+        <View style={{ width: 38 }} />
       </View>
 
-      <View style={styles.divider} />
-
+      {/* 💡 안드로이드 탭바 가림 방지 KeyboardAvoidingView */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? -12 : tabBarHeight}
       >
         {isLoading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color={Colors.yellow} />
+            <ActivityIndicator size="large" color="#FFE814" />
           </View>
         ) : (
           <ScrollView
             ref={scrollViewRef}
             contentContainerStyle={styles.chatScroll}
+            showsVerticalScrollIndicator={false}
             onContentSizeChange={() =>
               scrollViewRef.current?.scrollToEnd({ animated: true })
             }
           >
             {messages.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={48}
-                  color={Colors.tabIconDefault}
-                />
-                <Text style={styles.emptyText}>첫 메시지를 남겨보세요!</Text>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons
+                    name="chatbubbles-outline"
+                    size={32}
+                    color="#FFE814"
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>비어있는 채팅방</Text>
+                <Text style={styles.emptySubText}>
+                  첫 번째 대화를 시작해 보세요!
+                </Text>
               </View>
             ) : (
               messages.map((msg) => {
                 const isMyMessage = String(msg.userId) === String(me?.id);
-
                 const timeString = new Date(msg.createdAt).toLocaleTimeString(
                   "ko-KR",
                   { hour: "2-digit", minute: "2-digit" },
@@ -272,11 +270,7 @@ export default function GatheringChatScreen() {
                           />
                         ) : (
                           <View style={styles.avatarPlaceholder}>
-                            <Ionicons
-                              name="person"
-                              size={16}
-                              color={Colors.text}
-                            />
+                            <Ionicons name="person" size={14} color="#8E8E93" />
                           </View>
                         )}
                         <Text style={styles.senderName}>
@@ -285,36 +279,35 @@ export default function GatheringChatScreen() {
                       </View>
                     )}
 
-                    <TouchableOpacity
-                      activeOpacity={0.8}
-                      onLongPress={() => handleDeletePrompt(msg)}
-                      style={[
-                        styles.bubble,
-                        isMyMessage ? styles.myBubble : styles.otherBubble,
-                      ]}
-                    >
-                      <Text
+                    <View style={styles.bubbleRow}>
+                      {isMyMessage && (
+                        <Text style={styles.myTimestamp}>{timeString}</Text>
+                      )}
+
+                      <TouchableOpacity
+                        activeOpacity={0.8}
+                        onLongPress={() => handleDeletePrompt(msg)}
                         style={[
-                          styles.messageText,
-                          isMyMessage
-                            ? styles.myMessageText
-                            : styles.otherMessageText,
+                          styles.bubble,
+                          isMyMessage ? styles.myBubble : styles.otherBubble,
                         ]}
                       >
-                        {msg.message}
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={[
+                            styles.messageText,
+                            isMyMessage
+                              ? styles.myMessageText
+                              : styles.otherMessageText,
+                          ]}
+                        >
+                          {msg.message}
+                        </Text>
+                      </TouchableOpacity>
 
-                    <Text
-                      style={[
-                        styles.timestamp,
-                        isMyMessage
-                          ? styles.myTimestamp
-                          : styles.otherTimestamp,
-                      ]}
-                    >
-                      {timeString}
-                    </Text>
+                      {!isMyMessage && (
+                        <Text style={styles.otherTimestamp}>{timeString}</Text>
+                      )}
+                    </View>
                   </View>
                 );
               })
@@ -322,153 +315,235 @@ export default function GatheringChatScreen() {
           </ScrollView>
         )}
 
-        {/* 하단 입력 바 */}
+        {/* 💡 하단 입력 바 (탭바 및 Inset 고려한 패딩값 설정) */}
         <View
           style={[
             styles.inputContainer,
-            { paddingBottom: insets.bottom || 12 },
+            {
+              paddingBottom:
+                Platform.OS === "ios"
+                  ? Math.max(insets.bottom, 12)
+                  : tabBarHeight > 0
+                    ? 12
+                    : Math.max(insets.bottom, 12),
+            },
           ]}
         >
-          <TextInput
-            style={styles.textInput}
-            placeholder="메시지를 입력하세요..."
-            placeholderTextColor={Colors.tabIconDefault}
-            value={messageText}
-            onChangeText={setMessageText}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !messageText.trim() && styles.sendButtonDisabled,
-            ]}
-            disabled={!messageText.trim()}
-            onPress={handleSend}
-          >
-            <Ionicons
-              name="send"
-              size={18}
-              color={messageText.trim() ? Colors.card : "#666"}
+          <View style={styles.inputCapsule}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="메시지 입력..."
+              placeholderTextColor="#71717A"
+              value={messageText}
+              onChangeText={setMessageText}
+              multiline
+              maxLength={500}
             />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                !messageText.trim() && styles.sendButtonDisabled,
+              ]}
+              disabled={!messageText.trim()}
+              onPress={handleSend}
+            >
+              <Ionicons
+                name="arrow-up"
+                size={20}
+                color={messageText.trim() ? "#000" : "#52525B"}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: { fontSize: 16, fontWeight: "bold", color: Colors.text },
-  divider: { height: 1, backgroundColor: Colors.border },
-
-  chatScroll: { padding: 16, paddingBottom: 20 },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 100,
-    gap: 10,
-  },
-  emptyText: { color: Colors.tabIconDefault, fontSize: 14 },
-
-  messageWrapper: { marginBottom: 12, maxWidth: "75%" },
-  myMessageWrapper: { alignSelf: "flex-end", alignItems: "flex-end" },
-  otherMessageWrapper: { alignSelf: "flex-start", alignItems: "flex-start" },
-
-  bubble: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 16,
-  },
-  myBubble: {
-    backgroundColor: Colors.yellow,
-    borderBottomRightRadius: 4,
-  },
-  otherBubble: {
-    backgroundColor: Colors.card,
-    borderBottomLeftRadius: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  messageText: { fontSize: 14, lineHeight: 20 },
-  myMessageText: { color: Colors.card, fontWeight: "500" },
-  otherMessageText: { color: Colors.text },
-
-  timestamp: {
-    fontSize: 10,
-    color: Colors.tabIconDefault,
-    marginTop: 4,
-    marginHorizontal: 4,
-  },
-  myTimestamp: { textAlign: "right" },
-  otherTimestamp: { textAlign: "left" },
-
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 12,
-    paddingHorizontal: Platform.OS === "ios" ? 20 : 15,
-    backgroundColor: Colors.card,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    gap: 8,
-  },
-  textInput: {
+  container: {
     flex: 1,
-    backgroundColor: Colors.background,
-    color: Colors.text,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
+    backgroundColor: "#0F0F12",
   },
-  sendButton: {
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  header: {
+    height: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+  },
+  navIconButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: Colors.yellow,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     justifyContent: "center",
     alignItems: "center",
   },
-  sendButtonDisabled: {
-    backgroundColor: Colors.border,
+  headerTitleCenter: {
+    alignItems: "center",
+    maxWidth: "65%",
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    letterSpacing: -0.3,
+  },
+  headerSubTitle: {
+    fontSize: 11,
+    color: "#71717A",
+    marginTop: 2,
+  },
+  chatScroll: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 120,
+    gap: 8,
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(255, 232, 20, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  emptyTitle: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  emptySubText: {
+    color: "#71717A",
+    fontSize: 13,
+  },
+  messageWrapper: {
+    marginBottom: 16,
+    maxWidth: "80%",
+  },
+  myMessageWrapper: {
+    alignSelf: "flex-end",
+    alignItems: "flex-end",
+  },
+  otherMessageWrapper: {
+    alignSelf: "flex-start",
+    alignItems: "flex-start",
   },
   senderContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 4,
+    gap: 8,
+    marginBottom: 6,
   },
-
-  // 프로필 이미지 스타일
   profileImage: {
-    width: 28,
-    height: 28,
-    borderRadius: 14, // 원형으로 잘라내기
-  },
-
-  // 기존 senderName 스타일 수정 (margin 제거)
-  senderName: {
-    fontSize: 12,
-    color: Colors.text,
-    fontWeight: Platform.OS === "ios" ? "600" : "500",
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
   },
   avatarPlaceholder: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.border,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
+  },
+  senderName: {
+    fontSize: 12,
+    color: "#A1A1AA",
+    fontWeight: "600",
+  },
+  bubbleRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  bubble: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    maxWidth: "100%",
+  },
+  myBubble: {
+    backgroundColor: "#FFE814",
+    borderBottomRightRadius: 4,
+  },
+  otherBubble: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderBottomLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: -0.2,
+  },
+  myMessageText: {
+    color: "#000000",
+    fontWeight: "600",
+  },
+  otherMessageText: {
+    color: "#F4F4F5",
+    fontWeight: "400",
+  },
+  myTimestamp: {
+    fontSize: 10,
+    color: "#52525B",
+    marginBottom: 2,
+  },
+  otherTimestamp: {
+    fontSize: 10,
+    color: "#52525B",
+    marginBottom: 2,
+  },
+  inputContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: "#0F0F12",
+  },
+  inputCapsule: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderRadius: 24,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === "ios" ? 6 : 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  textInput: {
+    flex: 1,
+    color: "#FFFFFF",
+    fontSize: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    maxHeight: 90,
+  },
+  sendButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "#FFE814",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendButtonDisabled: {
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
 });

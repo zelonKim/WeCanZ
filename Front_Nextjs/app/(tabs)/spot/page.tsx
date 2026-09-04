@@ -107,18 +107,23 @@ export default function CommercialPage() {
           ads.map((item) => (
             <article
               key={item.id}
-              className="grid md:grid-cols-2 rounded-xl overflow-hidden bg-[#1e1e1e] cursor-pointer shadow-md hover:scale-[1.01] transition-transform duration-200"
+              className="grid md:grid-cols-2  rounded-xl overflow-hidden bg-[#1e1e1e] cursor-pointer shadow-md hover:scale-[1.01] transition-transform duration-200"
               onClick={() => handleAdClick(item)}
             >
               {(item.imageUrl || item.store.imageUrl) && (
                 <img
                   src={item.imageUrl || item.store.imageUrl}
                   alt={item.title}
-                  className="w-full h-[200px] object-cover object-center"
+                  className="w-full aspect-square object-cover object-center"
                 />
               )}
 
               <div className="p-4">
+                <div className="w-9 rounded bg-[#2C2C2E] px-2 text-center  mb-1">
+                  <span className="text-[10px] font-bold text-[#8E8E93]">
+                    광고
+                  </span>
+                </div>
                 <h2 className="text-lg font-bold mb-1.5 mt-0">{item.title}</h2>
                 <p className="text-sm text-gray-400 leading-relaxed max-h-[100px] overflow-hidden">
                   {item.content}

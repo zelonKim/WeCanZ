@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
   Modal,
+  Platform,
   RefreshControl,
   StyleSheet,
   Text,
@@ -16,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface User {
@@ -405,42 +407,48 @@ export default function FriendScreen() {
         visible={isAddModalVisible}
         onRequestClose={() => setIsAddModalVisible(false)}
       >
-        <View style={styles.addModalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.addModalTitle}>👋 친구 추가</Text>
-            <Text style={styles.modalSubtitle}>
-              추가할 친구의 닉네임을 입력해주세요.
-            </Text>
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.addModalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.addModalTitle}>👋 친구 추가</Text>
+              <Text style={styles.modalSubtitle}>
+                추가할 친구의 닉네임을 입력해주세요.
+              </Text>
 
-            <TextInput
-              style={styles.modalInput}
-              placeholder="닉네임 입력"
-              placeholderTextColor="#888"
-              value={friendNickname}
-              onChangeText={setFriendNickname}
-              autoCapitalize="none"
-            />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="닉네임 입력"
+                placeholderTextColor="#888"
+                value={friendNickname}
+                onChangeText={setFriendNickname}
+                autoCapitalize="none"
+              />
 
-            <View style={styles.modalButtonRow}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.cancelBtn]}
-                onPress={() => {
-                  setIsAddModalVisible(false);
-                  setFriendNickname("");
-                }}
-              >
-                <Text style={styles.cancelBtnText}>취소</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelBtn]}
+                  onPress={() => {
+                    setIsAddModalVisible(false);
+                    setFriendNickname("");
+                  }}
+                >
+                  <Text style={styles.cancelBtnText}>취소</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.submitBtn]}
-                onPress={handleSendFriendRequest}
-              >
-                <Text style={styles.submitBtnText}>요청 보내기</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.submitBtn]}
+                  onPress={handleSendFriendRequest}
+                >
+                  <Text style={styles.submitBtnText}>요청 보내기</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 💡 [복합 모달] 차단하기(닉네임 입력) + 차단 유저 목록 확인 및 차단 해제 */}
@@ -450,108 +458,116 @@ export default function FriendScreen() {
         animationType="fade"
         onRequestClose={() => setIsBlockModalVisible(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsBlockModalVisible(false)}
+        <KeyboardAvoidingView
+          behavior="padding"
+          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
+          style={{ flex: 1 }}
         >
           <TouchableOpacity
+            style={styles.modalOverlay}
             activeOpacity={1}
-            style={styles.modalContentCard}
-            onPress={(e) => e.stopPropagation()}
+            onPress={() => setIsBlockModalVisible(false)}
           >
-            {/* 모달 헤더 */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>🚫 차단 관리</Text>
-              <TouchableOpacity onPress={() => setIsBlockModalVisible(false)}>
-                <Ionicons
-                  name="close"
-                  size={24}
-                  color={Colors.text || "#212529"}
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContentCard}
+              onPress={(e) => e.stopPropagation()}
+            >
+              {/* 모달 헤더 */}
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>🚫 차단 관리</Text>
+                <TouchableOpacity onPress={() => setIsBlockModalVisible(false)}>
+                  <Ionicons
+                    name="close"
+                    size={24}
+                    color={Colors.text || "#212529"}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {/* 1. 닉네임 직접 입력 차단 영역 */}
+              <View style={styles.directBlockContainer}>
+                <TextInput
+                  style={styles.directBlockInput}
+                  placeholder="닉네임 입력"
+                  placeholderTextColor="#888"
+                  value={blockNickname}
+                  onChangeText={setBlockNickname}
+                  autoCapitalize="none"
                 />
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity
+                  style={styles.directBlockBtn}
+                  onPress={handleBlockByNickname}
+                >
+                  <Text style={styles.directBlockBtnText}>차단 하기</Text>
+                </TouchableOpacity>
+              </View>
 
-            {/* 1. 닉네임 직접 입력 차단 영역 */}
-            <View style={styles.directBlockContainer}>
-              <TextInput
-                style={styles.directBlockInput}
-                placeholder="닉네임 입력"
-                placeholderTextColor="#888"
-                value={blockNickname}
-                onChangeText={setBlockNickname}
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                style={styles.directBlockBtn}
-                onPress={handleBlockByNickname}
-              >
-                <Text style={styles.directBlockBtnText}>차단 하기</Text>
-              </TouchableOpacity>
-            </View>
+              {/* 구분선 */}
+              <View style={styles.divider} />
 
-            {/* 구분선 */}
-            <View style={styles.divider} />
+              <Text style={styles.subListTitle}>
+                차단된 친구 목록 ({blockedUsers.length})
+              </Text>
 
-            <Text style={styles.subListTitle}>
-              차단된 친구 목록 ({blockedUsers.length})
-            </Text>
+              {/* 2. 차단 유저 목록 및 차단 해제 FlatList */}
+              <FlatList
+                data={blockedUsers}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.modalListContent}
+                style={{ maxHeight: 350 }}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={isBlockedLoading}
+                    onRefresh={refetchBlocked}
+                  />
+                }
+                renderItem={({ item }) => {
+                  const user = item.receiver || (item as any);
+                  const targetUserId = user.id || item.id;
 
-            {/* 2. 차단 유저 목록 및 차단 해제 FlatList */}
-            <FlatList
-              data={blockedUsers}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.modalListContent}
-              style={{ maxHeight: 350 }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isBlockedLoading}
-                  onRefresh={refetchBlocked}
-                />
-              }
-              renderItem={({ item }) => {
-                const user = item.receiver || (item as any);
-                const targetUserId = user.id || item.id;
+                  return (
+                    <View style={styles.card}>
+                      <View style={styles.userInfo}>
+                        {renderAvatar(user.profileImage)}
+                        <Text style={styles.nickname}>
+                          {user.nickname || "알 수 없음"}
+                        </Text>
+                      </View>
 
-                return (
-                  <View style={styles.card}>
-                    <View style={styles.userInfo}>
-                      {renderAvatar(user.profileImage)}
-                      <Text style={styles.nickname}>
-                        {user.nickname || "알 수 없음"}
-                      </Text>
+                      <TouchableOpacity
+                        style={styles.btnUnblock}
+                        onPress={() =>
+                          Alert.alert(
+                            "차단 해제",
+                            `${user.nickname || "알 수 없음"}님을 차단 해제 하시겠습니까?`,
+                            [
+                              { text: "취소", style: "cancel" },
+                              {
+                                text: "해제",
+                                onPress: () =>
+                                  unblockMutation.mutate(targetUserId),
+                              },
+                            ],
+                          )
+                        }
+                      >
+                        <Text style={styles.btnUnblockText}>차단 해제</Text>
+                      </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                      style={styles.btnUnblock}
-                      onPress={() =>
-                        Alert.alert(
-                          "차단 해제",
-                          `${user.nickname || "알 수 없음"}님을 차단 해제 하시겠습니까?`,
-                          [
-                            { text: "취소", style: "cancel" },
-                            {
-                              text: "해제",
-                              onPress: () =>
-                                unblockMutation.mutate(targetUserId),
-                            },
-                          ],
-                        )
-                      }
-                    >
-                      <Text style={styles.btnUnblockText}>차단 해제</Text>
-                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={styles.emptyCard}>
+                    <Text style={styles.emptyText}>
+                      차단한 유저가 없습니다.
+                    </Text>
                   </View>
-                );
-              }}
-              ListEmptyComponent={
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>차단한 유저가 없습니다.</Text>
-                </View>
-              }
-            />
+                }
+              />
+            </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
@@ -685,7 +701,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   modalContentCard: {
-    backgroundColor: Colors.background || "#FFFFFF",
+    backgroundColor: Colors.background,
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingBottom: 24,

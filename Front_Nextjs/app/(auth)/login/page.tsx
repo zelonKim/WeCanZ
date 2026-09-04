@@ -138,7 +138,7 @@ export default function LoginScreen() {
           <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 shadow-xl">
             {/* 1. 상단 로고 & 타이틀 */}
             <div className="text-center">
-              <span className="text-4xl font-bold text-red-500">⚡️</span>
+              <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
               <p className="mt-2 text-sm text-[#A1A1A6]">
                 오늘 밤, 가장 핫한 술번개 & 클럽번개
               </p>
@@ -192,7 +192,9 @@ export default function LoginScreen() {
             {/* 3. 구분선 */}
             <div className="flex items-center my-6">
               <div className="flex-1 h-[1px] bg-[#2C2C2E]" />
-              <span className="px-4 text-xs text-[#666]">간편 로그인</span>
+              <span className="px-4 text-[13px] font-semibold text-[#666]">
+                간편 로그인
+              </span>
               <div className="flex-1 h-[1px] bg-[#2C2C2E]" />
             </div>
 
