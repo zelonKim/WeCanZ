@@ -167,10 +167,10 @@ export default function CommercialPage() {
             </p>
 
             <div className="flex flex-col items-start w-full mb-4">
-              <p className="text-xs text-white mb-1.5 font-medium">
+              <p className="text-sm text-white mb-1.5 font-medium">
                 • 이메일: ksz18601@gmail.com
               </p>
-              <p className="text-xs text-white mb-1.5 font-medium">
+              <p className="text-sm text-white mb-1.5 font-medium">
                 • LINE 아이디: sj1860
               </p>
             </div>
