@@ -309,6 +309,7 @@ export default function SettingScreen() {
   }
 
   if (isError || !user) {
+    router.replace("/login");
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
         <span className="text-zinc-500">유저 정보를 불러올 수 없습니다.</span>
