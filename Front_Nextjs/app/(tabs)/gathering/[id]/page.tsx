@@ -740,135 +740,194 @@ export default function GatheringDetailPage() {
       </main>
 
       {/* 모임 수정 모달 */}
+      {/* 모임 수정 모달 (새 벙개 만들기 UI 스타일) */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-neutral-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl border border-neutral-700">
-            <div className="flex items-center justify-between p-4 border-b border-neutral-700">
-              <h3 className="font-bold text-white text-base">벙개 정보 수정</h3>
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center p-0 sm:p-4"
+          onClick={() => setIsEditModalOpen(false)}
+        >
+          <div
+            className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl sm:rounded-2xl border border-neutral-800 bg-[#191919] p-6 text-white shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+              <h3 className="text-lg font-bold text-white">벙개 정보 수정</h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-neutral-400 hover:text-white"
+                className="text-neutral-400 hover:text-white transition"
               >
-                <IoClose size={20} />
+                <IoClose size={24} />
               </button>
             </div>
 
+            {/* 모달 바디 (스크롤 영역) */}
             <form
               onSubmit={handleEditGathering}
-              className="p-4 space-y-3 max-h-[80vh] overflow-y-auto text-xs"
+              className="flex flex-col flex-1 overflow-y-auto space-y-5 py-4 px-1 scrollbar-none"
             >
+              {/* 카테고리 선택 */}
               <div>
-                <label className="block text-neutral-400 mb-1">제목</label>
+                <label className="mb-2 block text-xs font-semibold text-neutral-400">
+                  카테고리
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "🍺 술벙", value: "DRINK" },
+                    { label: "🎉 클럽벙", value: "CLUB" },
+                    { label: "🔥 술+클럽벙", value: "DRINK_CLUB" },
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setCategory(item.value)}
+                      className={`py-3 rounded-xl text-sm font-bold transition ${
+                        category === item.value
+                          ? "bg-amber-400 text-neutral-900 shadow-md"
+                          : "bg-neutral-800/80 text-neutral-400 hover:text-white hover:bg-neutral-800"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 제목 */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-400">
+                  제목
+                </label>
                 <input
                   type="text"
+                  placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
                 />
               </div>
 
+              {/* 설명 */}
               <div>
-                <label className="block text-neutral-400 mb-1">설명</label>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-400">
+                  설명
+                </label>
                 <textarea
+                  placeholder="예) 끼, 주사 없는 2030만"
+                  rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
+                  className="w-full resize-none rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
                 />
               </div>
 
+              {/* 장소 */}
               <div>
-                <label className="block text-neutral-400 mb-1">카테고리</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
-                >
-                  <option value="DRINK">🍺 술벙</option>
-                  <option value="CLUB">🎉 클럽벙</option>
-                  <option value="DRINK_CLUB">🔥 술+클럽벙</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-neutral-400 mb-1">정원 (명)</label>
-                <input
-                  type="number"
-                  value={maxPeople}
-                  onChange={(e) => setMaxPeople(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
-                />
-              </div>
-
-              <div>
-                <label className="block text-neutral-400 mb-1">장소</label>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-400">
+                  장소
+                </label>
                 <input
                   type="text"
+                  placeholder="예) 종로3가역 6번 출구"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
                 />
               </div>
 
+              {/* 날짜 */}
               <div>
-                <label className="block text-neutral-400 mb-1">날짜</label>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-400">
+                  날짜
+                </label>
                 <input
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition [color-scheme:dark]"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-neutral-400 mb-1">
-                    시간 (시)
-                  </label>
-                  <select
-                    value={selectedHour}
-                    onChange={(e) => setSelectedHour(Number(e.target.value))}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
-                  >
-                    {HOURS.map((h) => (
-                      <option key={h} value={h}>
-                        {h}시
-                      </option>
-                    ))}
-                  </select>
+              {/* 시간 선택 (시 / 분 칩 스크롤) */}
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-neutral-400">
+                  시간
+                </label>
+
+                {/* 시간 미리보기 배너 */}
+                <div className="mb-3 rounded-xl border border-amber-400/30 bg-neutral-900 py-2.5 text-center">
+                  <span className="text-xl font-bold tracking-widest text-amber-400">
+                    {String(selectedHour).padStart(2, "0")} :{" "}
+                    {String(selectedMinute).padStart(2, "0")}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-neutral-400 mb-1">분</label>
-                  <select
-                    value={selectedMinute}
-                    onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-yellow-400"
-                  >
-                    {MINUTES.map((m) => (
-                      <option key={m} value={m}>
-                        {m}분
-                      </option>
-                    ))}
-                  </select>
+
+                <span className="mb-1 block text-[11px] text-neutral-500">
+                  시
+                </span>
+                <div className="mb-3 flex gap-2 overflow-x-auto py-1 scrollbar-none">
+                  {HOURS.map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setSelectedHour(h)}
+                      className={`whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                        selectedHour === h
+                          ? "bg-amber-400 text-neutral-900 font-bold"
+                          : "bg-neutral-800/80 text-neutral-300 hover:bg-neutral-700"
+                      }`}
+                    >
+                      {String(h).padStart(2, "0")}시
+                    </button>
+                  ))}
+                </div>
+
+                <span className="mb-1 block text-[11px] text-neutral-500">
+                  분
+                </span>
+                <div className="flex gap-2 overflow-x-auto py-1 scrollbar-none">
+                  {MINUTES.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setSelectedMinute(m)}
+                      className={`whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                        selectedMinute === m
+                          ? "bg-amber-400 text-neutral-900 font-bold"
+                          : "bg-neutral-800/80 text-neutral-300 hover:bg-neutral-700"
+                      }`}
+                    >
+                      {String(m).padStart(2, "0")}분
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-3 py-2 bg-neutral-700 text-neutral-300 rounded-lg font-medium hover:bg-neutral-600"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  disabled={editMutation.isPending}
-                  className="px-4 py-2 bg-yellow-400 text-neutral-900 font-bold rounded-lg hover:bg-yellow-500 transition"
-                >
-                  {editMutation.isPending ? "저장 중..." : "저장"}
-                </button>
+              {/* 정원 */}
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-neutral-400">
+                  정원 (명)
+                </label>
+                <input
+                  type="number"
+                  value={maxPeople}
+                  onChange={(e) => setMaxPeople(e.target.value)}
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition"
+                />
               </div>
+
+              {/* 하단 수정완료 버튼 */}
+              <button
+                type="submit"
+                disabled={editMutation.isPending}
+                className="my-4 flex w-full items-center justify-center rounded-xl bg-amber-400 py-3.5 text-base font-bold text-neutral-900 transition hover:bg-amber-500 disabled:opacity-50 shadow-lg shadow-amber-400/10"
+              >
+                {editMutation.isPending ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-neutral-900" />
+                ) : (
+                  "수정하기"
+                )}
+              </button>
             </form>
           </div>
         </div>
