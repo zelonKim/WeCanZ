@@ -397,7 +397,7 @@ export default function SettingScreen() {
           </span>
           <div className="bg-[#1C1C1E] border border-zinc-800 rounded-2xl overflow-hidden">
             <button
-              onClick={() => openTerms("https://example.com/terms")}
+              onClick={() => openTerms("https://www.jongtaewon.com/terms")}
               className="w-full flex justify-between items-center px-4 py-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
@@ -412,7 +412,7 @@ export default function SettingScreen() {
             </button>
 
             <button
-              onClick={() => openTerms("https://example.com/privacy")}
+              onClick={() => openTerms("https://www.jongtaewon.com/privacy")}
               className="w-full flex justify-between items-center px-4 py-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
