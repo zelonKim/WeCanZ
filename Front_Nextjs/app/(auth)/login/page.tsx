@@ -223,7 +223,7 @@ function LoginContent() {
                   alt="Get it on Google Play"
                   width={120}
                   height={36}
-                  className="h-11 w-auto"
+                  className="h-10 w-auto"
                 />
               </button>
 
