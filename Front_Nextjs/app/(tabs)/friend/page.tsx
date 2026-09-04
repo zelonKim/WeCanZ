@@ -199,7 +199,9 @@ export default function FriendScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${blockNickname}`);
+      const res = await client.get(
+        `/user/search/${encodeURIComponent(blockNickname.trim())}`,
+      );
       blockUserMutation.mutate(res.data.id);
     } catch (error: any) {
       const errorMessage =

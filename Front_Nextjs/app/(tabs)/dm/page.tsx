@@ -142,7 +142,9 @@ export default function DMScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${targetNickname}`);
+      const res = await client.get(
+        `/user/search/${encodeURIComponent(targetNickname.trim())}`,
+      );
       requestDmMutation.mutate(res.data.id);
     } catch (error: any) {
       const errorMessage =
