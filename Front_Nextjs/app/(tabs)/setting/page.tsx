@@ -226,7 +226,14 @@ export default function SettingScreen() {
     let finalImageUrl = profileImage;
 
     try {
-      // 웹 환경에 맞춘 이미지 업로드 로직 처리
+      if (profileImage) {
+        const data = await uploadProfileImage(profileImage);
+        if (data?.imageUrl) {
+          finalImageUrl = data.imageUrl; // R2에서 받아온 공개 URL로 교체
+        }
+      }
+
+      // 💡 R2 업로드가 끝난 최종 URL을 담아 기존 mutation 실행
       profileMutation.mutate({
         nickname,
         bio,

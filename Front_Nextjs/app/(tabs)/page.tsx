@@ -448,7 +448,7 @@ export default function HomeScreen() {
                   placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className=" font-bold w-full bg-[#2C2C2E] rounded-lg  px-3.5 py-2.5 text-sm text-white placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                  className="font-bold w-full bg-[#2C2C2E] rounded-lg  px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
                 />
               </div>
 
