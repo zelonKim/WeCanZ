@@ -71,7 +71,7 @@ export default function CommercialPage() {
 
   if (isError) {
     return (
-      <div className="flex flex-col justify-center items-center py-10 min-h-screen bg-[#121212]">
+      <div className="flex flex-col justify-center items-center py-10 min-h-screen ">
         <p className="text-sm text-gray-400">
           광고를 불러오는 데 실패했습니다.
         </p>
@@ -80,10 +80,10 @@ export default function CommercialPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 bg-[#121212] text-white max-w-5xl w-full mx-auto">
+    <main className="min-h-screen px-4  text-white max-w-5xl w-full mx-auto">
       {/* 상단 커스텀 헤더 */}
-      <header className="flex flex-row items-center justify-between py-3 mb-2">
-        <h1 className="text-6xl font-bold text-xl">📍 인기 스팟</h1>
+      <header className="flex flex-row items-center justify-between py-3 my-1">
+        <h1 className="text-2xl font-bold">📍 인기 스팟</h1>
 
         {/* 우측 아이콘 버튼 */}
         <button
@@ -95,8 +95,10 @@ export default function CommercialPage() {
         </button>
       </header>
 
+      <div className="h-[1px] bg-zinc-800 mb-3" />
       {/* 광고 카드 리스트 */}
-      <div className="flex flex-col gap-4">
+
+      <div className="flex flex-col gap-6">
         {ads.length === 0 ? (
           <div className="flex flex-col justify-center items-center py-10">
             <p className="text-sm text-gray-400">

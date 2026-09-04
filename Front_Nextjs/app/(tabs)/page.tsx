@@ -253,20 +253,21 @@ export default function HomeScreen() {
     FULL: {
       label: "인원 마감",
       badgeClass: "bg-red-500",
-      textClass: "text-white",
+      textClass: "text-gray-100",
     },
     IN_PROGRESS: {
       label: "진행 중",
       badgeClass: "bg-red-500",
-      textClass: "text-white",
+      textClass: "text-gray-100",
     },
   };
 
   return (
-    <main className=" min-h-screen bg-[#121212] text-white max-w-5xl w-full mx-auto relative px-4 pb-24">
+    <main className=" min-h-screen  text-white max-w-5xl w-full mx-auto relative px-6 pb-6">
       {/* 상단 헤더 */}
-      <header className="flex items-center justify-between py-3 mb-2">
-        <h1 className="text-xl font-bold">⚡️ 벙개의 광장</h1>
+      <header className="flex items-center justify-between py-4 ">
+        <h1 className="text-2xl font-bold">⚡️ 벙개의 광장</h1>
+
         <button
           className="p-1.5 rounded-full hover:bg-[#2C2C2E] transition-colors"
           onClick={() => {
@@ -279,13 +280,15 @@ export default function HomeScreen() {
         </button>
       </header>
 
+      <div className="h-[1px] bg-zinc-800 mb-3" />
+
       {/* 카테고리 필터 Bar */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 py-1">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
             onClick={() => setSelectedCategory(cat.value)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+            className={`px-4 py-2 rounded-full text-[15px] font-semibold whitespace-nowrap transition-colors ${
               selectedCategory === cat.value
                 ? "bg-[#FFD700] text-black"
                 : "bg-[#2C2C2E] text-gray-400 hover:text-white"
@@ -316,36 +319,38 @@ export default function HomeScreen() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-xs font-bold ${
                       STATUS_CONFIG[item.status]?.badgeClass || "bg-gray-700"
                     } ${STATUS_CONFIG[item.status]?.textClass || "text-white"}`}
                   >
                     {STATUS_CONFIG[item.status]?.label || item.status}
                   </span>
-                  <span className="text-xs font-bold text-[#FFD700]">
+                  <span className="text-sm font-bold text-[#FFD700]">
                     {getCategoryLabel(item.category)}
                   </span>
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-sm text-zinc-400">
                   정원 {item.maxPeople}명
                 </span>
               </div>
 
-              <h2 className="text-base font-bold text-white mb-1">
+              <h2 className="text-lg font-bold text-white mb-1">
                 {item.title}
               </h2>
-              <p className="text-xs text-gray-400 line-clamp-2 mb-3 leading-relaxed">
+              <p className="text-base text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
                 {item.description}
               </p>
 
+              <div className="h-[1px] bg-zinc-800 mb-2" />
+
               <div className="flex items-end justify-between pt-1">
-                <div className="flex flex-col gap-1 text-xs text-white">
+                <div className="flex flex-col gap-1 text-sm text-white">
                   <div className="flex items-center gap-1.5">
-                    <IoCalendarOutline className="text-[#FFD700]" size={14} />
+                    <IoCalendarOutline className="text-[#FFD700]" size={15} />
                     <span>{formatDateTime(item.dateTime)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <IoLocationOutline className="text-red-500" size={14} />
+                    <IoLocationOutline className="text-red-500" size={15} />
                     <span>{item.location}</span>
                   </div>
                 </div>
@@ -385,14 +390,14 @@ export default function HomeScreen() {
       {/* 새 벙개 만들기 모달 */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 bg-black/75 flex justify-center items-end z-100 "
+          className="fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none"
           onClick={closeAndResetModal}
         >
           <div
-            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-5 w-md sm:w-xl max-h-[90vh] flex flex-col mb-12 "
+            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] flex flex-col mb-12 scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4">
+            <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
               <h3 className="text-lg font-bold">새 벙개 만들기</h3>
               <button
                 onClick={closeAndResetModal}
@@ -405,15 +410,15 @@ export default function HomeScreen() {
             <div className="overflow-y-auto space-y-4 pr-1">
               {/* 카테고리 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2">
+                <label className="block text-sm font-semibold text-gray-400 mb-2">
                   카테고리
                 </label>
                 <div className="flex gap-2">
                   {[
-                    { label: "술벙", value: GatheringCategory.DRINK },
-                    { label: "클럽벙", value: GatheringCategory.CLUB },
+                    { label: "🍺 술벙", value: GatheringCategory.DRINK },
+                    { label: "🎉 클럽벙", value: GatheringCategory.CLUB },
                     {
-                      label: "술+클럽벙",
+                      label: "🔥 술+클럽벙",
                       value: GatheringCategory.DRINK_CLUB,
                     },
                   ].map((item) => (
@@ -421,7 +426,7 @@ export default function HomeScreen() {
                       key={item.value}
                       type="button"
                       onClick={() => setCategory(item.value)}
-                      className={`flex-1 py-2.5 rounded-lg text-xs font-semibold transition-colors ${
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                         category === item.value
                           ? "bg-[#FFD700] text-black"
                           : "bg-[#2C2C2E] text-gray-400"
@@ -435,35 +440,35 @@ export default function HomeScreen() {
 
               {/* 제목 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
-                  모임 제목
+                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                  제목
                 </label>
                 <input
                   type="text"
                   placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
                 />
               </div>
 
               {/* 설명 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
-                  상세 설명
+                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                  설명
                 </label>
                 <textarea
                   placeholder="예) 끼, 주사 없는 2030만"
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700] resize-none"
+                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700] resize-none"
                 />
               </div>
 
               {/* 장소 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-400 mb-1">
                   장소
                 </label>
                 <input
@@ -471,44 +476,44 @@ export default function HomeScreen() {
                   placeholder="예) 종로3가역 6번 출구"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
                 />
               </div>
 
               {/* 모임 날짜 선택 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
-                  모임 날짜 선택
+                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                  날짜
                 </label>
                 <input
                   type="date"
                   min={new Date().toISOString().split("T")[0]}
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#FFD700] [color-scheme:dark]"
+                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#FFD700] [color-scheme:dark]"
                 />
               </div>
 
               {/* 모임 시간 선택 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2">
-                  모임 시간 선택
+                <label className="block text-sm font-semibold text-gray-400 mb-2">
+                  시간
                 </label>
-                <div className="bg-[#1C1C1E] border border-[#FFD700] rounded-xl py-2.5 text-center mb-3">
-                  <span className="text-2xl font-bold text-[#FFD700] tracking-widest">
+                <div className="bg-[#1C1C1E] border border-[#FFD700] rounded-xl py-2.5 text-center mb-3 ">
+                  <span className="text-2xl font-bold text-[#FFD700] tracking-widest ">
                     {String(selectedHour).padStart(2, "0")} :{" "}
                     {String(selectedMinute).padStart(2, "0")}
                   </span>
                 </div>
 
-                <span className="block text-[11px] text-gray-400 mb-1">시</span>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3">
+                <span className="block text-xs text-gray-400 mb-1">시</span>
+                <div className="flex gap-2 overflow-x-auto scrollbar-none mb-3">
                   {HOURS.map((h) => (
                     <button
                       key={h}
                       type="button"
                       onClick={() => setSelectedHour(h)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                      className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedHour === h
                           ? "bg-[#FFD700] text-black"
                           : "bg-[#2C2C2E] text-white"
@@ -519,14 +524,14 @@ export default function HomeScreen() {
                   ))}
                 </div>
 
-                <span className="block text-[11px] text-gray-400 mb-1">분</span>
-                <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                <span className="block text-xs text-gray-400 mb-1">분</span>
+                <div className="flex gap-2 overflow-x-auto scrollbar-none">
                   {MINUTES.map((m) => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => setSelectedMinute(m)}
-                      className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                      className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedMinute === m
                           ? "bg-[#FFD700] text-black"
                           : "bg-[#2C2C2E] text-white"
@@ -540,14 +545,14 @@ export default function HomeScreen() {
 
               {/* 최대 인원 */}
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-400 mb-1">
                   최대 인원 (명)
                 </label>
                 <input
                   type="number"
                   value={maxPeople}
                   onChange={(e) => setMaxPeople(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#FFD700]"
                 />
               </div>
             </div>
@@ -555,7 +560,7 @@ export default function HomeScreen() {
             <button
               onClick={handleCreateGathering}
               disabled={createMutation.isPending}
-              className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white text-sm mt-4 transition-colors flex justify-center items-center"
+              className="w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
             >
               {createMutation.isPending ? (
                 <div className="flex justify-center items-center py-20">
@@ -585,7 +590,7 @@ export default function HomeScreen() {
             <h3 className="text-lg font-bold text-white mb-1">
               🔡 룸 코드 입장
             </h3>
-            <p className="text-xs text-gray-400 mb-5 text-center">
+            <p className="text-sm text-gray-400 mb-5 text-center">
               방의 4자리 룸 코드를 입력해 주세요.
             </p>
 

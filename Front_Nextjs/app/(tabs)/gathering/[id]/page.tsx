@@ -455,16 +455,16 @@ export default function GatheringDetailPage() {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-white truncate">
+              <span className="font-semibold text-base text-white truncate">
                 {user?.nickname}
               </span>
               {displayRoleTag && (
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                <span className="text-[11px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
                   {displayRoleTag}
                 </span>
               )}
             </div>
-            <p className="text-xs text-neutral-400 mt-0.5">
+            <p className="text-[13px] text-neutral-400 mt-0.5">
               예스쇼 {user?.yesShowCount ?? 0}회 / 노쇼 {user?.noShowCount ?? 0}
               회
             </p>
@@ -515,7 +515,7 @@ export default function GatheringDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 max-w-4xl mx-auto relative pb-20 shadow-2xl">
+    <div className="min-h-screen  max-w-4xl mx-auto relative pb-10 shadow-2xl">
       {/* 헤더 */}
       <header className="sticky top-0 z-30 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
         <button
@@ -524,7 +524,7 @@ export default function GatheringDetailPage() {
         >
           <IoArrowBack size={22} />
         </button>
-        <h1 className="font-semibold text-base">벙개 상세 정보</h1>
+        <h1 className="font-semibold text-lg">벙개 상세 정보</h1>
         <button
           onClick={() => {
             if (!canAccessChat) {
@@ -532,7 +532,7 @@ export default function GatheringDetailPage() {
             }
             router.push(`/gathering/${id}/chat`);
           }}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${"border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition ${"border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"}`}
         >
           <IoChatbubblesOutline size={14} />
           <span>채팅방</span>
@@ -591,22 +591,22 @@ export default function GatheringDetailPage() {
           <h2 className="text-xl font-bold text-white mb-2">
             {gathering.title}
           </h2>
-          <p className="text-sm text-neutral-300 whitespace-pre-line leading-relaxed">
+          <p className="text-base text-neutral-300 whitespace-pre-line leading-relaxed">
             {gathering.description}
           </p>
         </div>
 
         {/* 정보 섹션 */}
-        <div className="bg-neutral-800/60 border border-neutral-800 rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+        <div className="bg-neutral-800/60 border border-neutral-800 rounded-xl p-4 space-y-3 my-6 ">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
             <IoCalendarOutline size={18} className="text-yellow-400 shrink-0" />
             <span>{formatDateTime(gathering.dateTime)}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
             <IoLocationOutline size={18} className="text-red-400 shrink-0" />
             <span>{gathering.location}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-sm text-neutral-300">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
             <IoPeopleOutline size={18} className="text-yellow-400 shrink-0" />
             <span>
               참여 인원:{" "}
@@ -617,7 +617,7 @@ export default function GatheringDetailPage() {
             </span>
           </div>
           {gathering.roomCode && (
-            <div className=" flex gap-2 items-center text-sm">
+            <div className=" flex gap-2 items-center text-[15px] mt-4">
               <span className="text-neutral-400"> 룸 코드</span>
               <span className=" py-1 px-2 font-mono text-yellow-400 font-bold bg-neutral-800 rounded-lg border border-neutral-700/50">
                 {gathering.roomCode}
@@ -676,15 +676,15 @@ export default function GatheringDetailPage() {
             )}
         </div>
 
-        <hr className="border-neutral-800 my-4" />
+        <hr className="border-neutral-800 mt-8" />
 
         {/* 참가자 목록 */}
         <section>
-          <h3 className="text-sm font-semibold text-neutral-300 mb-2.5 flex items-center gap-1">
+          <h3 className=" text-base font-semibold text-neutral-200 mt-6 mb-2.5 flex items-center gap-1">
             <span>✅ 참가자</span>
           </h3>
           {approvedParticipants.length === 0 ? (
-            <p className="text-xs text-neutral-500 py-2">
+            <p className="text-sm text-neutral-500 py-2">
               참가 승인된 멤버가 없습니다.
             </p>
           ) : (
@@ -695,12 +695,12 @@ export default function GatheringDetailPage() {
         </section>
 
         {/* 대기자 목록 */}
-        <section className="mt-4">
-          <h3 className="text-sm font-semibold text-neutral-300 mb-2.5 flex items-center gap-1">
+        <section className="mt-8">
+          <h3 className="text-base font-semibold text-neutral-200 mb-2 flex items-center gap-1">
             <span>⏳ 대기자</span>
           </h3>
           {pendingParticipants.length === 0 ? (
-            <p className="text-xs text-neutral-500 py-2">
+            <p className="text-sm text-neutral-500 py-2">
               대기 중인 멤버가 없습니다.
             </p>
           ) : (
@@ -713,7 +713,7 @@ export default function GatheringDetailPage() {
         {/* 액션 버튼 */}
         {!isHost &&
           (gathering.status === "OPEN" || gathering.status === "FULL") && (
-            <div className="pt-4">
+            <div className="pt-8">
               {myParticipant ? (
                 myParticipant.status !== "BANNED" && (
                   <button
@@ -724,15 +724,15 @@ export default function GatheringDetailPage() {
                     }}
                     className="w-full py-3 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold rounded-xl text-sm border border-neutral-700 transition"
                   >
-                    벙개 참여 취소하기
+                    참여 취소하기
                   </button>
                 )
               ) : (
                 <button
                   onClick={() => applyMutation.mutate()}
-                  className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-bold rounded-xl text-sm transition shadow-lg shadow-yellow-400/10"
+                  className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-yellow-400/10"
                 >
-                  벙개 참여 신청하기 ⚡️
+                  참여 신청하기 ⚡️
                 </button>
               )}
             </div>

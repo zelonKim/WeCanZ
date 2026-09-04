@@ -135,7 +135,7 @@ function LoginContent() {
         {/* 1. 상단 로고 & 타이틀 */}
         <div className="text-center">
           <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
-          <p className="mt-2 text-sm text-[#A1A1A6]">
+          <p className="mt-2 text-[15px] text-[#A1A1A6]">
             오늘 밤, 가장 핫한 술번개 & 클럽번개
           </p>
         </div>
@@ -167,7 +167,7 @@ function LoginContent() {
           <button
             type="submit"
             disabled={isPending || isSocialPending}
-            className="w-full h-14 rounded-xl bg-yellow-400 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="text-lg w-full h-14 rounded-xl bg-yellow-400 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
           >
             {isPending ? "로그인 중..." : "로그인"}
           </button>
@@ -188,7 +188,7 @@ function LoginContent() {
         {/* 3. 구분선 */}
         <div className="flex items-center my-6">
           <div className="flex-1 h-[1px] bg-[#2C2C2E]" />
-          <span className="px-4 text-[13px] font-semibold text-[#666]">
+          <span className="px-4 text-sm font-semibold text-[#666]">
             간편 로그인
           </span>
           <div className="flex-1 h-[1px] bg-[#2C2C2E]" />
@@ -207,7 +207,7 @@ function LoginContent() {
         <div className="pt-6 border-t border-[#2C2C2E] text-center space-y-4">
           {/* 앱 출시 예정 안내 박스 */}
           <div className="bg-[#2C2C2E]/50 p-3 rounded-xl border border-[#3A3A3C]/50">
-            <p className="text-[12px] font-medium text-[#A1A1A6] mb-2">
+            <p className="text-sm font-medium text-[#A1A1A6] mb-2">
               ⚡️ 9월 중 앱 출시 예정
             </p>
             <div className="flex justify-center items-center gap-3">
@@ -223,7 +223,7 @@ function LoginContent() {
                   alt="Get it on Google Play"
                   width={120}
                   height={36}
-                  className="h-12 w-auto"
+                  className="h-11 w-auto"
                 />
               </button>
 

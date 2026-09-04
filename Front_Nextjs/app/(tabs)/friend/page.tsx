@@ -227,10 +227,10 @@ export default function FriendScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white max-w-5xl mx-auto px-4 py-6">
+    <div className="flex flex-col min-h-screen  text-white max-w-5xl mx-auto px-4 py-1">
       {/* 헤더 영역 */}
-      <div className="flex items-center justify-between py-3 border-b border-zinc-800 mb-6">
-        <h1 className="text-2xl font-bold">👥 나의 친구</h1>
+      <div className="flex items-center justify-between py-3 border-b border-zinc-800 mb-4">
+        <h1 className="text-2xl font-bold">👥 나의 친구들</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsAddModalVisible(true)}

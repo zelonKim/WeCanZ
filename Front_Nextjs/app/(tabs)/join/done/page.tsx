@@ -45,9 +45,9 @@ export default function DoneGatheringsPage() {
   );
 
   return (
-    <div className=" min-h-screen bg-neutral-900 text-white max-w-5xl mx-auto shadow-2xl flex flex-col">
+    <div className=" min-h-screen  text-white max-w-5xl mx-auto shadow-2xl flex flex-col">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-800 shrink-0">
+      <header className="flex items-center justify-between px-4 py-3 bg-neutral-900/90 border-b border-neutral-800 shrink-0">
         <button
           onClick={() => router.back()}
           className="p-1 hover:bg-neutral-800 rounded-full transition"
@@ -62,7 +62,7 @@ export default function DoneGatheringsPage() {
       <nav className="flex border-b border-neutral-800 shrink-0">
         <button
           onClick={() => setActiveTab("COMPLETED")}
-          className={`flex-1 py-3.5 text-center text-sm font-medium transition-colors ${
+          className={`flex-1 py-3.5 text-center text-base font-medium transition-colors ${
             activeTab === "COMPLETED"
               ? "text-orange-500 border-b-2 border-orange-500 font-bold"
               : "text-neutral-500 hover:text-neutral-300"
@@ -73,7 +73,7 @@ export default function DoneGatheringsPage() {
 
         <button
           onClick={() => setActiveTab("CANCELED")}
-          className={`flex-1 py-3.5 text-center text-sm font-medium transition-colors ${
+          className={`flex-1 py-3.5 text-center text-base font-medium transition-colors ${
             activeTab === "CANCELED"
               ? "text-red-500 border-b-2 border-red-500 font-bold"
               : "text-neutral-500 hover:text-neutral-300"
@@ -90,7 +90,7 @@ export default function DoneGatheringsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
           </div>
         ) : currentList.length === 0 ? (
-          <div className="py-20 text-center text-neutral-500 text-sm">
+          <div className="py-20 text-center text-neutral-500 text-base">
             {activeTab === "COMPLETED"
               ? "종료된 모임이 없습니다."
               : "취소된 모임이 없습니다."}
@@ -101,7 +101,7 @@ export default function DoneGatheringsPage() {
               <li key={item.id}>
                 <div
                   onClick={() => router.push(`/gathering/${item.id}`)}
-                  className="bg-neutral-800 border border-neutral-700/80 rounded-xl p-4 cursor-pointer hover:border-neutral-600 transition"
+                  className="bg-[#1e1e1e] border border-[#333] rounded-xl p-4 cursor-pointer hover:border-neutral-600 transition"
                 >
                   <h2 className="text-base font-bold text-white truncate mb-1.5">
                     {item.title}
@@ -110,6 +110,8 @@ export default function DoneGatheringsPage() {
                   <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed mb-2.5">
                     {item.description || "상세 내용이 없습니다."}
                   </p>
+
+                  <div className="h-[1px] bg-zinc-800 mb-3" />
 
                   <div className="flex items-center gap-1 text-xs text-neutral-400">
                     <IoLocationOutline className="text-red-500 text-sm shrink-0" />

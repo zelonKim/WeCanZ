@@ -87,7 +87,7 @@ export default function FlashScreen() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white max-w-5xl mx-auto px-4 py-6">
+    <div className="flex flex-col min-h-screen  text-white max-w-5xl mx-auto px-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between py-3">
         <h1 className="text-2xl font-bold">✅ 참여중인 벙개</h1>
@@ -100,7 +100,7 @@ export default function FlashScreen() {
           <TimeOutline color="#FFE600" height="25px" width="25px" />
         </button>
       </div>
-      <div className="h-[1px] bg-zinc-800 mb-6" />
+      <div className="h-[1px] bg-zinc-800 mb-4" />
 
       {/* 목록 콘텐츠 */}
       {isLoading ? (
@@ -112,15 +112,15 @@ export default function FlashScreen() {
           <p className="text-base">현재 참여 중인 벙개가 없습니다.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">
           {myGatherings.map((item) => (
             <div
               key={item.id}
               onClick={() => handlePressGathering(item.id)}
-              className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl cursor-pointer hover:border-yellow-400 transition flex flex-col justify-between"
+              className="bg-[#1e1e1e] border border-[#333] p-5 rounded-2xl cursor-pointer hover:border-yellow-400 transition flex flex-col justify-between"
             >
               <div>
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-2">
                   <h2 className="text-lg font-bold text-white truncate mr-2">
                     {item.title}
                   </h2>
@@ -128,14 +128,15 @@ export default function FlashScreen() {
                 </div>
 
                 {item.description ? (
-                  <p className="text-sm text-zinc-400 line-clamp-2 mb-4 leading-relaxed">
+                  <p className="text-base text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
                     {item.description}
                   </p>
                 ) : null}
               </div>
 
+              <div className="h-[1px] bg-zinc-800 mb-1" />
               {item.location && (
-                <div className="flex items-center gap-1.5 text-xs text-zinc-300 mt-2">
+                <div className="flex items-center gap-1.5 text-sm text-zinc-300 mt-2">
                   <LocationOutline color="#EF4444" height="14px" width="14px" />
                   <span className="truncate">{item.location}</span>
                 </div>

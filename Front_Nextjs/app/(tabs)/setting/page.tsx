@@ -317,7 +317,7 @@ export default function SettingScreen() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white max-w-4xl w-full mx-auto pb-10">
+    <div className="flex flex-col min-h-screen  text-white max-w-4xl w-full mx-auto pb-6">
       <div className="flex items-center justify-between px-5 py-4">
         <h1 className="text-2xl font-extrabold">⚙️ 환경 설정</h1>
         <button
@@ -359,7 +359,7 @@ export default function SettingScreen() {
 
           <div className="mb-4">
             <h2 className="text-xl font-bold mb-1.5">{user.nickname}</h2>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-[15px] text-zinc-400 leading-relaxed">
               {user.bio || "아직 작성된 자기소개가 없습니다."}
             </p>
           </div>
@@ -367,14 +367,14 @@ export default function SettingScreen() {
           {/* 신뢰도/매너 배지 */}
           <div className="flex bg-[#2C2C2E] rounded-xl py-3 items-center">
             <div className="flex-1 text-center">
-              <span className="text-xs text-zinc-400 block mb-1">예스쇼</span>
+              <span className="text-sm text-zinc-400 block mb-1">예스쇼</span>
               <span className="text-base font-bold text-yellow-400">
                 {user.yesShowCount ?? 0}회
               </span>
             </div>
             <div className="w-[1px] h-6 bg-zinc-700" />
             <div className="flex-1 text-center">
-              <span className="text-xs text-zinc-400 block mb-1">노쇼</span>
+              <span className="text-sm text-zinc-400 block mb-1">노쇼</span>
               <span className="text-base font-bold text-red-500">
                 {user.noShowCount ?? 0}회
               </span>
@@ -384,7 +384,7 @@ export default function SettingScreen() {
 
         {/* 설정 메뉴 */}
         <div>
-          <span className="text-xs font-semibold text-zinc-400 ml-1 mb-2 block">
+          <span className="text-sm font-semibold text-zinc-400 ml-1 mb-2 block">
             앱 설정
           </span>
           <div className="bg-[#1C1C1E] border border-zinc-800 rounded-2xl overflow-hidden">
@@ -398,7 +398,7 @@ export default function SettingScreen() {
                   height="18px"
                   width="18px"
                 />
-                <span className="text-sm font-medium">서비스 이용약관</span>
+                <span className="text-base font-medium">서비스 이용약관</span>
               </div>
               <ChevronForward color="#8E8E93" height="18px" width="18px" />
             </button>
@@ -413,7 +413,7 @@ export default function SettingScreen() {
                   height="18px"
                   width="18px"
                 />
-                <span className="text-sm font-medium">개인정보 처리방침</span>
+                <span className="text-base font-medium">개인정보 처리방침</span>
               </div>
               <ChevronForward color="#8E8E93" height="18px" width="18px" />
             </button>
@@ -424,7 +424,7 @@ export default function SettingScreen() {
             >
               <div className="flex items-center gap-2.5">
                 <MegaphoneOutline color="#FF453A" height="18px" width="18px" />
-                <span className="text-sm font-medium text-red-500">
+                <span className="text-base font-medium text-red-500">
                   신고하기
                 </span>
               </div>
@@ -435,7 +435,7 @@ export default function SettingScreen() {
 
         {/* 계정 관리 */}
         <div>
-          <span className="text-xs font-semibold text-zinc-400 ml-1 mb-2 block">
+          <span className="text-sm font-semibold text-zinc-400 ml-1 mb-2 block">
             계정 관리
           </span>
           <div className="bg-[#1C1C1E] border border-zinc-800 rounded-2xl overflow-hidden">
@@ -445,7 +445,7 @@ export default function SettingScreen() {
             >
               <div className="flex items-center gap-2.5">
                 <LogOutOutline color="#FFF" height="18px" width="18px" />
-                <span className="text-sm font-medium">로그아웃</span>
+                <span className="text-base font-medium">로그아웃</span>
               </div>
               <ChevronForward color="#8E8E93" height="18px" width="18px" />
             </button>
@@ -460,7 +460,7 @@ export default function SettingScreen() {
                   height="18px"
                   width="18px"
                 />
-                <span className="text-sm font-medium text-red-500">
+                <span className="text-base font-medium text-red-500">
                   회원 탈퇴
                 </span>
               </div>
@@ -472,7 +472,7 @@ export default function SettingScreen() {
 
       {/* 프로필 수정 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className=" mb-16 fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-[#1C1C1E] w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 border border-zinc-800">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">프로필 수정</h3>
@@ -519,7 +519,7 @@ export default function SettingScreen() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1">
+                <label className="text-sm font-semibold text-zinc-400 block mb-1">
                   닉네임
                 </label>
                 <input
@@ -527,12 +527,12 @@ export default function SettingScreen() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="닉네임을 입력하세요"
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-yellow-400"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-bold text-base text-white outline-none focus:ring-1 focus:ring-yellow-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1">
+                <label className="text-sm font-semibold text-zinc-400 block mb-1">
                   자기소개
                 </label>
                 <textarea
@@ -540,7 +540,7 @@ export default function SettingScreen() {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="자기소개를 입력하세요"
                   rows={3}
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-yellow-400 resize-none"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-medium text-base text-white outline-none focus:ring-1 focus:ring-yellow-400 resize-none"
                 />
               </div>
             </div>
@@ -558,7 +558,7 @@ export default function SettingScreen() {
 
       {/* 신고하기 모달 */}
       {isReportModalOpen && (
-        <div className="fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="mb-16 fixed inset-0 bg-black/75 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-[#1C1C1E] w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 border border-zinc-800 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">🚨 유저 신고하기</h3>
@@ -569,7 +569,7 @@ export default function SettingScreen() {
 
             <div className="space-y-4 mb-5">
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1">
+                <label className="text-sm font-semibold text-zinc-400 block mb-1">
                   신고할 유저 닉네임
                 </label>
                 <input
@@ -577,12 +577,12 @@ export default function SettingScreen() {
                   value={targetNickname}
                   onChange={(e) => setTargetNickname(e.target.value)}
                   placeholder="상대방 닉네임을 입력해주세요"
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-sm text-white outline-none"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-base text-white outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1">
+                <label className="text-sm font-semibold text-zinc-400 block mb-1">
                   신고 사유 선택
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -592,7 +592,7 @@ export default function SettingScreen() {
                       <button
                         key={reason}
                         onClick={() => setSelectedReason(reason)}
-                        className={`px-3 py-2 rounded-lg text-xs font-medium border transition cursor-pointer ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium border transition cursor-pointer ${
                           isSelected
                             ? "bg-red-500/15 border-red-500 text-red-500 font-semibold"
                             : "bg-[#2C2C2E] border-transparent text-zinc-400 hover:bg-zinc-700"
@@ -606,7 +606,7 @@ export default function SettingScreen() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-400 block mb-1">
+                <label className="text-sm font-semibold text-zinc-400 block mb-1">
                   상세 내용
                 </label>
                 <textarea
@@ -614,7 +614,7 @@ export default function SettingScreen() {
                   onChange={(e) => setReportDetails(e.target.value)}
                   placeholder="신고 사유에 대한 상세 내용을 적어주세요."
                   rows={3}
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-sm text-white outline-none resize-none"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-[15px] text-white outline-none resize-none"
                 />
               </div>
             </div>
@@ -637,7 +637,7 @@ export default function SettingScreen() {
             <h3 className="text-lg font-bold text-center">
               🔍 유저 프로필 찾기
             </h3>
-            <p className="text-xs text-zinc-400 text-center -mt-2">
+            <p className="text-sm text-zinc-400 text-center -mt-2">
               찾고 싶은 유저의 닉네임을 입력하세요.
             </p>
 
@@ -646,7 +646,7 @@ export default function SettingScreen() {
               placeholder="닉네임 입력"
               value={searchNickname}
               onChange={(e) => setSearchNickname(e.target.value)}
-              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-sm text-white outline-none"
+              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-base font-semibold text-white outline-none"
             />
 
             <div className="flex gap-2.5">
