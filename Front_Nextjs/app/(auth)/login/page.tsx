@@ -9,12 +9,10 @@ import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
 import { Suspense } from "react";
+import Image from "next/image";
 
-// 💡 환경변수 또는 발급받은 클라이언트 ID 입력
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-
 const APPLE_CLIENT_ID = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "";
-
 const APPLE_REDIRECT_URI = process.env.NEXT_PUBLIC_APPLE_REDIRECT_URI || "";
 
 interface LoginData {
@@ -135,7 +133,7 @@ export default function LoginScreen() {
     <Suspense fallback={<div>Loading...</div>}>
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4 py-8">
-          <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 pb-4 shadow-xl">
+          <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 pb-6 shadow-xl">
             {/* 1. 상단 로고 & 타이틀 */}
             <div className="text-center">
               <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
@@ -207,28 +205,72 @@ export default function LoginScreen() {
               isSocialPending={isSocialPending}
             />
 
-            {/* 🚀 5. 약관 및 개인정보 처리방침 링크 추가 */}
-            <div className="pt-4 border-t border-[#2C2C2E] text-center">
-              <div className="flex justify-center items-center gap-3 text-xs text-[#8E8E93]">
-                <button
-                  type="button"
-                  onClick={() => router.push("/terms")}
-                  className="hover:text-white transition underline underline-offset-4 cursor-pointer"
-                >
-                  서비스 이용약관
-                </button>
-                <span>|</span>
-                <button
-                  type="button"
-                  onClick={() => router.push("/privacy")}
-                  className="hover:text-white transition underline underline-offset-4 cursor-pointer"
-                >
-                  개인정보 처리방침
-                </button>
+            {/* 🚀 5. 약관, 스토어 배지 및 저작권 표기 영역 */}
+            <div className="pt-6 border-t border-[#2C2C2E] text-center space-y-4">
+              {/* 앱 출시 예정 안내 박스 (배지 강조 + 시선 집중) */}
+              <div className="bg-[#2C2C2E]/50 p-3 rounded-xl border border-[#3A3A3C]/50">
+                <p className="text-[12px] font-medium text-[#A1A1A6] mb-2">
+                  ⚡️ 9월 중 앱 출시 예정
+                </p>
+                <div className="flex justify-center items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      alert("안드로이드 앱이 9월 중에 출시될 예정입니다! 📱")
+                    }
+                    className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                  >
+                    <Image
+                      src="/logo/playStore.png"
+                      alt="Get it on Google Play"
+                      width={120}
+                      height={36}
+                      className="h-12 w-auto"
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      alert("iOS 앱이 9월 중에 출시될 예정입니다! 📱")
+                    }
+                    className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                  >
+                    <Image
+                      src="/logo/appStore.svg"
+                      alt="Download on the App Store"
+                      width={120}
+                      height={36}
+                      className="h-12 w-auto"
+                    />
+                  </button>
+                </div>
               </div>
-              <p className="text-[11px] text-[#666] mt-3">
-                Copyright © 2026 Golazo. All rights reserved.
-              </p>
+
+              {/* 하단 약관 및 저작권 (상대적으로 은은하게 배치) */}
+              <div className="space-y-1.5 pt-1">
+                <div className="flex justify-center items-center gap-3 text-xs text-[#8E8E93]">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/terms")}
+                    className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                  >
+                    서비스 이용약관
+                  </button>
+                  <span>|</span>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/privacy")}
+                    className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                  >
+                    개인정보 처리방침
+                  </button>
+                </div>
+
+                <p className="mt-2 text-[11px] text-[#555]">
+                  Copyright © 2026 Golazo. All rights reserved.
+                </p>
+              </div>
             </div>
           </div>
         </div>
