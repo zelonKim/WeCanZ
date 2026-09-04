@@ -63,8 +63,8 @@ export default function CommercialPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center py-10 min-h-screen bg-[#121212]">
-        <IoReloadOutline className="animate-spin text-[#FFD700]" size={36} />
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
       </div>
     );
   }

@@ -11,7 +11,6 @@ import {
   IoCalendarOutline,
   IoLocationOutline,
   IoPerson,
-  IoRefreshOutline,
   IoQrCodeOutline,
 } from "react-icons/io5";
 
@@ -299,8 +298,8 @@ export default function HomeScreen() {
 
       {/* 모임 리스트 */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <IoRefreshOutline className="animate-spin text-[#FFD700]" size={36} />
+        <div className="flex justify-center items-center min-h-screen bg-neutral-900 text-white">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
         </div>
       ) : filteredGatherings.length === 0 ? (
         <div className="text-center py-24 text-gray-400 text-sm leading-relaxed">
@@ -559,7 +558,9 @@ export default function HomeScreen() {
               className="w-full bg-red-600 hover:bg-red-700 py-3 rounded-xl font-bold text-white text-sm mt-4 transition-colors flex justify-center items-center"
             >
               {createMutation.isPending ? (
-                <IoRefreshOutline className="animate-spin" size={20} />
+                <div className="flex justify-center items-center py-20">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
+                </div>
               ) : (
                 "방 만들기"
               )}

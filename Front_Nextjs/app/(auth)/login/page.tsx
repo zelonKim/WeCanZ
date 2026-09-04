@@ -134,8 +134,8 @@ export default function LoginScreen() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-        <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4">
-          <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 shadow-xl">
+        <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4 py-8">
+          <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 pb-4 shadow-xl">
             {/* 1. 상단 로고 & 타이틀 */}
             <div className="text-center">
               <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
@@ -206,6 +206,30 @@ export default function LoginScreen() {
               onAppleLogin={handleAppleLogin}
               isSocialPending={isSocialPending}
             />
+
+            {/* 🚀 5. 약관 및 개인정보 처리방침 링크 추가 */}
+            <div className="pt-4 border-t border-[#2C2C2E] text-center">
+              <div className="flex justify-center items-center gap-3 text-xs text-[#8E8E93]">
+                <button
+                  type="button"
+                  onClick={() => router.push("/terms")}
+                  className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                >
+                  서비스 이용약관
+                </button>
+                <span>|</span>
+                <button
+                  type="button"
+                  onClick={() => router.push("/privacy")}
+                  className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                >
+                  개인정보 처리방침
+                </button>
+              </div>
+              <p className="text-[11px] text-[#666] mt-3">
+                Copyright © 2026 Golazo. All rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </GoogleOAuthProvider>

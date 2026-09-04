@@ -87,7 +87,7 @@ export default function DoneGatheringsPage() {
       <main className=" flex-1 p-4 overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
           </div>
         ) : currentList.length === 0 ? (
           <div className="py-20 text-center text-neutral-500 text-sm">
