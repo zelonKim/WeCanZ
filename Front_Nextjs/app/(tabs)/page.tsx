@@ -123,7 +123,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (me) {
       if (!me.termsAgreedAt || !me.privacyAgreedAt) {
-        router.replace("/login");
+        router.replace("/agreement");
       }
     }
   }, [me, router]);
