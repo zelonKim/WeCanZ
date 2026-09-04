@@ -18,12 +18,14 @@ client.interceptors.request.use(
 
     return config;
   },
-  (error) => {
+  async (error) => {
+    if (typeof window !== "undefined") {
+      await removeAccessToken();
+      window.location.href = "/login";
+    }
     return Promise.reject(error);
   },
 );
-
-
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
