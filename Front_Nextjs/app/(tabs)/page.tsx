@@ -199,6 +199,10 @@ export default function HomeScreen() {
     setSelectedMinute(0);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   const handleCreateGathering = () => {
     if (!title.trim()) return alert("제목을 입력해주세요.");
     if (!description.trim()) return alert("설명을 입력해주세요.");
@@ -389,10 +393,7 @@ export default function HomeScreen() {
 
       {/* 새 벙개 만들기 모달 */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none"
-          onClick={closeAndResetModal}
-        >
+        <div className="fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none">
           <div
             className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] overflow-y-auto flex flex-col mb-12 scrollbar-none"
             onClick={(e) => e.stopPropagation()}
@@ -400,7 +401,7 @@ export default function HomeScreen() {
             <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
               <h3 className="text-lg font-bold text-white">새 벙개 만들기</h3>
               <button
-                onClick={closeAndResetModal}
+                onClick={closeModal}
                 className="text-gray-400 hover:text-white"
               >
                 <IoClose size={24} />
