@@ -123,7 +123,7 @@ export default function FriendScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${friendNickname}`);
+      const res = await client.get(`/user/search/${encodeURIComponent(friendNickname.trim())}`);
       await client.post(`/friendship/request/${res.data.id}`);
 
       setIsAddModalVisible(false);
