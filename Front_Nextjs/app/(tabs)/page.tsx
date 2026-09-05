@@ -136,6 +136,8 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["gatherings"],
     queryFn: fetchGatherings,
+    refetchInterval: 10 * 60 * 1000, // 10분 (밀리초 단위: 600,000ms)
+    refetchIntervalInBackground: true, // 유저가 다른 탭을 보고 있어도 백그라운드에서 주기적으로 갱신
   });
 
   // 모임 생성 Mutation

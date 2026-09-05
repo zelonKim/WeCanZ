@@ -3,15 +3,19 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateGatheringDto } from './dto/create-gathering.dto';
 import { UpdateGatheringDto } from './dto/update-gathering.dto';
 import { GatheringStatus, ParticipantStatus } from '@prisma/client';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class GatheringService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private readonly logger = new Logger(GatheringService.name);
 
   private generateRandomCode(): string {
     const chars = 'abcdefghijklmnopqrstuvwxyz';
@@ -37,6 +41,34 @@ export class GatheringService {
       }
     }
   }
+
+  @Cron(CronExpression.EVERY_10_MINUTES) // 10분마다 실행
+  async autoCompleteExpiredGatherings() {
+    // 현재 시간 - 12시간
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+
+    const result = await this.prisma.gathering.updateMany({
+      where: {
+        status: {
+          notIn: [GatheringStatus.COMPLETED, GatheringStatus.CANCELED],
+        },
+        dateTime: {
+          lte: twelveHoursAgo, // dateTime <= 현재시간 - 12시간
+        },
+      },
+      data: {
+        status: GatheringStatus.COMPLETED,
+        roomCode: null, // 기존 completeGathering과 동일하게 초대코드 초기화
+      },
+    });
+
+    if (result.count > 0) {
+      this.logger.log(
+        `[Auto-Close] 12시간 이상 경과한 모임 ${result.count}개가 COMPLETED 처리되었습니다.`,
+      );
+    }
+  }
+
   // 1. 모임 생성
   async createGathering(
     hostId: string,
