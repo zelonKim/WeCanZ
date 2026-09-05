@@ -166,12 +166,11 @@ export default function HomeScreen() {
   });
 
   const filteredGatherings = gatherings.filter((item) => {
-    const isNotFinished =
-      item.status !== "COMPLETED" && item.status !== "CANCELED";
+    const isNotCanceled = item.status !== "CANCELED";
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 
-    return isNotFinished && matchesCategory;
+    return isNotCanceled && matchesCategory;
   });
 
   const closeAndResetModal = () => {

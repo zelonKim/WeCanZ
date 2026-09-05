@@ -179,12 +179,11 @@ export default function HomeScreen() {
   };
 
   const filteredGatherings = gatherings.filter((item) => {
-    const isNotFinished =
-      item.status !== "COMPLETED" && item.status !== "CANCELED";
+    const isNotCanceled = item.status !== "CANCELED";
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 
-    return isNotFinished && matchesCategory;
+    return isNotCanceled && matchesCategory;
   });
 
   const closeAndResetModal = () => {
@@ -262,6 +261,11 @@ export default function HomeScreen() {
     IN_PROGRESS: {
       label: "진행 중",
       badgeClass: "bg-red-500",
+      textClass: "text-gray-100",
+    },
+    COMPLETED: {
+      label: "종료됨",
+      badgeClass: "bg-gray-700",
       textClass: "text-gray-100",
     },
   };

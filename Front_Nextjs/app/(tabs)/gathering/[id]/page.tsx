@@ -81,7 +81,7 @@ const STATUS_COLOR_CLASS: Record<string, string> = {
   FULL: "bg-red-500 text-gray-900 border-red-500/30",
   IN_PROGRESS: "bg-red-500 text-gray-100 border-red-500/30",
   CANCELED: "bg-red-500 text-gray-900 border-red-500/30",
-  COMPLETED: "bg-orange-500 text-gray-900 border-orange-500/30",
+  COMPLETED: "bg-gray-700 text-gray-100 border-gray-500/30",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -588,7 +588,7 @@ export default function GatheringDetailPage() {
         {/* 상태 배너 */}
 
         {gathering.status === "COMPLETED" && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex flex-row justify-between items-center  gap-2 text-amber-400 ">
+          <div className="bg-gray-400/20 border border-gray-300/30 rounded-xl p-3 flex flex-row justify-between items-center  gap-2 text-gray-400 ">
             <div className="flex items-center gap-1.5 font-medium text-sm">
               <IoCheckmarkCircleOutline size={18} />
               <span>종료된 모임입니다</span>
