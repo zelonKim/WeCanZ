@@ -584,7 +584,7 @@ export default function GatheringDetailPage() {
       </header>
 
       {/* 본문 콘텐츠 */}
-      <main className="p-4 space-y-4 bg-[#121212]">
+      <main className="p-6 pb-12 space-y-4 bg-[#121212]">
         {/* 상태 배너 */}
 
         {gathering.status === "COMPLETED" && (
@@ -704,7 +704,7 @@ export default function GatheringDetailPage() {
                           if (confirm("정말로 모임을 시작하시겠습니까?"))
                             startMutation.mutate();
                         }}
-                        className="cursor-pointer py-2 px-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold rounded-lg text-sm transition"
+                        className="cursor-pointer py-2 px-3 bg-yellow-400/90 hover:bg-yellow-500/90 text-neutral-900 font-semibold rounded-lg text-sm transition"
                       >
                         시작하기 🚀
                       </button>
@@ -713,7 +713,7 @@ export default function GatheringDetailPage() {
                           if (confirm("정말로 모임을 취소하시겠습니까?"))
                             cancelMutation.mutate();
                         }}
-                        className="cursor-pointer py-2 px-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg text-sm transition"
+                        className="cursor-pointer py-2 px-3 bg-red-600/90 hover:bg-red-700/90 text-white font-semibold rounded-lg text-sm transition"
                       >
                         취소하기 🗑️
                       </button>

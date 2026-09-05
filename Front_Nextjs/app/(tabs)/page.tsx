@@ -55,8 +55,8 @@ const CATEGORIES = [
 ];
 
 const HOURS = [
-  17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16,
+  18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 17,
 ];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
@@ -394,16 +394,16 @@ export default function HomeScreen() {
 
       {/* 새 벙개 만들기 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none">
+        <div className=" fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none">
           <div
-            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] overflow-y-auto flex flex-col mb-12 scrollbar-none"
+            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] overflow-y-auto flex flex-col  scrollbar-none mb-10"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
-              <h3 className="text-lg font-bold text-white">새 벙개 만들기</h3>
+              <h3 className="text-lg font-bold text-white">New 벙개 만들기</h3>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white cursor-pointer"
               >
                 <IoClose size={24} />
               </button>
@@ -413,7 +413,7 @@ export default function HomeScreen() {
             <div className="overflow-y-auto space-y-4 px-3 py-1 scrollbar-none">
               {/* 카테고리 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   카테고리
                 </label>
                 <div className="flex gap-2">
@@ -429,7 +429,7 @@ export default function HomeScreen() {
                       key={item.value}
                       type="button"
                       onClick={() => setCategory(item.value)}
-                      className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                      className={`cursor-pointer flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                         category === item.value
                           ? "bg-[#FFD700] text-gray-900"
                           : "bg-[#2C2C2E] text-gray-400"
@@ -443,7 +443,7 @@ export default function HomeScreen() {
 
               {/* 제목 (ring-inset 적용) */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-bold text-gray-200 mb-1">
                   제목
                 </label>
                 <input
@@ -451,13 +451,13 @@ export default function HomeScreen() {
                   placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm  text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
                 />
               </div>
 
               {/* 설명 (ring-inset 적용) */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-200 mb-1">
                   설명
                 </label>
                 <textarea
@@ -465,13 +465,13 @@ export default function HomeScreen() {
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] resize-none"
+                  className=" w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] resize-none"
                 />
               </div>
 
               {/* 장소 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-200 mb-1">
                   장소
                 </label>
                 <input
@@ -479,13 +479,13 @@ export default function HomeScreen() {
                   placeholder="예) 종로3가역 6번 출구"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
                 />
               </div>
 
               {/* 모임 날짜 선택 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-200 mb-1">
                   날짜
                 </label>
                 <input
@@ -493,13 +493,13 @@ export default function HomeScreen() {
                   min={new Date().toISOString().split("T")[0]}
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="font-bold w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] [color-scheme:dark]"
+                  className=" w-full bg-[#2C2C2E] font-semibold rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] [color-scheme:dark]"
                 />
               </div>
 
               {/* 모임 시간 선택 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-2">
+                <label className="block text-sm font-semibold text-gray-200 mb-2">
                   시간
                 </label>
                 <div className="bg-[#1C1C1E] border border-[#FFD700] rounded-xl py-2.5 text-center mb-3">
@@ -509,7 +509,9 @@ export default function HomeScreen() {
                   </span>
                 </div>
 
-                <span className="block text-xs text-gray-400 mb-1">시</span>
+                <span className="block text-xs text-gray-200 font-semibold mb-1">
+                  시
+                </span>
                 <div className="flex gap-2 overflow-x-auto scrollbar-none mb-3 py-0.5">
                   {HOURS.map((h) => (
                     <button
@@ -527,7 +529,9 @@ export default function HomeScreen() {
                   ))}
                 </div>
 
-                <span className="block text-xs text-gray-400 mb-1">분</span>
+                <span className="block text-xs text-gray-200 font-semibold mb-1">
+                  분
+                </span>
                 <div className="flex gap-2 overflow-x-auto scrollbar-none py-0.5">
                   {MINUTES.map((m) => (
                     <button
@@ -548,14 +552,27 @@ export default function HomeScreen() {
 
               {/* 최대 인원 */}
               <div>
-                <label className="block text-sm font-semibold text-gray-400 mb-1">
+                <label className="block text-sm font-semibold text-gray-200 mb-1">
                   최대 인원 (명)
                 </label>
                 <input
                   type="number"
                   value={maxPeople}
-                  onChange={(e) => setMaxPeople(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  min={1}
+                  max={100}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+
+                    // 100 초과 입력 방지
+                    if (val > 99) {
+                      setMaxPeople("99");
+                      return;
+                    }
+
+                    // 음수 입력 방지 및 일반 값 반영
+                    setMaxPeople(e.target.value);
+                  }}
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
                 />
               </div>
             </div>
@@ -563,7 +580,7 @@ export default function HomeScreen() {
             <button
               onClick={handleCreateGathering}
               disabled={createMutation.isPending}
-              className="w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
+              className="cursor-pointer w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
             >
               {createMutation.isPending ? (
                 <div className="flex justify-center items-center">

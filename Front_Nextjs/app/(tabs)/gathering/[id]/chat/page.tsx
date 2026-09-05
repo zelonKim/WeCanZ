@@ -26,10 +26,22 @@ interface ChatMessage {
   };
 }
 
+interface Participant {
+  id: string;
+  userId: string;
+  status: "PENDING" | "APPROVED" | "BANNED" | "YES_SHOW" | "NO_SHOW";
+  user?: {
+    id: string;
+    nickname: string;
+    profileImage?: string;
+  };
+}
+
 interface Gathering {
   id: string;
   title: string;
   hostId: string;
+  participants?: Participant[];
 }
 
 interface UserProfile {
@@ -189,19 +201,37 @@ export default function GatheringChatPage() {
 
   return (
     /* 💡 [핵심 해결 2] pb-16 (약 64px)을 추가하여 하단 네비게이션 바 높이만큼 잘리지 않도록 여백 확보 */
-    <div className="flex flex-col h-[calc(100vh-68px)] max-w-4xl mx-auto bg-neutral-900 text-neutral-100 shadow-2xl ">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3 bg-neutral-900 border-b border-neutral-800 shrink-0">
+    <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-neutral-900 text-neutral-100 shadow-2xl">
+      <header className="flex items-center justify-between px-4 py-2.5 bg-neutral-900 border-b border-neutral-800 shrink-0">
+        {/* 뒤로가기 버튼 */}
         <button
           onClick={() => router.back()}
           className="p-1 hover:bg-neutral-800 rounded-full transition"
         >
           <IoArrowBack size={22} />
         </button>
-        <h1 className="font-bold text-base truncate max-w-[200px]">
-          {gathering ? gathering.title : "모임 채팅방"}
-        </h1>
-        <div className="w-6" />
+
+        {/* 타이틀 & 참가자 수 (세로 정렬) */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <h1 className="font-bold text-base truncate max-w-[200px]">
+            {gathering ? gathering.title : "벙개 채팅방"}
+          </h1>
+
+          {gathering?.participants && (
+            <span className="text-xs text-neutral-400 font-medium">
+              참가자{" "}
+              {
+                gathering.participants.filter(
+                  (p) => p.status === "APPROVED" || p.status === "YES_SHOW",
+                ).length
+              }
+              명
+            </span>
+          )}
+        </div>
+
+        {/* 오른쪽 대칭용 레이아웃 여백 */}
+        <div className="w-8" />
       </header>
 
       {/* 채팅 메시지 영역 */}

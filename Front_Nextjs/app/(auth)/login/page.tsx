@@ -9,6 +9,7 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
+import { IoLockClosedOutline, IoPersonOutline } from "react-icons/io5";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 const APPLE_CLIENT_ID = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "";
@@ -135,31 +136,34 @@ function LoginContent() {
         {/* 1. 상단 로고 & 타이틀 */}
         <div className="text-center">
           <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
-          <p className="mt-2 text-[15px] text-[#A1A1A6]">
+          <p className="mt-2 text-[15px] text-[#A1A1A6] font-medium">
             오늘 밤, 가장 핫한 술번개 & 클럽번개
           </p>
         </div>
 
         {/* 2. 이메일 & 비밀번호 입력 폼 */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div>
+          <div className="relative flex items-center">
+            <IoPersonOutline className="absolute left-4 text-neutral-400 text-xl pointer-events-none" />
             <input
               type="text"
               placeholder="아이디"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-14 rounded-xl bg-[#2C2C2E] px-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
               autoCapitalize="none"
             />
           </div>
 
-          <div>
+          {/* 비밀번호 입력 영역 */}
+          <div className="relative flex items-center">
+            <IoLockClosedOutline className="absolute left-4 text-neutral-400 text-xl pointer-events-none" />
             <input
               type="password"
               placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-14 rounded-xl bg-[#2C2C2E] px-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
               autoCapitalize="none"
             />
           </div>
@@ -167,9 +171,9 @@ function LoginContent() {
           <button
             type="submit"
             disabled={isPending || isSocialPending}
-            className="text-lg w-full h-14 rounded-xl bg-yellow-400 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="text-lg w-full h-14 rounded-xl bg-yellow-400 shadow-sm shadow-yellow-400 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
           >
-            {isPending ? "로그인 중..." : "로그인"}
+            {isPending ? "로그인 중...⚡️" : "로그인"}
           </button>
         </form>
 

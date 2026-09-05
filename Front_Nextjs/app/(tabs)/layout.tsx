@@ -64,7 +64,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen justify-center bg-[#121212]">
       {/* 모바일 앱 비율과 동일하게 최대 너비를 잡아줍니다 */}
-      <div className="relative w-full max-w-5xl pb-24 bg-[#121212] text-white shadow-xl min-h-screen flex flex-col">
+      <div className="relative w-full max-w-5xl pb-[68px] bg-[#121212] text-white shadow-xl min-h-screen flex flex-col">
         {/* 상위 페이지 콘텐츠 영역 */}
         <main className="flex-1">{children}</main>
 
