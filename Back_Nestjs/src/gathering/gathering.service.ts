@@ -107,17 +107,49 @@ export class GatheringService {
   }
   //////////////////////////////////////////////////////////////////
 
-  // 2. 전체 모임 목록 조회
+  // 2. 전체 모임 목록 조회 (활성 모임 + 최근 완료 모임 5개 합쳐서 배열로 반환)
   async findAllGathering() {
-    return await this.prisma.gathering.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        host: {
-          select: { id: true, nickname: true, profileImage: true },
+    const [activeGatherings, completedGatherings] = await Promise.all([
+      // 1) 모집 중 / 진행 중인 모임 (최근 생성순)
+      this.prisma.gathering.findMany({
+        where: {
+          status: {
+            in: [
+              GatheringStatus.OPEN,
+              GatheringStatus.FULL,
+              GatheringStatus.IN_PROGRESS,
+            ],
+          },
         },
-      },
-    });
+        orderBy: { createdAt: 'desc' },
+        include: {
+          host: {
+            select: { id: true, nickname: true, profileImage: true },
+          },
+        },
+      }),
+
+      // 2) 최근 종료된 모임 (최근 생성순 5개만 제한)
+      this.prisma.gathering.findMany({
+        where: {
+          status: GatheringStatus.COMPLETED,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          host: {
+            select: { id: true, nickname: true, profileImage: true },
+          },
+        },
+      }),
+      
+    ]);
+
+    // 두 배열을 하나로 합쳐서 기존처럼 1차원 배열로 반환
+    return [...activeGatherings, ...completedGatherings];
   }
+
+
   //////////////////////////////////////////////////////////////////
 
   // 3. 나의 모임 조회
