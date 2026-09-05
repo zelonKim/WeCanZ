@@ -353,6 +353,7 @@ export default function GatheringDetailScreen() {
 
   const [isNoShowModalOpen, setIsNoShowModalOpen] = useState(false);
 
+  
   const noShowMutation = useMutation({
     mutationFn: async (participantId: string) => {
       return await client.patch(`/participant/${participantId}/no-show`);
@@ -364,6 +365,8 @@ export default function GatheringDetailScreen() {
       Alert.alert("오류", err.response?.data?.message || "노쇼 처리 실패");
     },
   });
+
+
 
   const handleCompleteCheck = async () => {
     const restParticipants = (gathering?.participants || []).filter(
@@ -703,6 +706,7 @@ export default function GatheringDetailScreen() {
                 종료된 모임입니다
               </Text>
             </View>
+
             {isHost &&
               (gathering.participants || []).some(
                 (p) => p.status === "APPROVED",
@@ -718,6 +722,7 @@ export default function GatheringDetailScreen() {
               )}
           </View>
         )}
+
 
         {gathering.status === "CANCELED" && (
           <View style={[styles.statusBanner, styles.canceledBanner]}>
@@ -757,6 +762,7 @@ export default function GatheringDetailScreen() {
             <Text style={styles.categoryText}>
               {CATEGORY_LABEL[gathering.category] || gathering.category}
             </Text>
+
           </View>
           {isHost &&
             (gathering.status === "OPEN" || gathering.status === "FULL") && (
@@ -1250,8 +1256,6 @@ export default function GatheringDetailScreen() {
                 </View>
               )}
             />
-
-            {/* 🚀 하단 체크 완료 버튼 */}
             <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={styles.completeBtn}
@@ -1264,6 +1268,9 @@ export default function GatheringDetailScreen() {
           </View>
         </View>
       </Modal>
+
+
+
     </SafeAreaView>
   );
 }

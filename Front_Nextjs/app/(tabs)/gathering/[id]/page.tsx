@@ -152,6 +152,7 @@ export default function GatheringDetailPage() {
 
   // 팝업 메뉴 관리
   const [activeMenuUserId, setActiveMenuUserId] = useState<string | null>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 바깥 클릭 시 유저 팝업 메뉴 닫기
@@ -228,6 +229,49 @@ export default function GatheringDetailPage() {
       dateTime: finalDate.toISOString(),
     });
   };
+
+  /////////////////////////////////////////////////////
+
+  // 1. 노쇼 모달 열림 상태 관리
+  const [isNoShowModalOpen, setIsNoShowModalOpen] = useState(false);
+
+  // 2. 노쇼 처리 Mutation
+  const noShowMutation = useMutation({
+    mutationFn: async (participantId: string) => {
+      return await client.patch(`/participant/${participantId}/no-show`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["gathering", id] });
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.message || "노쇼 처리 실패");
+    },
+  });
+
+  // 3. 출석 체크 완료
+  const handleCompleteCheck = async () => {
+    const restParticipants = (gathering?.participants || []).filter(
+      (p: any) => p.status === "APPROVED",
+    );
+
+    try {
+      if (restParticipants.length > 0) {
+        await Promise.all(
+          restParticipants.map((p: any) =>
+            client.patch(`/participant/${p.id}/yes-show`),
+          ),
+        );
+        queryClient.invalidateQueries({ queryKey: ["gathering", id] });
+      }
+
+      setIsNoShowModalOpen(false);
+      alert("참가자 출석 체크가 완료되었습니다.");
+    } catch (error) {
+      alert("출석 체크 처리 중 오류가 발생했습니다.");
+    }
+  };
+
+  /////////////////////////////////////////////////////
 
   // 모임 제어/참여 관련 Mutations
   const applyMutation = useMutation({
@@ -542,12 +586,27 @@ export default function GatheringDetailPage() {
       {/* 본문 콘텐츠 */}
       <main className="p-4 space-y-4">
         {/* 상태 배너 */}
+
         {gathering.status === "COMPLETED" && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex flex-col items-center justify-center gap-2 text-amber-400">
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex flex-row justify-between items-center  gap-2 text-amber-400 ">
             <div className="flex items-center gap-1.5 font-medium text-sm">
               <IoCheckmarkCircleOutline size={18} />
               <span>종료된 모임입니다</span>
             </div>
+
+            {isHost &&
+              (gathering?.participants || []).some(
+                (p: any) => p.status === "APPROVED",
+              ) && (
+                <button
+                  type="button"
+                  onClick={() => setIsNoShowModalOpen(true)}
+                  className="flex items-center gap-1.5 rounded-lg bg-red-500 px-3 py-2 text-xs font-semibold text-white hover:bg-red-600/90 transition cursor-pointer"
+                >
+                  <IoBanOutline size={18} className="text-white" />
+                  <span>노쇼 체크하기</span>
+                </button>
+              )}
           </div>
         )}
 
@@ -740,7 +799,6 @@ export default function GatheringDetailPage() {
       </main>
 
       {/* 모임 수정 모달 */}
-      {/* 모임 수정 모달 (새 벙개 만들기 UI 스타일) */}
       {isEditModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center p-0 sm:p-4"
@@ -929,6 +987,102 @@ export default function GatheringDetailPage() {
                 )}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 노쇼 체크하기 모달 */}
+      {isNoShowModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setIsNoShowModalOpen(false)}
+        >
+          <div
+            className="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl border border-neutral-800 bg-[#191919] p-5 text-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 className="text-base font-bold text-white">
+                참가자 노쇼 체크
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsNoShowModalOpen(false)}
+                className="text-neutral-400 hover:text-white transition"
+              >
+                <IoClose size={24} />
+              </button>
+            </div>
+
+            {/* 참가자 리스트 (FlatList -> map 변환) */}
+            <div className="flex-1 overflow-y-auto divide-y divide-neutral-800/60 py-2 scrollbar-none">
+              {(gathering?.participants || [])
+                .filter(
+                  (item: any) =>
+                    item.userId !== me?.id &&
+                    (item.status === "APPROVED" ||
+                      item.status === "YES_SHOW" ||
+                      item.status === "NO_SHOW"),
+                )
+                .map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between py-3"
+                  >
+                    {/* 유저 정보 및 뱃지 */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[15px] font-medium text-white">
+                        {item.user?.nickname || "참가자"}
+                      </span>
+                      {item.status === "NO_SHOW" && (
+                        <span className="rounded bg-red-400/20 px-2 py-0.5 text-xs font-semibold text-red-400">
+                          노쇼 처리됨
+                        </span>
+                      )}
+                      {item.status === "YES_SHOW" && (
+                        <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-xs font-semibold text-emerald-400">
+                          예스쇼 처리됨
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 노쇼 지정 버튼 (방장 자신 제외 & 이미 노쇼가 아닌 유저만) */}
+                    {item.userId !== me?.id && item.status !== "NO_SHOW" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `${item.user?.nickname || "참가자"}님을 노쇼 처리하시겠습니까?`,
+                            )
+                          ) {
+                            noShowMutation.mutate(item.id);
+                          }
+                        }}
+                        className=" cursor-pointer rounded-lg bg-red-500 px-3 py-1.5 text-[13px] font-semibold text-gray-100 hover:bg-red-600/90 transition"
+                      >
+                        노쇼 지정
+                      </button>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            {/* 모달 푸터 (체크 완료 버튼) */}
+            <div className="border-t border-neutral-800 pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm(`참가자 노쇼 체크를 완료하시겠습니까?`)) {
+                    handleCompleteCheck();
+                  }
+                }}
+                className="cursor-pointer w-full rounded-xl bg-amber-400 py-3 text-base font-bold text-neutral-900 hover:bg-amber-500/90 transition shadow-lg shadow-amber-400/10"
+              >
+                체크 완료
+              </button>
+            </div>
           </div>
         </div>
       )}
