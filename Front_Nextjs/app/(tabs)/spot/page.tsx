@@ -63,8 +63,8 @@ export default function CommercialPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
+      <div className="flex-1 flex justify-center items-start py-62">
+        <div className="animate-spin text-4xl">⚡️</div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function CommercialPage() {
   }
 
   return (
-    <main className="min-h-screen px-4  text-white max-w-5xl w-full mx-auto">
+    <main className="min-h-screen px-4  text-white max-w-5xl w-full mx-auto pb-10">
       {/* 상단 커스텀 헤더 */}
       <header className="flex flex-row items-center justify-between py-3 my-1">
         <h1 className="text-2xl font-bold">📍 인기 스팟</h1>
@@ -98,7 +98,7 @@ export default function CommercialPage() {
       <div className="h-[1px] bg-zinc-800 mb-3" />
       {/* 광고 카드 리스트 */}
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         {ads.length === 0 ? (
           <div className="flex flex-col justify-center items-center py-10">
             <p className="text-sm text-gray-400">
@@ -127,18 +127,18 @@ export default function CommercialPage() {
                   </span>
                 </div>
                 <h2 className="text-lg font-bold mb-1.5 mt-0">{item.title}</h2>
-                <p className="text-sm text-gray-400 leading-relaxed max-h-[100px] overflow-hidden">
+                <p className="text-base text-gray-400 leading-relaxed max-h-[100px] overflow-hidden">
                   {item.content}
                 </p>
 
                 <div className="border-t border-[#333333] pt-2.5 flex flex-col gap-1 mt-3">
-                  <p className="text-xs text-gray-300 mb-1 font-normal">
+                  <p className="text-[15px] text-gray-300 mb-1 font-medium">
                     {item.store.name}
                   </p>
-                  <p className="text-xs text-gray-400 m-0">
+                  <p className="text-sm text-gray-400 m-0">
                     📍 {item.store.address}
                   </p>
-                  <p className="text-xs text-gray-400 m-0">
+                  <p className="text-sm text-gray-400 m-0">
                     ⏰ 영업시간: {item.store.openTime} ~ {item.store.closeTime}
                   </p>
                 </div>
@@ -158,19 +158,19 @@ export default function CommercialPage() {
             className="bg-[#1e1e1e] rounded-2xl p-6 w-full max-w-[340px] flex flex-col items-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold mb-3 mt-0 text-white">
+            <h3 className="text-xl font-bold mb-3 mt-0 text-white">
               📢 광고 및 제휴 신청 안내
             </h3>
-            <p className="text-sm text-gray-300 leading-relaxed text-center mb-5">
-              운영하는 술집이나 클럽 등 제휴 광고를 <br /> 원하시는 사장님께서는
-              아래 채널로 <br /> 문의해 주세요.
+            <p className="text-base text-gray-300 leading-relaxed text-center mb-6">
+              운영하는 술집이나 클럽 등 인기 스팟에 <br /> 제휴 광고를 원하시는
+              사장님께서는 <br /> 아래 채널로 문의해 주세요.
             </p>
 
-            <div className="flex flex-col items-start w-full mb-4">
-              <p className="text-sm text-white mb-1.5 font-medium">
+            <div className="flex flex-col items-start w-full mb-4 ml-10">
+              <p className="text-base text-gray-100 mb-1.5 font-medium">
                 • 이메일: ksz18601@gmail.com
               </p>
-              <p className="text-sm text-white mb-1.5 font-medium">
+              <p className="text-base text-gray-100 mb-1.5 font-medium">
                 • LINE 아이디: sj1860
               </p>
             </div>

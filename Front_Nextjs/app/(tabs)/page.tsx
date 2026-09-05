@@ -267,7 +267,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <main className=" min-h-screen  text-white max-w-5xl w-full mx-auto relative px-6 pb-6">
+    <main className=" min-h-screen  text-white max-w-5xl w-full mx-auto relative px-6 pb-10">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between py-4 ">
         <h1 className="text-2xl font-bold">⚡️ 벙개의 광장</h1>
@@ -305,12 +305,13 @@ export default function HomeScreen() {
 
       {/* 모임 리스트 */}
       {isLoading ? (
-        <div className="flex justify-center items-center min-h-screen bg-neutral-900 text-white">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
+        <div className="flex-1 flex justify-center items-center py-32">
+          <div className="animate-spin text-4xl">⚡️</div>
         </div>
       ) : filteredGatherings.length === 0 ? (
-        <div className="text-center py-24 text-gray-400 text-sm leading-relaxed">
-          아직 등록된 벙개가 없습니다. <br /> 첫 벙개를 열어보세요!
+        <div className="text-center py-24 text-gray-400 text-base leading-relaxed">
+          아직 등록된 벙개가 없습니다. <br /> 밑의 + 버튼을 눌러 첫 벙개를
+          열어보세요!
         </div>
       ) : (
         <div className="grid md:grid-cols-2 flex flex-col gap-4">
@@ -341,14 +342,14 @@ export default function HomeScreen() {
               <h2 className="text-lg font-bold text-white mb-1">
                 {item.title}
               </h2>
-              <p className="text-base text-zinc-400 line-clamp-2 mb-3 leading-relaxed">
+              <p className="text-base text-neutral-300  line-clamp-2 mb-3 leading-relaxed">
                 {item.description}
               </p>
 
               <div className="h-[1px] bg-zinc-800 mb-2" />
 
               <div className="flex items-end justify-between pt-1">
-                <div className="flex flex-col gap-1 text-sm text-white">
+                <div className="flex flex-col gap-1 text-sm text-neutral-200 ">
                   <div className="flex items-center gap-1.5">
                     <IoCalendarOutline className="text-[#FFD700]" size={15} />
                     <span>{formatDateTime(item.dateTime)}</span>
@@ -602,7 +603,7 @@ export default function HomeScreen() {
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toLowerCase())}
               placeholder="____"
-              className="w-full h-12 bg-[#2C2C2E] rounded-lg text-[#FFE600] text-xl font-bold text-center tracking-[6px] uppercase mb-5 focus:outline-none focus:ring-1 focus:ring-[#FFE600]"
+              className="w-full h-12 bg-[#2C2C2E] rounded-lg text-[#FFE600] text-xl font-bold text-center tracking-[6px]  mb-5 focus:outline-none focus:ring-1 focus:ring-[#FFE600]"
             />
 
             <div className="flex gap-2.5 w-full">

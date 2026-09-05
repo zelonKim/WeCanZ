@@ -309,8 +309,8 @@ export default function SettingScreen() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400" />
+      <div className="flex-1 flex justify-center items-center py-68">
+        <div className="animate-spin text-4xl">⚡️</div>
       </div>
     );
   }
@@ -366,8 +366,8 @@ export default function SettingScreen() {
           </div>
 
           <div className="mb-4">
-            <h2 className="text-xl font-bold mb-1.5">{user.nickname}</h2>
-            <p className="text-[15px] text-zinc-400 leading-relaxed">
+            <h2 className="text-[22px] font-bold mb-1.5">{user.nickname}</h2>
+            <p className="text-base text-zinc-400 leading-relaxed">
               {user.bio || "아직 작성된 자기소개가 없습니다."}
             </p>
           </div>
@@ -654,22 +654,22 @@ export default function SettingScreen() {
               placeholder="닉네임 입력"
               value={searchNickname}
               onChange={(e) => setSearchNickname(e.target.value)}
-              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-base font-semibold text-white outline-none"
+              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-[15px]  text-white outline-none"
             />
 
             <div className="flex gap-2.5">
               <button
                 onClick={() => setIsModalVisible(false)}
-                className="flex-1 bg-[#2C2C2E] py-3 rounded-xl font-semibold text-sm text-white hover:bg-zinc-700 transition cursor-pointer"
+                className="flex-1 bg-[#2C2C2E] py-3 rounded-xl font-semibold text-[15px] text-white hover:bg-zinc-700 transition cursor-pointer"
               >
                 취소
               </button>
               <button
                 onClick={handleSearchUser}
                 disabled={isLoading}
-                className="flex-1 bg-yellow-400 py-3 rounded-xl font-bold text-sm text-black hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                className="flex-1 bg-yellow-400 py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition cursor-pointer disabled:opacity-50"
               >
-                검색
+                검색하기
               </button>
             </div>
           </div>

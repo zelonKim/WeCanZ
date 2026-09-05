@@ -240,12 +240,12 @@ export default function DMScreen() {
       <div className="space-y-6 pb-20">
         {/* 받은 DM 요청 섹션 */}
         <div>
-          <h2 className="text-base font-bold text-white mb-3">
+          <h2 className="text-lg font-bold text-white mb-3">
             받은 DM 요청 ({pendingRequests.length})
           </h2>
 
           {pendingRequests.length === 0 ? (
-            <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl text-center text-zinc-400 text-sm">
+            <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl text-center text-zinc-400 text-base">
               받은 DM 요청이 없습니다.
             </div>
           ) : (
@@ -288,12 +288,12 @@ export default function DMScreen() {
 
         {/* 대화 중인 DM 섹션 */}
         <div>
-          <h2 className="text-base font-bold text-white mb-3">
+          <h2 className="text-lg font-bold text-white mb-3">
             대화 중인 DM ({myDMRooms.length})
           </h2>
 
           {myDMRooms.length === 0 ? (
-            <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl text-center text-zinc-400 text-sm">
+            <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl text-center text-zinc-400 text-base">
               참여 중인 DM 대화방이 없습니다.
             </div>
           ) : (
@@ -367,7 +367,7 @@ export default function DMScreen() {
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-sm">
             <h3 className="text-lg font-bold text-center mb-1">✉️ DM 요청</h3>
-            <p className="text-xs text-zinc-400 text-center mb-5">
+            <p className="text-sm text-zinc-400 text-center mb-5">
               DM을 요청할 유저의 닉네임을 입력해주세요.
             </p>
 
@@ -376,7 +376,7 @@ export default function DMScreen() {
               placeholder="닉네임 입력"
               value={targetNickname}
               onChange={(e) => setTargetNickname(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-[#FFE600] mb-4"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base text-white outline-none focus:border-[#FFE600] mb-4"
             />
 
             <div className="flex gap-2">
@@ -385,13 +385,13 @@ export default function DMScreen() {
                   setIsModalVisible(false);
                   setTargetNickname("");
                 }}
-                className="flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-xs text-zinc-300 hover:bg-zinc-700 transition"
+                className="flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-[15px] text-zinc-300 hover:bg-zinc-700 transition"
               >
                 취소
               </button>
               <button
                 onClick={handleSendDmRequest}
-                className="flex-1 bg-[#FFE600] py-3 rounded-xl font-bold text-xs text-black hover:opacity-90 transition"
+                className="flex-1 bg-[#FFE600] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
               >
                 요청 보내기
               </button>

@@ -104,8 +104,8 @@ export default function FlashScreen() {
 
       {/* 목록 콘텐츠 */}
       {isLoading ? (
-        <div className="flex-1 flex justify-center items-center py-32">
-          <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+        <div className="flex-1 flex justify-center items-start py-32">
+          <div className="animate-spin text-4xl">⚡️</div>
         </div>
       ) : myGatherings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 gap-3 text-zinc-400">

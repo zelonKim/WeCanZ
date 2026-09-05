@@ -384,8 +384,8 @@ export default function GatheringDetailPage() {
 
   if (isLoading || !gathering) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-neutral-900 text-white">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-yellow-400" />
+      <div className="flex-1 flex justify-center items-start py-55">
+        <div className="animate-spin text-4xl">⚡️</div>
       </div>
     );
   }
@@ -503,7 +503,7 @@ export default function GatheringDetailPage() {
                 {user?.nickname}
               </span>
               {displayRoleTag && (
-                <span className="text-[11px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                <span className="text-[11px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30 font-semibold">
                   {displayRoleTag}
                 </span>
               )}
@@ -564,7 +564,7 @@ export default function GatheringDetailPage() {
       <header className="sticky top-0 z-30 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
         <button
           onClick={() => router.back()}
-          className="p-1 text-white hover:opacity-80"
+          className="cursor-pointer p-1 text-white hover:opacity-80"
         >
           <IoArrowBack size={22} />
         </button>
@@ -576,7 +576,7 @@ export default function GatheringDetailPage() {
             }
             router.push(`/gathering/${id}/chat`);
           }}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition ${"border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"}`}
+          className={`cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition ${"border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"}`}
         >
           <IoChatbubblesOutline size={14} />
           <span>채팅방</span>
@@ -628,7 +628,7 @@ export default function GatheringDetailPage() {
             >
               {STATUS_LABEL[gathering.status] || gathering.status}
             </span>
-            <span className="text-xs font-bold text-yellow-500 px-2.5 py-1 rounded-lg">
+            <span className="text-sm font-bold text-yellow-400 px-2.5 py-1 rounded-lg">
               {CATEGORY_LABEL[gathering.category] || gathering.category}
             </span>
           </div>
@@ -637,7 +637,7 @@ export default function GatheringDetailPage() {
             (gathering.status === "OPEN" || gathering.status === "FULL") && (
               <button
                 onClick={openEditModal}
-                className="flex items-center gap-1 text-xs text-neutral-300 bg-neutral-800 hover:bg-neutral-700 px-2.5 py-1 rounded-lg border border-neutral-700 transition"
+                className="cursor-pointer flex items-center gap-1 text-xs text-neutral-300 bg-neutral-800 hover:bg-neutral-700 px-2.5 py-1 rounded-lg border border-neutral-700 transition"
               >
                 <IoPencil size={12} />
                 <span>수정</span>
@@ -647,25 +647,25 @@ export default function GatheringDetailPage() {
 
         {/* 타이틀 및 상세 설명 */}
         <div>
-          <h2 className="text-xl font-bold text-white mb-2">
+          <h2 className="text-[22px] font-bold text-white mb-2">
             {gathering.title}
           </h2>
-          <p className="text-base text-neutral-300 whitespace-pre-line leading-relaxed">
+          <p className="text-lg text-neutral-300 whitespace-pre-line leading-relaxed">
             {gathering.description}
           </p>
         </div>
 
         {/* 정보 섹션 */}
         <div className="bg-neutral-800/60 border border-neutral-800 rounded-xl p-4 space-y-3 my-6 ">
-          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
             <IoCalendarOutline size={18} className="text-yellow-400 shrink-0" />
             <span>{formatDateTime(gathering.dateTime)}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
             <IoLocationOutline size={18} className="text-red-400 shrink-0" />
             <span>{gathering.location}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-[15px] text-neutral-300">
+          <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
             <IoPeopleOutline size={18} className="text-yellow-400 shrink-0" />
             <span>
               참여 인원:{" "}
@@ -691,7 +691,7 @@ export default function GatheringDetailPage() {
               gathering.status === "CANCELED"
             ) && (
               <div className="mt-4 pt-3 border-t border-neutral-700/50 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400">
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-400">
                   <IoSettingsOutline size={14} />
                   <span>모임 관리</span>
                 </div>
@@ -704,7 +704,7 @@ export default function GatheringDetailPage() {
                           if (confirm("정말로 모임을 시작하시겠습니까?"))
                             startMutation.mutate();
                         }}
-                        className="py-2 px-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold rounded-lg text-xs transition"
+                        className="cursor-pointer py-2 px-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-semibold rounded-lg text-sm transition"
                       >
                         시작하기 🚀
                       </button>
@@ -713,7 +713,7 @@ export default function GatheringDetailPage() {
                           if (confirm("정말로 모임을 취소하시겠습니까?"))
                             cancelMutation.mutate();
                         }}
-                        className="py-2 px-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg text-xs transition"
+                        className="cursor-pointer py-2 px-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg text-sm transition"
                       >
                         취소하기 🗑️
                       </button>

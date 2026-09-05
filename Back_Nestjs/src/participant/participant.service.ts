@@ -40,10 +40,10 @@ export class ParticipantService {
     if (existing) {
       if (existing.status === ParticipantStatus.BANNED) {
         throw new ForbiddenException(
-          '강퇴된 모임에는 다시 신청할 수 없습니다.',
+          '강퇴된 벙개에는 다시 신청할 수 없습니다.',
         );
       }
-      throw new ConflictException('이미 신청했거나 참여 중인 모임입니다.');
+      throw new ConflictException('이미 신청했거나 참여 중인 벙개입니다.');
     }
 
     // 정원 초과 검증 (승인된 인원 기준)
@@ -52,7 +52,7 @@ export class ParticipantService {
     ).length;
 
     if (approvedCount >= gathering.maxPeople) {
-      throw new BadRequestException('이미 정원이 가득 찬 모임입니다.');
+      throw new BadRequestException('이미 정원이 가득 찬 벙개입니다.');
     }
 
     // PENDING 상태로 참가 등록

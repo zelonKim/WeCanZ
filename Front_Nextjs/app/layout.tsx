@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jongtaewon",
-  description: "Our gathering place",
+  title: "종태원",
+  description: "오늘 밤, 가장 핫한 술번개 & 클럽번개",
 };
 
 export default function RootLayout({
