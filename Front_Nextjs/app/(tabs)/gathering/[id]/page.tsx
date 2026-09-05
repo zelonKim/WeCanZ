@@ -559,7 +559,7 @@ export default function GatheringDetailPage() {
   };
 
   return (
-    <div className="  max-w-4xl mx-auto relative pb-6 shadow-2xl">
+    <div className="bg-[#121212]  max-w-4xl mx-auto ">
       {/* 헤더 */}
       <header className="sticky top-0 z-30 bg-neutral-900/90 backdrop-blur-md border-b border-neutral-800 px-4 py-3 flex items-center justify-between">
         <button
@@ -584,7 +584,7 @@ export default function GatheringDetailPage() {
       </header>
 
       {/* 본문 콘텐츠 */}
-      <main className="p-4 space-y-4">
+      <main className="p-4 space-y-4 bg-[#121212]">
         {/* 상태 배너 */}
 
         {gathering.status === "COMPLETED" && (
@@ -789,7 +789,7 @@ export default function GatheringDetailPage() {
               ) : (
                 <button
                   onClick={() => applyMutation.mutate()}
-                  className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-yellow-400/10"
+                  className="w-full py-3 mb-6 bg-yellow-400/90 hover:bg-yellow-500/90 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-yellow-400/10"
                 >
                   참여 신청하기 ⚡️
                 </button>

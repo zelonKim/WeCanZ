@@ -95,7 +95,7 @@ export default function UserProfilePage() {
           {user.profileImage ? (
             <button
               onClick={() => setIsModalVisible(true)}
-              className="relative h-28 w-28 overflow-hidden rounded-full border-none bg-[#2C2C2E] focus:outline-none"
+              className="cursor-pointer relative h-28 w-28 overflow-hidden rounded-full border-none bg-[#2C2C2E] focus:outline-none"
             >
               <Image
                 src={user.profileImage}
