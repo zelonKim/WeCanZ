@@ -46,15 +46,6 @@ export class ParticipantService {
       throw new ConflictException('이미 신청했거나 참여 중인 벙개입니다.');
     }
 
-    // 정원 초과 검증 (승인된 인원 기준)
-    const approvedCount = gathering.participants.filter(
-      (p) => p.status === ParticipantStatus.APPROVED,
-    ).length;
-
-    if (approvedCount >= gathering.maxPeople) {
-      throw new BadRequestException('이미 정원이 가득 찬 벙개입니다.');
-    }
-
     // PENDING 상태로 참가 등록
     return await this.prisma.participant.create({
       data: {
