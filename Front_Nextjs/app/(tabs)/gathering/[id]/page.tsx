@@ -403,7 +403,10 @@ export default function GatheringDetailPage() {
   const myParticipant = gathering.participants?.find(
     (p) => p.userId === me?.id,
   );
-  const isApprovedParticipant = myParticipant?.status === "APPROVED";
+  const isApprovedParticipant =
+    myParticipant?.status === "APPROVED" ||
+    myParticipant?.status === "YES_SHOW";
+    
   const canAccessChat = isHost || isApprovedParticipant;
 
   const renderUserCard = (
