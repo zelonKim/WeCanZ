@@ -417,7 +417,7 @@ export default function GatheringChatPage() {
                         <IoPerson size={16} className="text-neutral-400" />
                       </div>
                     )}
-                    <span className="text-[15px] font-semibold text-neutral-200">
+                    <span className="text-sm font-semibold text-neutral-400">
                       {msg.user?.nickname || "알 수 없음"}
                     </span>
                   </div>
