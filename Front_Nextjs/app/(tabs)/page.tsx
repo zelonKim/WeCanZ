@@ -182,6 +182,7 @@ export default function HomeScreen() {
 
   const filteredGatherings = gatherings.filter((item) => {
     const isNotCanceled = item.status !== "CANCELED";
+    
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 

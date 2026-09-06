@@ -199,6 +199,33 @@ export default function GatheringChatPage() {
     }
   };
 
+  const [isVerifying, setIsVerifying] = useState(true);
+
+  useEffect(() => {
+    if (isLoading || !gathering || !me) return;
+
+    const isHost = gathering.hostId === me.id;
+    const isApprovedParticipant = gathering.participants?.some(
+      (p) =>
+        p.userId === me.id &&
+        (p.status === "APPROVED" || p.status === "YES_SHOW"),
+    );
+
+    if (!isHost && !isApprovedParticipant) {
+      router.replace(`/gathering/${id}`);
+    } else {
+      setIsVerifying(false);
+    }
+  }, [gathering, me, isLoading, id, router]);
+
+  if (isLoading || isVerifying || !gathering || !me) {
+    return (
+      <div className="flex-1 flex justify-center items-center py-68">
+        <div className="animate-spin text-4xl">⚡️</div>
+      </div>
+    );
+  }
+
   return (
     /* 💡 [핵심 해결 2] pb-16 (약 64px)을 추가하여 하단 네비게이션 바 높이만큼 잘리지 않도록 여백 확보 */
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto bg-neutral-900 text-neutral-100 shadow-2xl">

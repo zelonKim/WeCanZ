@@ -42,9 +42,10 @@ export class GatheringService {
     }
   }
 
+
   @Cron(CronExpression.EVERY_10_MINUTES) // 10분마다 실행
   async autoCompleteExpiredGatherings() {
-    // 현재 시간 - 12시간
+    // 12시간이 경과한 모임
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
 
     const result = await this.prisma.gathering.updateMany({
@@ -53,7 +54,7 @@ export class GatheringService {
           notIn: [GatheringStatus.COMPLETED, GatheringStatus.CANCELED],
         },
         dateTime: {
-          lte: twelveHoursAgo, // dateTime <= 현재시간 - 12시간
+          lte: twelveHoursAgo, 
         },
       },
       data: {
