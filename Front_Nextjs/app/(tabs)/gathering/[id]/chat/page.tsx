@@ -350,7 +350,7 @@ export default function GatheringChatPage() {
         </button>
 
         <div className="flex flex-col items-center justify-center text-center">
-          <h1 className="font-bold text-lg truncate max-w-100">
+          <h1 className="font-bold text-lg truncate max-w-[300px]">
             {gathering ? gathering.title : "벙개 채팅방"}
           </h1>
 
