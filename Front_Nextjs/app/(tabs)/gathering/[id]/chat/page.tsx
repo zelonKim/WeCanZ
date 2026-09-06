@@ -59,6 +59,7 @@ export default function GatheringChatPage() {
   const socketRef = useRef<any>(null);
 
   const [messageText, setMessageText] = useState("");
+  const [isVerifying, setIsVerifying] = useState(true);
 
   const { data: me } = useQuery<UserProfile>({
     queryKey: ["me"],
@@ -91,7 +92,10 @@ export default function GatheringChatPage() {
       const { data } = await client.get(`/gathering-chat/${id}/messages`);
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !isVerifying,
+    retry: false,
+    staleTime: 0, 
+    gcTime: 0,
   });
 
   useEffect(() => {
@@ -100,9 +104,6 @@ export default function GatheringChatPage() {
       router.replace(`/gathering/${id}`);
     }
   }, [error, id, router]); // gatheringId -> id로 수정
-
-
-
 
   const scrollToBottom = (smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
@@ -212,8 +213,6 @@ export default function GatheringChatPage() {
       });
     }
   };
-
-  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
     if (isLoading || !gathering || !me) return;
