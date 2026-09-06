@@ -8,10 +8,13 @@ import {
   IoLogOutOutline,
   IoPerson,
   IoSend,
+  IoImageOutline,
+  IoCloseCircle,
 } from "react-icons/io5";
 
 import { client } from "@/api/client";
 import { getSocket } from "@/lib/socket";
+import { uploadProfileImage } from "@/utils/uploadProfileImage";
 
 interface MessageUser {
   id: string;
@@ -40,9 +43,16 @@ export default function DirectChatRoomPage() {
 
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<DirectChatMessage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null); // 이미지 확대 모달용
+
+  // ⚡️ 대기 중인 이미지 파일 및 미리보기 URL State
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 내 정보 조회
   const { data: myInfo } = useQuery<{ id: string }>({
@@ -138,34 +148,107 @@ export default function DirectChatRoomPage() {
     return () => window.removeEventListener("online", handleOnline);
   }, [roomId, queryClient]);
 
-  // 메시지 전송
-  const handleSend = () => {
-    if (!inputText.trim() || !myInfo?.id || !roomId || !socketRef.current) {
+  // ⚡️ 파일 선택 시 즉시 업로드하지 않고 미리보기 상태로 전환
+  const handleSelectFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 업로드할 수 있습니다.");
       return;
     }
+    setPendingFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
 
-    const messageText = inputText.trim();
-    setInputText("");
+  // ⚡️ 미리보기 취소
+  const handleRemoveFile = () => {
+    setPendingFile(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+  };
 
-    const tempMessage: DirectChatMessage = {
-      id: `temp-${Date.now()}`,
-      message: messageText,
-      createdAt: new Date().toISOString(),
-      roomId,
-      senderId: myInfo.id,
-      sender: {
-        id: myInfo.id,
-        nickname: "",
-      },
-    };
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
 
-    setMessages((prev) => [...prev, tempMessage]);
+    for (const item of Array.from(items)) {
+      if (item.type.indexOf("image") !== -1) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) handleSelectFile(file);
+        break;
+      }
+    }
+  };
 
-    socketRef.current.emit("sendDirectMessage", {
-      roomId,
-      senderId: myInfo.id,
-      message: messageText,
-    });
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleSelectFile(file);
+      e.target.value = "";
+    }
+  };
+
+  // ⚡️ 엔터 또는 전송 버튼 클릭 시 이미지 업로드 및 소켓 메시지 전송
+  const handleSend = async () => {
+    if (!myInfo?.id || !roomId || !socketRef.current) return;
+
+    const textToCategory = inputText.trim();
+    if (!textToCategory && !pendingFile) return;
+
+    try {
+      setIsUploading(true);
+
+      // 1. 첨부한 이미지 업로드 및 전송
+      if (pendingFile) {
+        const tempUrl = URL.createObjectURL(pendingFile);
+        const data = await uploadProfileImage(tempUrl);
+
+        if (data?.imageUrl) {
+          const tempImageMsg: DirectChatMessage = {
+            id: `temp-${Date.now()}-img`,
+            message: data.imageUrl,
+            createdAt: new Date().toISOString(),
+            roomId,
+            senderId: myInfo.id,
+            sender: { id: myInfo.id, nickname: "" },
+          };
+          setMessages((prev) => [...prev, tempImageMsg]);
+
+          socketRef.current.emit("sendDirectMessage", {
+            roomId,
+            senderId: myInfo.id,
+            message: data.imageUrl,
+          });
+        }
+        handleRemoveFile();
+      }
+
+      // 2. 작성한 텍스트 메시지 전송
+      if (textToCategory) {
+        setInputText("");
+        const tempTextMsg: DirectChatMessage = {
+          id: `temp-${Date.now()}-text`,
+          message: textToCategory,
+          createdAt: new Date().toISOString(),
+          roomId,
+          senderId: myInfo.id,
+          sender: { id: myInfo.id, nickname: "" },
+        };
+        setMessages((prev) => [...prev, tempTextMsg]);
+
+        socketRef.current.emit("sendDirectMessage", {
+          roomId,
+          senderId: myInfo.id,
+          message: textToCategory,
+        });
+      }
+    } catch (err) {
+      console.error("전송 실패:", err);
+      alert("메시지 전송에 실패했습니다.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // 엔터키 입력 처리 (한글 중복 전송 방지)
@@ -249,6 +332,9 @@ export default function DirectChatRoomPage() {
     );
   }, [targetUserId, blockedUsers]);
 
+  const canSend =
+    (Boolean(inputText.trim()) || Boolean(pendingFile)) && !isUploading;
+
   return (
     <div className="h-[calc(100vh-68px)] flex flex-col max-w-4xl mx-auto bg-neutral-900 text-white shadow-2xl">
       {/* 헤더 */}
@@ -297,6 +383,7 @@ export default function DirectChatRoomPage() {
             const isMyMessage =
               (item.senderId && item.senderId === myInfo?.id) ||
               (item.sender?.id && item.sender.id === myInfo?.id);
+            const isImage = item.message.startsWith("http");
 
             return (
               <div
@@ -307,13 +394,24 @@ export default function DirectChatRoomPage() {
                 }`}
               >
                 <div
-                  className={`px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed break-words ${
-                    isMyMessage
-                      ? "bg-yellow-400 text-neutral-900 rounded-br-xs font-medium"
-                      : "bg-neutral-800 text-neutral-100 rounded-bl-xs border border-neutral-700/60"
+                  className={`text-sm leading-relaxed break-words rounded-2xl overflow-hidden ${
+                    isImage
+                      ? "p-1 bg-neutral-800 border border-neutral-700/60"
+                      : isMyMessage
+                        ? "px-3.5 py-2.5 bg-yellow-400 text-neutral-900 rounded-br-xs font-medium"
+                        : "px-3.5 py-2.5 bg-neutral-800 text-neutral-100 rounded-bl-xs border border-neutral-700/60"
                   }`}
                 >
-                  {item.message}
+                  {isImage ? (
+                    <img
+                      src={item.message}
+                      alt="첨부 이미지"
+                      className="max-w-[200px] sm:max-w-[260px] rounded-xl object-cover cursor-pointer hover:opacity-90 transition"
+                      onClick={() => setSelectedImage(item.message)}
+                    />
+                  ) : (
+                    item.message
+                  )}
                 </div>
 
                 <span
@@ -339,30 +437,95 @@ export default function DirectChatRoomPage() {
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="메시지를 입력하세요..."
-              rows={1}
-              maxLength={500}
-              className="flex-1 bg-neutral-900 text-white placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none"
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
             />
-            <button
-              onClick={handleSend}
-              disabled={!inputText.trim()}
-              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition ${
-                inputText.trim()
-                  ? "bg-yellow-400 text-neutral-900 hover:bg-yellow-500"
-                  : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
-              }`}
-            >
-              <IoSend size={16} />
-            </button>
-          </div>
+
+            {/* 이미지 미리보기 썸네일 */}
+            {previewUrl && (
+              <div className="relative inline-block mb-2 ml-10">
+                <img
+                  src={previewUrl}
+                  alt="업로드 미리보기"
+                  className="w-16 h-16 object-cover rounded-xl border border-neutral-600 shadow-md"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="absolute -top-2 -right-2 bg-neutral-900 text-neutral-300 hover:text-red-400 rounded-full transition"
+                >
+                  <IoCloseCircle size={20} />
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="p-2 text-neutral-400 hover:text-white bg-neutral-700 hover:bg-yellow-400/90 rounded-full transition"
+                title="사진 첨부"
+              >
+                <IoImageOutline size={22} />
+              </button>
+
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
+                placeholder={
+                  isUploading ? "전송 중..." : "메시지를 입력하세요..."
+                }
+                disabled={isUploading}
+                rows={1}
+                maxLength={500}
+                className="flex-1 bg-neutral-900 text-white placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none disabled:opacity-50"
+              />
+
+              <button
+                onClick={handleSend}
+                disabled={!canSend}
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition ${
+                  canSend
+                    ? "bg-yellow-400 text-neutral-900 hover:bg-yellow-500"
+                    : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
+                }`}
+              >
+                <IoSend size={16} />
+              </button>
+            </div>
+          </>
         )}
       </footer>
+
+      {/* 이미지 확대 모달 UI */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative max-w-3xl max-h-[90vh] w-full flex items-center justify-center">
+            <img
+              src={selectedImage}
+              alt="확대 이미지"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+            />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-neutral-300 text-sm font-semibold py-2 px-3.5 bg-neutral-800/80 hover:bg-neutral-600/60 rounded-full"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
