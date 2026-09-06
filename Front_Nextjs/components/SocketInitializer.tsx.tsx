@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import GlobalSocketListener from "@/components/GlobalSocketListener";
 import { client } from "@/api/client";
 import { useUnreadStore } from "@/stores/useUnreadStore";
+import { getAccessToken } from "@/api/token";
 
 export default function SocketInitializer() {
   const [me, setMe] = useState<{ id: string } | null>(null);
@@ -14,6 +15,9 @@ export default function SocketInitializer() {
   );
 
   const fetchMeAndGatherings = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) return;
+
     try {
       // 1. 로그인 정보 및 unread 목록 조회
       const [meResponse, gatheringsResponse, unreadResponse] =
@@ -35,12 +39,12 @@ export default function SocketInitializer() {
       if (Array.isArray(unreadResponse.data)) {
         setUnreadGatherings(unreadResponse.data);
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 401) return;
       console.error("소켓 데이터 로딩 실패:", error);
     }
   }, [setUnreadGatherings]);
 
-  
   useEffect(() => {
     fetchMeAndGatherings();
 
