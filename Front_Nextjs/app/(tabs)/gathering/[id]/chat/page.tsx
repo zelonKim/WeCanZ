@@ -231,11 +231,7 @@ export default function GatheringChatPage() {
   }, [gathering, me, isLoading, id, router]);
 
   if (isLoading || isVerifying || !gathering || !me) {
-    return (
-      <div className="flex-1 flex justify-center items-center py-68">
-        <div className="animate-spin text-4xl">⚡️</div>
-      </div>
-    );
+    return null;
   }
 
   return (
