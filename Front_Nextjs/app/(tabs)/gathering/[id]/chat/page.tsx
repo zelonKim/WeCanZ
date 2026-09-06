@@ -81,7 +81,11 @@ export default function GatheringChatPage() {
     me?.id && gathering?.hostId && String(me.id) === String(gathering.hostId),
   );
 
-  const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
+  const {
+    data: messages = [],
+    isLoading,
+    error,
+  } = useQuery<ChatMessage[]>({
     queryKey: ["gathering-messages", id],
     queryFn: async () => {
       const { data } = await client.get(`/gathering-chat/${id}/messages`);
@@ -89,6 +93,16 @@ export default function GatheringChatPage() {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (error) {
+      alert("승인된 참가자만 입장할 수 있습니다."); // 필요 시 유지
+      router.replace(`/gathering/${id}`);
+    }
+  }, [error, id, router]); // gatheringId -> id로 수정
+
+
+
 
   const scrollToBottom = (smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
