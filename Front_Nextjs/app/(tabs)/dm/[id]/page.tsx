@@ -10,6 +10,7 @@ import {
   IoSend,
   IoImageOutline,
   IoCloseCircle,
+  IoTrashOutline,
 } from "react-icons/io5";
 
 import { client } from "@/api/client";
@@ -44,9 +45,12 @@ export default function DirectChatRoomPage() {
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<DirectChatMessage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null); // 이미지 확대 모달용
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // ⚡️ 대기 중인 이미지 파일 및 미리보기 URL State
+  // ⚡️ 삭제 확인 모달 대상 State
+  const [deletingMessage, setDeletingMessage] =
+    useState<DirectChatMessage | null>(null);
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -83,7 +87,6 @@ export default function DirectChatRoomPage() {
     }
   }, [initialMessages]);
 
-  // 스크롤 최하단 이동
   const scrollToBottom = (smooth = true) => {
     messagesEndRef.current?.scrollIntoView({
       behavior: smooth ? "smooth" : "auto",
@@ -94,7 +97,7 @@ export default function DirectChatRoomPage() {
     scrollToBottom(false);
   }, [messages.length]);
 
-  // 1. 소켓 연결 및 이벤트 핸들링
+  // 소켓 연결 및 이벤트
   useEffect(() => {
     if (!roomId) return;
 
@@ -119,6 +122,8 @@ export default function DirectChatRoomPage() {
 
     const handleDeletedMessage = ({ messageId }: { messageId: string }) => {
       setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      // ⚡️ 소켓 이벤트 수신 시 Query 캐시 재갱신
+      queryClient.invalidateQueries({ queryKey: ["dm-messages", roomId] });
     };
 
     socket.on("newDirectMessage", handleNewMessage);
@@ -129,9 +134,8 @@ export default function DirectChatRoomPage() {
       socket.off("newDirectMessage", handleNewMessage);
       socket.off("directMessageDeleted", handleDeletedMessage);
     };
-  }, [roomId]);
+  }, [roomId, queryClient]);
 
-  // 2. 웹 네트워크 상태 감지 및 재연결
   useEffect(() => {
     if (!roomId) return;
 
@@ -148,7 +152,6 @@ export default function DirectChatRoomPage() {
     return () => window.removeEventListener("online", handleOnline);
   }, [roomId, queryClient]);
 
-  // ⚡️ 파일 선택 시 즉시 업로드하지 않고 미리보기 상태로 전환
   const handleSelectFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("이미지 파일만 업로드할 수 있습니다.");
@@ -158,7 +161,6 @@ export default function DirectChatRoomPage() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  // ⚡️ 미리보기 취소
   const handleRemoveFile = () => {
     setPendingFile(null);
     if (previewUrl) {
@@ -189,7 +191,6 @@ export default function DirectChatRoomPage() {
     }
   };
 
-  // ⚡️ 엔터 또는 전송 버튼 클릭 시 이미지 업로드 및 소켓 메시지 전송
   const handleSend = async () => {
     if (!myInfo?.id || !roomId || !socketRef.current) return;
 
@@ -199,7 +200,6 @@ export default function DirectChatRoomPage() {
     try {
       setIsUploading(true);
 
-      // 1. 첨부한 이미지 업로드 및 전송
       if (pendingFile) {
         const tempUrl = URL.createObjectURL(pendingFile);
         const data = await uploadProfileImage(tempUrl);
@@ -224,7 +224,6 @@ export default function DirectChatRoomPage() {
         handleRemoveFile();
       }
 
-      // 2. 작성한 텍스트 메시지 전송
       if (textToCategory) {
         setInputText("");
         const tempTextMsg: DirectChatMessage = {
@@ -251,7 +250,6 @@ export default function DirectChatRoomPage() {
     }
   };
 
-  // 엔터키 입력 처리 (한글 중복 전송 방지)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing) return;
 
@@ -261,25 +259,39 @@ export default function DirectChatRoomPage() {
     }
   };
 
-  // 메시지 삭제 (우클릭 / 컨텍스트 메뉴)
+  // ⚡️ 우클릭 시 삭제 모달 오픈
   const handleRightClickMessage = (
     e: React.MouseEvent,
     msg: DirectChatMessage,
   ) => {
     e.preventDefault();
     if (myInfo?.id && msg.senderId !== myInfo.id) return;
-
-    if (confirm("이 메시지를 삭제하시겠습니까?")) {
-      setMessages((prev) => prev.filter((m) => m.id !== msg.id));
-      socketRef.current?.emit("deleteDirectMessage", {
-        roomId,
-        messageId: msg.id,
-        userId: myInfo?.id,
-      });
-    }
+    setDeletingMessage(msg);
   };
 
-  // 방 나가기
+  // ⚡️ 삭제 확정 실행 및 React Query 재갱신
+  const confirmDeleteMessage = () => {
+    if (!deletingMessage || !myInfo?.id || !socketRef.current) return;
+
+    const targetId = deletingMessage.id;
+
+    // 1. 상태 즉시 반영
+    setMessages((prev) => prev.filter((m) => m.id !== targetId));
+
+    // 2. 소켓 삭제 요청
+    socketRef.current.emit("deleteDirectMessage", {
+      roomId,
+      messageId: targetId,
+      userId: myInfo.id,
+    });
+
+    // 3. React Query 캐시 재갱신
+    queryClient.invalidateQueries({ queryKey: ["dm-messages", roomId] });
+
+    // 4. 모달 닫기
+    setDeletingMessage(null);
+  };
+
   const leaveRoomMutation = useMutation({
     mutationFn: () => client.delete(`/direct-chat/rooms/${roomId}/leave`),
     onSuccess: () => {
@@ -306,7 +318,6 @@ export default function DirectChatRoomPage() {
     });
   };
 
-  // 차단 유저 조회
   const { data: blockedUsers = [] } = useQuery({
     queryKey: ["blocked-users"],
     queryFn: async () => {
@@ -315,7 +326,6 @@ export default function DirectChatRoomPage() {
     },
   });
 
-  // 상대방 User ID 도출
   const targetUserId = useMemo(() => {
     const otherMsg = messages.find(
       (msg) => String(msg.senderId) !== String(myInfo?.id),
@@ -323,7 +333,6 @@ export default function DirectChatRoomPage() {
     return otherMsg?.senderId || otherMsg?.sender?.id;
   }, [messages, myInfo]);
 
-  // 차단 여부 확인
   const isBlocked = useMemo(() => {
     if (!targetUserId || !blockedUsers.length) return false;
 
@@ -336,8 +345,7 @@ export default function DirectChatRoomPage() {
     (Boolean(inputText.trim()) || Boolean(pendingFile)) && !isUploading;
 
   return (
-    <div className="h-[calc(100vh-68px)] flex flex-col max-w-4xl mx-auto bg-neutral-900 text-white shadow-2xl">
-      {/* 헤더 */}
+    <div className="fixed inset-0 left-1/2 -translate-x-1/2 flex flex-col w-full max-w-4xl bg-neutral-900 text-neutral-100 shadow-2xl overflow-hidden">
       <header className="h-13 flex items-center justify-between px-4 py-3 bg-neutral-800 border-b border-neutral-700/80 shrink-0">
         <button
           onClick={() => router.back()}
@@ -394,7 +402,7 @@ export default function DirectChatRoomPage() {
                 }`}
               >
                 <div
-                  className={`text-sm leading-relaxed break-words rounded-2xl overflow-hidden ${
+                  className={`text-base leading-relaxed break-words rounded-2xl overflow-hidden group relative ${
                     isImage
                       ? "p-1 bg-neutral-800 border border-neutral-700/60"
                       : isMyMessage
@@ -412,10 +420,21 @@ export default function DirectChatRoomPage() {
                   ) : (
                     item.message
                   )}
+
+                  {/* ⚡️ 내가 작성한 메시지 호버 삭제 버튼 (PC용) */}
+                  {isMyMessage && (
+                    <button
+                      onClick={() => setDeletingMessage(item)}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-neutral-900/80 hover:bg-red-500/80 text-white rounded-full transition duration-150"
+                      title="메시지 삭제"
+                    >
+                      <IoTrashOutline size={12} />
+                    </button>
+                  )}
                 </div>
 
                 <span
-                  className={`text-[10px] text-neutral-500 mt-1 px-1 ${
+                  className={`text-xs text-neutral-500 mt-1 px-1 ${
                     isMyMessage ? "text-right" : "text-left"
                   }`}
                 >
@@ -446,7 +465,6 @@ export default function DirectChatRoomPage() {
               className="hidden"
             />
 
-            {/* 이미지 미리보기 썸네일 */}
             {previewUrl && (
               <div className="relative inline-block mb-2 ml-10">
                 <img
@@ -504,6 +522,45 @@ export default function DirectChatRoomPage() {
           </>
         )}
       </footer>
+
+      {/* ⚡️ 삭제 확인 모달 UI */}
+      {deletingMessage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setDeletingMessage(null)}
+        >
+          <div
+            className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col items-center gap-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+              <IoTrashOutline size={24} />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-white">메시지 삭제</h3>
+              <p className="text-[15px] text-neutral-400 mt-1">
+                선택한 메시지를 삭제하시겠습니까?
+              </p>
+            </div>
+
+            <div className="flex w-full gap-2 mt-1">
+              <button
+                onClick={() => setDeletingMessage(null)}
+                className="flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDeleteMessage}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
+              >
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 이미지 확대 모달 UI */}
       {selectedImage && (

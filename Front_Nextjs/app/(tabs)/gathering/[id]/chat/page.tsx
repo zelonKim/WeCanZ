@@ -65,9 +65,13 @@ export default function GatheringChatPage() {
 
   const [messageText, setMessageText] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null); // 이미지 확대 모달용
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // ⚡️ 대기 중인 파일 및 미리보기 URL State
+  // ⚡️ 삭제 확인 모달 대상 State
+  const [deletingMessage, setDeletingMessage] = useState<ChatMessage | null>(
+    null,
+  );
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -169,6 +173,7 @@ export default function GatheringChatPage() {
         ["gathering-messages", id],
         (oldMessages = []) => oldMessages.filter((msg) => msg.id !== messageId),
       );
+      queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
     };
 
     socket.on("newGatheringMessage", handleNewMessage);
@@ -197,7 +202,6 @@ export default function GatheringChatPage() {
     return () => window.removeEventListener("online", handleOnline);
   }, [id, queryClient]);
 
-  // ⚡️ 파일 선택 시 서버 업로드 없이 "미리보기 대기 상태"로 전환
   const handleSelectFile = (file: File) => {
     if (!file.type.startsWith("image/")) {
       alert("이미지 파일만 업로드할 수 있습니다.");
@@ -207,7 +211,6 @@ export default function GatheringChatPage() {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  // ⚡️ 미리보기 선택 취소
   const handleRemoveFile = () => {
     setPendingFile(null);
     if (previewUrl) {
@@ -238,7 +241,6 @@ export default function GatheringChatPage() {
     }
   };
 
-  // ⚡️ 엔터 또는 전송 버튼을 눌렀을 때만 실제 업로드 및 전송 실행
   const handleSend = async () => {
     if (!socketRef.current || !me?.id) return;
 
@@ -248,7 +250,6 @@ export default function GatheringChatPage() {
     try {
       setIsUploading(true);
 
-      // 1. 대기 중인 사진이 있으면 먼저 R2에 업로드 후 소켓 전송
       if (pendingFile) {
         const tempUrl = URL.createObjectURL(pendingFile);
         const data = await uploadProfileImage(tempUrl);
@@ -263,7 +264,6 @@ export default function GatheringChatPage() {
         handleRemoveFile();
       }
 
-      // 2. 함께 입력한 텍스트가 있으면 전송
       if (textToCategory) {
         socketRef.current.emit("sendGatheringMessage", {
           gatheringId: id,
@@ -289,23 +289,27 @@ export default function GatheringChatPage() {
     }
   };
 
-  const handleDeletePrompt = (msg: ChatMessage) => {
+  const openDeleteModal = (msg: ChatMessage) => {
     const isMyMessage = String(msg.userId) === String(me?.id);
 
     if (!isHost && !isMyMessage) {
-      alert("본인이 작성한 메시지만 삭제할 수 있습니다.");
       return;
     }
 
-    if (confirm("이 메시지를 삭제하시겠습니까?")) {
-      if (!socketRef.current || !me?.id) return;
+    setDeletingMessage(msg);
+  };
 
-      socketRef.current.emit("deleteGatheringMessage", {
-        gatheringId: id,
-        messageId: msg.id,
-        userId: me.id,
-      });
-    }
+  const confirmDeleteMessage = () => {
+    if (!deletingMessage || !socketRef.current || !me?.id) return;
+
+    socketRef.current.emit("deleteGatheringMessage", {
+      gatheringId: id,
+      messageId: deletingMessage.id,
+      userId: me.id,
+    });
+
+    queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
+    setDeletingMessage(null);
   };
 
   const [isVerifying, setIsVerifying] = useState(true);
@@ -335,7 +339,7 @@ export default function GatheringChatPage() {
     (Boolean(messageText.trim()) || Boolean(pendingFile)) && !isUploading;
 
   return (
-    <div className="fixed inset-0 pb-[68px] flex flex-col w-full max-w-4xl mx-auto bg-neutral-900 text-neutral-100 shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 left-1/2 -translate-x-1/2 flex flex-col w-full max-w-4xl bg-neutral-900 text-neutral-100 shadow-2xl overflow-hidden">
       {/* 1. 상단 고정 헤더 */}
       <header className="flex items-center justify-between px-4 bg-neutral-900 border-b border-neutral-800 shrink-0 h-14 z-10">
         <button
@@ -346,12 +350,12 @@ export default function GatheringChatPage() {
         </button>
 
         <div className="flex flex-col items-center justify-center text-center">
-          <h1 className="font-bold text-base truncate max-w-[200px]">
+          <h1 className="font-bold text-lg truncate max-w-100">
             {gathering ? gathering.title : "벙개 채팅방"}
           </h1>
 
           {gathering?.participants && (
-            <span className="text-xs text-neutral-400 font-medium">
+            <span className="text-[13px] text-neutral-400 font-medium">
               참가자{" "}
               {
                 gathering.participants.filter(
@@ -392,6 +396,10 @@ export default function GatheringChatPage() {
             return (
               <div
                 key={msg.id}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  openDeleteModal(msg);
+                }}
                 className={`flex flex-col max-w-[75%] ${
                   isMyMessage ? "ml-auto items-end" : "mr-auto items-start"
                 }`}
@@ -402,40 +410,40 @@ export default function GatheringChatPage() {
                       <img
                         src={msg.user.profileImage}
                         alt="프로필"
-                        className="w-7 h-7 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-neutral-700 flex items-center justify-center">
-                        <IoPerson size={14} className="text-neutral-400" />
+                      <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center">
+                        <IoPerson size={16} className="text-neutral-400" />
                       </div>
                     )}
-                    <span className="text-xs font-semibold text-neutral-300">
+                    <span className="text-[15px] font-semibold text-neutral-200">
                       {msg.user?.nickname || "알 수 없음"}
                     </span>
                   </div>
                 )}
 
-                <div className="relative group flex items-end gap-1">
+                <div className="relative group">
+                  {/* ⚡️ 말풍선 우측 상단에 배치된 Trash 아이콘 */}
                   {(isMyMessage || isHost) && (
                     <button
-                      onClick={() => handleDeletePrompt(msg)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 transition"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteModal(msg);
+                      }}
+                      className="absolute -top-0.5 -right-0.5 z-10 opacity-0 group-hover:opacity-95 p-1 bg-neutral-800 border border-neutral-700 text-neutral-400 hover:text-red-400 rounded-full shadow-md transition-all duration-150"
                       title="메시지 삭제"
                     >
-                      <IoTrashOutline size={14} />
+                      <IoTrashOutline size={13} />
                     </button>
                   )}
 
                   <div
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      handleDeletePrompt(msg);
-                    }}
-                    className={`rounded-2xl text-sm leading-relaxed break-words max-w-full overflow-hidden ${
+                    className={`rounded-2xl text-base font-medium leading-relaxed break-words max-w-full overflow-hidden ${
                       isImage
                         ? "p-[3px] bg-neutral-800 "
                         : isMyMessage
-                          ? "px-3.5 py-2.5 bg-yellow-400 text-neutral-900 rounded-br-sm font-medium"
+                          ? "px-3.5 py-2.5 bg-yellow-400 text-neutral-900 rounded-br-sm "
                           : "px-3.5 py-2.5 bg-neutral-800 text-neutral-100 rounded-bl-sm border border-neutral-700/60"
                     }`}
                   >
@@ -453,7 +461,7 @@ export default function GatheringChatPage() {
                 </div>
 
                 <span
-                  className={`text-[10px] text-neutral-500 mt-1 px-1 ${
+                  className={`text-xs text-neutral-500 mt-1 px-1 ${
                     isMyMessage ? "text-right" : "text-left"
                   }`}
                 >
@@ -476,7 +484,6 @@ export default function GatheringChatPage() {
           className="hidden"
         />
 
-        {/* ⚡️ 이미지 미리보기 썸네일 노출 영역 */}
         {previewUrl && (
           <div className="relative inline-block mb-2 ml-10">
             <img
@@ -495,7 +502,6 @@ export default function GatheringChatPage() {
         )}
 
         <div className="flex items-center gap-2">
-          {/* 사진 첨부 버튼 */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -531,6 +537,45 @@ export default function GatheringChatPage() {
           </button>
         </div>
       </footer>
+
+      {/* 삭제 확인 모달 UI */}
+      {deletingMessage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setDeletingMessage(null)}
+        >
+          <div
+            className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col items-center gap-4 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+              <IoTrashOutline size={24} />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-white">메시지 삭제</h3>
+              <p className="text-[15px] text-neutral-400 mt-1">
+                선택한 메시지를 삭제하시겠습니까?
+              </p>
+            </div>
+
+            <div className="flex w-full gap-2 mt-1">
+              <button
+                onClick={() => setDeletingMessage(null)}
+                className="flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDeleteMessage}
+                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
+              >
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 이미지 확대 모달 UI */}
       {selectedImage && (
