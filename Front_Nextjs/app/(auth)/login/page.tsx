@@ -44,6 +44,7 @@ function LoginContent() {
     onSuccess: async (data: any) => {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
+        window.dispatchEvent(new Event("auth-state-change"));
       }
       router.replace("/");
     },
@@ -84,6 +85,7 @@ function LoginContent() {
       onSuccess: async (data: any) => {
         if (data.accessToken) {
           await setAccessToken(data.accessToken);
+          window.dispatchEvent(new Event("auth-state-change"));
         }
         if (data.isNewUser) {
           router.replace("/agreement");

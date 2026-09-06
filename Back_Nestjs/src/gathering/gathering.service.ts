@@ -460,6 +460,7 @@ export class GatheringService {
 
     if (myParticipants.length === 0) return [];
 
+    
     // 2. OR 조건으로 안 읽은 메시지가 존재하는 모임 찾기
     // (내가 보낸 메시지 제외, 내 lastReadAt 이후 생성된 메시지)
     const unreadGatherings = await this.prisma.gathering.findMany({

@@ -163,14 +163,12 @@ export default function GatheringDetailPage() {
 
   const canAccessChat = isHost || isApprovedParticipant;
 
-
   ////////////////////////////////////////////////////
 
   // 안읽은 채팅방 메시지 표시
   const { unreadGatheringIds } = useUnreadStore();
   const hasUnread = unreadGatheringIds.includes(id);
 
-  
   const handleChatClick = () => {
     if (!canAccessChat) return alert("승인된 참가자만 입장할 수 있습니다.");
 
@@ -605,7 +603,6 @@ export default function GatheringDetailPage() {
           <IoChatbubblesOutline size={14} />
           <span>채팅방</span>
 
-          {/* 승인된 유저 + 안 읽은 메시지가 있을 때만 N 표시 */}
           {canAccessChat && hasUnread && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md">
               N
