@@ -59,7 +59,6 @@ export default function GatheringChatPage() {
   const socketRef = useRef<any>(null);
 
   const [messageText, setMessageText] = useState("");
-  const [isVerifying, setIsVerifying] = useState(true);
 
   const { data: me } = useQuery<UserProfile>({
     queryKey: ["me"],
@@ -92,10 +91,8 @@ export default function GatheringChatPage() {
       const { data } = await client.get(`/gathering-chat/${id}/messages`);
       return data;
     },
-    enabled: !!id && !isVerifying,
+    enabled: !!id,
     retry: false,
-    staleTime: 0, 
-    gcTime: 0,
   });
 
   useEffect(() => {
@@ -213,6 +210,8 @@ export default function GatheringChatPage() {
       });
     }
   };
+
+  const [isVerifying, setIsVerifying] = useState(true);
 
   useEffect(() => {
     if (isLoading || !gathering || !me) return;
