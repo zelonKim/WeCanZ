@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ParticipantStatus } from '@prisma/client';
-import { CreateChatDto } from './dto/create-chat.dto';
+
 
 @Injectable()
 export class GatheringChatService {

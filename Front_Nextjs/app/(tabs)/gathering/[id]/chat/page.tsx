@@ -10,7 +10,6 @@ import {
   IoChatbubbleEllipsesOutline,
   IoTrashOutline,
 } from "react-icons/io5";
-
 import { client } from "@/api/client";
 import { getSocket } from "@/lib/socket";
 
@@ -154,6 +153,8 @@ export default function GatheringChatPage() {
     };
   }, [id, queryClient]);
 
+
+
   useEffect(() => {
     if (!id) return;
 
@@ -169,6 +170,7 @@ export default function GatheringChatPage() {
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
   }, [id, queryClient]);
+
 
   const handleSend = () => {
     if (!messageText.trim() || !socketRef.current || !me?.id) return;

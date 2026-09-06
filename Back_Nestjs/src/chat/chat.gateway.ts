@@ -57,7 +57,10 @@ export class ChatGateway {
 
     this.server
       .to(`gathering_${data.gatheringId}`)
-      .emit('newGatheringMessage', savedMessage);
+      .emit('newGatheringMessage', {
+        ...savedMessage,
+        gatheringId: data.gatheringId,
+      });
 
     return savedMessage;
   }

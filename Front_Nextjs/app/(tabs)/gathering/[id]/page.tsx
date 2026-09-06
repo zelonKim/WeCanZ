@@ -20,9 +20,9 @@ import {
   IoPersonRemoveOutline,
   IoClose,
 } from "react-icons/io5";
-
-// API 클라이언트 경로 (프로젝트 환경에 맞게 수정)
 import { client } from "@/api/client";
+import { getSocket } from "@/lib/socket";
+import { useUnreadStore } from "@/stores/useUnreadStore";
 
 // ================= TYPES =================
 export interface UserProfile {
@@ -136,6 +136,50 @@ export default function GatheringDetailPage() {
       return data;
     },
   });
+
+  ///////////////////////////////////////////////
+
+  const isHost = Boolean(
+    me?.id && gathering?.hostId && String(me.id) === String(gathering.hostId),
+  );
+
+  const approvedParticipants =
+    gathering?.participants?.filter(
+      (p) => p.status === "APPROVED" || p.status === "YES_SHOW",
+    ) || [];
+
+  const pendingParticipants =
+    gathering?.participants?.filter((p) => p.status === "PENDING") || [];
+
+  const currentCount = approvedParticipants.length;
+
+  const myParticipant = gathering?.participants?.find(
+    (p) => p.userId === me?.id,
+  );
+
+  const isApprovedParticipant =
+    myParticipant?.status === "APPROVED" ||
+    myParticipant?.status === "YES_SHOW";
+
+  const canAccessChat = isHost || isApprovedParticipant;
+
+
+  ////////////////////////////////////////////////////
+
+  // 안읽은 채팅방 메시지 표시
+  const { unreadGatheringIds, removeUnreadGathering } = useUnreadStore();
+  const hasUnread = unreadGatheringIds.includes(id);
+
+  
+  const handleChatClick = () => {
+    if (!canAccessChat) return alert("승인된 참가자만 입장할 수 있습니다.");
+
+    // 채팅방 들어갈 때 전역 안 읽음 목록에서 제거
+    removeUnreadGathering(id);
+    router.push(`/gathering/${id}/chat`);
+  };
+
+  ////////////////////////////////////////////////
 
   // 모임 수정 모달 상태
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -390,24 +434,7 @@ export default function GatheringDetailPage() {
     );
   }
 
-  const isHost = Boolean(
-    me?.id && gathering?.hostId && String(me.id) === String(gathering.hostId),
-  );
-  const approvedParticipants =
-    gathering.participants?.filter(
-      (p) => p.status === "APPROVED" || p.status === "YES_SHOW",
-    ) || [];
-  const pendingParticipants =
-    gathering.participants?.filter((p) => p.status === "PENDING") || [];
-  const currentCount = approvedParticipants.length;
-  const myParticipant = gathering.participants?.find(
-    (p) => p.userId === me?.id,
-  );
-  const isApprovedParticipant =
-    myParticipant?.status === "APPROVED" ||
-    myParticipant?.status === "YES_SHOW";
-    
-  const canAccessChat = isHost || isApprovedParticipant;
+  /////////////////////////////////////////////////
 
   const renderUserCard = (
     user?: UserProfile,
@@ -572,17 +599,20 @@ export default function GatheringDetailPage() {
           <IoArrowBack size={22} />
         </button>
         <h1 className="font-semibold text-lg">벙개 상세 정보</h1>
+
         <button
-          onClick={() => {
-            if (!canAccessChat) {
-              return alert("승인된 참가자만 입장할 수 있습니다.");
-            }
-            router.push(`/gathering/${id}/chat`);
-          }}
-          className={`cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition ${"border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"}`}
+          onClick={handleChatClick}
+          className="relative cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"
         >
           <IoChatbubblesOutline size={14} />
           <span>채팅방</span>
+
+          {/* 승인된 유저 + 안 읽은 메시지가 있을 때만 N 표시 */}
+          {canAccessChat && hasUnread && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md">
+              N
+            </span>
+          )}
         </button>
       </header>
 
