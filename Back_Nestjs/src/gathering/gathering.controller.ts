@@ -40,6 +40,12 @@ export class GatheringController {
     return await this.gatheringService.getMyGatherings(user.id);
   }
 
+  // 안읽은 모임 채팅방
+  @Get('unread')
+  async getUnreadGatherings(@GetUser() user: User) {
+    return await this.gatheringService.getUnreadGatheringIds(user.id);
+  }
+
   // 4. 모임 상세 조회
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -91,11 +97,5 @@ export class GatheringController {
     @Param('roomCode') roomCode: string,
   ) {
     return await this.gatheringService.searchGathering(user.id, roomCode);
-  }
-
-  // 안읽은 모임 채팅방
-  @Get('unread')
-  async getUnreadGatherings(@GetUser() user: User) {
-    return await this.gatheringService.getUnreadGatheringIds(user.id);
   }
 }
