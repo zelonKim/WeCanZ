@@ -42,7 +42,6 @@ export class GatheringService {
     }
   }
 
-
   @Cron(CronExpression.EVERY_10_MINUTES) // 10분마다 실행
   async autoCompleteExpiredGatherings() {
     // 12시간이 경과한 모임
@@ -54,7 +53,7 @@ export class GatheringService {
           notIn: [GatheringStatus.COMPLETED, GatheringStatus.CANCELED],
         },
         dateTime: {
-          lte: twelveHoursAgo, 
+          lte: twelveHoursAgo,
         },
       },
       data: {
@@ -143,13 +142,11 @@ export class GatheringService {
           },
         },
       }),
-      
     ]);
 
     // 두 배열을 하나로 합쳐서 기존처럼 1차원 배열로 반환
     return [...activeGatherings, ...completedGatherings];
   }
-
 
   //////////////////////////////////////////////////////////////////
 
@@ -443,5 +440,48 @@ export class GatheringService {
     }
 
     return gathering;
+  }
+
+  /////////////////////////////////////////////////////
+
+  // 유저의 안 읽은 모임 ID 목록 조회
+  async getUnreadGatheringIds(userId: string): Promise<string[]> {
+    // 1. 유저가 참가를 승인받았거나 참석 확정된 Participant 목록 조회
+    const myParticipants = await this.prisma.participant.findMany({
+      where: {
+        userId,
+        status: { in: ['APPROVED', 'YES_SHOW'] },
+      },
+      select: {
+        gatheringId: true,
+        lastReadAt: true,
+      },
+    });
+
+    if (myParticipants.length === 0) return [];
+
+    // 2. OR 조건으로 안 읽은 메시지가 존재하는 모임 찾기
+    // (내가 보낸 메시지 제외, 내 lastReadAt 이후 생성된 메시지)
+    const unreadGatherings = await this.prisma.gathering.findMany({
+      where: {
+        OR: myParticipants.map((p) => ({
+          id: p.gatheringId,
+          gatheringChatRooms: {
+            some: {
+              messages: {
+                some: {
+                  createdAt: { gt: p.lastReadAt }, // 내 읽은 시간 이후
+                  userId: { not: userId }, // 내가 보낸 메시지 제외
+                },
+              },
+            },
+          },
+        })),
+      },
+      select: { id: true },
+    });
+
+    // 3. 모임 ID 배열만 뽑아서 반환
+    return unreadGatherings.map((g) => g.id);
   }
 }

@@ -79,4 +79,14 @@ export class ParticipantController {
   ) {
     return this.participantService.yesShowParticipant(participantId, user.id);
   }
+
+  // 채팅방 읽음 처리
+  @Patch('read/:gatheringId')
+  async updateLastRead(
+    @GetUser() user: User,
+    @Param('gatheringId') gatheringId: string,
+  ) {
+    return await this.participantService.updateLastRead(user.id, gatheringId);
+  }
+
 }

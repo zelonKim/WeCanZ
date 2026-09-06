@@ -92,4 +92,10 @@ export class GatheringController {
   ) {
     return await this.gatheringService.searchGathering(user.id, roomCode);
   }
+
+  // 안읽은 모임 채팅방
+  @Get('unread')
+  async getUnreadGatherings(@GetUser() user: User) {
+    return await this.gatheringService.getUnreadGatheringIds(user.id);
+  }
 }

@@ -302,4 +302,28 @@ export class ParticipantService {
       return updatedParticipant;
     });
   }
+
+  ///////////////////////////////////////////////////
+
+  // 채팅방 읽음 처리
+  async updateLastRead(userId: string, gatheringId: string) {
+    try {
+      return await this.prisma.participant.update({
+        where: {
+          userId_gatheringId: {
+            userId,
+            gatheringId,
+          },
+        },
+        data: {
+          lastReadAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException(
+        '해당 모임의 참가자 정보를 찾을 수 없습니다.',
+      );
+    }
+  }
 }

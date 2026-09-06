@@ -167,15 +167,13 @@ export default function GatheringDetailPage() {
   ////////////////////////////////////////////////////
 
   // 안읽은 채팅방 메시지 표시
-  const { unreadGatheringIds, removeUnreadGathering } = useUnreadStore();
+  const { unreadGatheringIds } = useUnreadStore();
   const hasUnread = unreadGatheringIds.includes(id);
 
   
   const handleChatClick = () => {
     if (!canAccessChat) return alert("승인된 참가자만 입장할 수 있습니다.");
 
-    // 채팅방 들어갈 때 전역 안 읽음 목록에서 제거
-    removeUnreadGathering(id);
     router.push(`/gathering/${id}/chat`);
   };
 

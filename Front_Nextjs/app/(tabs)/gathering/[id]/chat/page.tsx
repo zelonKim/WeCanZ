@@ -12,6 +12,8 @@ import {
 } from "react-icons/io5";
 import { client } from "@/api/client";
 import { getSocket } from "@/lib/socket";
+import { useUnreadStore } from "@/stores/useUnreadStore";
+import { Socket } from "socket.io-client";
 
 interface ChatMessage {
   id: string;
@@ -55,9 +57,24 @@ export default function GatheringChatPage() {
   const queryClient = useQueryClient();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<any>(null);
-
+  const socketRef = useRef<Socket | null>(null);
   const [messageText, setMessageText] = useState("");
+
+  const removeUnreadGathering = useUnreadStore(
+    (state) => state.removeUnreadGathering,
+  );
+
+  useEffect(() => {
+    if (!id) return;
+
+    client.patch(`/participant/read/${id}`).catch((err) => {
+      console.error("읽음 처리 실패:", err);
+    });
+
+    removeUnreadGathering(id);
+  }, [id, removeUnreadGathering]);
+
+
 
   const { data: me } = useQuery<UserProfile>({
     queryKey: ["me"],
@@ -153,8 +170,6 @@ export default function GatheringChatPage() {
     };
   }, [id, queryClient]);
 
-
-
   useEffect(() => {
     if (!id) return;
 
@@ -170,7 +185,6 @@ export default function GatheringChatPage() {
     window.addEventListener("online", handleOnline);
     return () => window.removeEventListener("online", handleOnline);
   }, [id, queryClient]);
-
 
   const handleSend = () => {
     if (!messageText.trim() || !socketRef.current || !me?.id) return;
