@@ -409,7 +409,9 @@ export default function GatheringDetailScreen() {
   // DM 요청하기
   const requestDmMutation = useMutation({
     mutationFn: async (targetUserId: string) => {
-      return await client.post(`/direct-chat/request/${targetUserId}`);
+      return await client.post(
+        `/direct-chat/request/${encodeURIComponent(targetUserId)}`,
+      );
     },
     onSuccess: (data) => {
       // 대화방 생성 성공 시 대화방 상세(예: /dm/[roomId])로 이동 로직 추가 가능
@@ -648,9 +650,8 @@ export default function GatheringDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.push("/")}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>벙개 상세 정보</Text>

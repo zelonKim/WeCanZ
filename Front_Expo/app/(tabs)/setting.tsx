@@ -107,9 +107,8 @@ export default function SettingScreen() {
     }
 
     try {
-      // 백엔드의 GET /users/search/:nickname 호출
       const { data } = await client.get(
-        `/user/search/${searchNickname.trim()}`,
+        `/user/search/${encodeURIComponent(searchNickname.trim())}`,
       );
 
       if (data && data.id) {

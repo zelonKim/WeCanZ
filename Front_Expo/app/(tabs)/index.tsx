@@ -27,10 +27,10 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
+  handleNotification: () => ({
+    shouldShowList: true, // 알림 센터(드래그 내려서 보는 곳)에 표시
+    shouldPlaySound: true, // 소리 재생
+    shouldSetBadge: true, // 앱 아이콘 배지 설정
   }),
 });
 

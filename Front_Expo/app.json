@@ -30,6 +30,7 @@
       },
       "softwareKeyboardLayoutMode": "pan",
       "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
       "package": "com.zelon.jongtaewon"
     },
     "web": {

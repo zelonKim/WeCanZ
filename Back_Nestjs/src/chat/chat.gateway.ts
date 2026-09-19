@@ -4,6 +4,7 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { DirectChatService } from './direct-chat.service';
@@ -13,11 +14,14 @@ import { PrismaService } from 'prisma/prisma.service';
 import Expo from 'expo-server-sdk';
 
 @WebSocketGateway({ cors: { origin: '*' } })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
   private expo = new Expo();
+
+  // 💡 1. 유저 접속 상태를 관리할 Map (Key: userId, Value: gatheringId)
+  private activeUsers = new Map<string, string>();
 
   constructor(
     private readonly gatheringChatService: GatheringChatService,
@@ -25,21 +29,47 @@ export class ChatGateway {
     private readonly prisma: PrismaService,
   ) {}
 
+  // 💡 2. 외부 및 내부에서 호출 가능한 방 접속 상태 확인 메서드
+  isUserInRoom(userId: string, gatheringId: string): boolean {
+    return this.activeUsers.get(userId) === gatheringId;
+  }
+
+  // 소켓 연결 해제 시 Map 정리
+  handleDisconnect(client: Socket) {
+    const userId = client.data?.userId;
+    if (userId) {
+      this.activeUsers.delete(userId);
+    }
+  }
+
   @SubscribeMessage('joinGatheringRoom')
   handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { gatheringId: string },
+    @MessageBody() data: { gatheringId: string; userId: string },
   ) {
     client.join(`gathering_${data.gatheringId}`);
+
+    // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
+    if (data.userId) {
+      client.data.userId = data.userId;
+      this.activeUsers.set(data.userId, data.gatheringId);
+    }
+
     return { event: 'joinedRoom', gatheringId: data.gatheringId };
   }
 
   @SubscribeMessage('leaveGatheringRoom')
   handleLeaveRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { gatheringId: string },
+    @MessageBody() data: { gatheringId: string; userId: string }, // 💡 userId 추가
   ) {
     client.leave(`gathering_${data.gatheringId}`);
+
+    // 💡 Map에서 유저 접속 상태 제거
+    if (data.userId) {
+      this.activeUsers.delete(data.userId);
+    }
+
     return { event: 'leftRoom', gatheringId: data.gatheringId };
   }
 
@@ -86,19 +116,27 @@ export class ChatGateway {
       senderId,
     );
 
-    const pushMessages: any = [];
+    const pushMessages: any[] = [];
 
     for (const user of targetUsers) {
       if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
         continue;
       }
 
+      const isUserActiveInRoom = this.isUserInRoom(user.userId, gatheringId);
+
+      if (isUserActiveInRoom) {
+        continue;
+      }
+
       pushMessages.push({
         to: user.pushToken,
         sound: 'default' as const,
-        title: '⚡️ 벙개 채팅방',
+        title: '새로운 채팅',
         body: message,
-        data: { gatheringId, type: 'CHAT' }, // 앱에서 클릭 시 특정 페이지 이동용
+        priority: 'high',
+        channelId: 'default',
+        data: { gatheringId, type: 'CHAT' },
       });
     }
 

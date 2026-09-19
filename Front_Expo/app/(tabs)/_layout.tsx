@@ -1,11 +1,32 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { router, Tabs } from "expo-router";
+import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
-  // 💡 기기별 하단 안전 영역(소프트키/제스처바 높이)을 가져옵니다.
   const insets = useSafeAreaInsets();
+  const responseListener = useRef<Notifications.EventSubscription | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data;
+        
+        if (data?.type === "CHAT" && data?.gatheringId) {
+          router.push(`/gathering/${data.gatheringId}/chat`);
+        }
+      });
+
+    return () => {
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, []);
 
   return (
     <Tabs

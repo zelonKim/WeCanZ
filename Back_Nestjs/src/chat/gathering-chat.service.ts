@@ -133,17 +133,18 @@ export class GatheringChatService {
       where: {
         gatheringId: gatheringId,
         userId: {
-          not: senderId, 
+          not: senderId,
         },
         user: {
           pushToken: {
-            not: null, 
+            not: null,
           },
         },
       },
       select: {
         user: {
           select: {
+            id: true,
             pushToken: true,
           },
         },
@@ -151,7 +152,10 @@ export class GatheringChatService {
     });
 
     return members
-      .map((member) => ({ pushToken: member.user.pushToken }))
+      .map((member) => ({
+        userId: member.user.id, 
+        pushToken: member.user.pushToken,
+      }))
       .filter((item) => item.pushToken !== null);
   }
 }

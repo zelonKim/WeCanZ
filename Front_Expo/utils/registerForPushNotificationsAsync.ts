@@ -9,9 +9,10 @@ export async function registerForPushNotificationsAsync() {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
-      importance: Notifications.AndroidImportance.MAX,
+      importance: Notifications.AndroidImportance.MAX, // 최고 중요도 (상단 배너 팝업)
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF236C",
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC, // 잠금화면에 내용 표시
     });
   }
 
@@ -41,7 +42,7 @@ export async function registerForPushNotificationsAsync() {
     const pushTokenData = await Notifications.getExpoPushTokenAsync({
       projectId,
     });
-    
+
     token = pushTokenData.data;
   } catch (err) {
     console.error("Push Token 발급 중 에러 발생:", err);

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "345213125520",
+    "project_id": "jongtaewon-c7cf7",
+    "storage_bucket": "jongtaewon-c7cf7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:345213125520:android:07f0e09a56032326b76915",
+        "android_client_info": {
+          "package_name": "com.zelon.jongtaewon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB60G94VSP6OLUPYfJWIhXBdcGe8Uxw8IQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

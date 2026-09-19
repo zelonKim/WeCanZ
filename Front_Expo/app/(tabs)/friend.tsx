@@ -136,7 +136,9 @@ export default function FriendScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${friendNickname}`);
+      const res = await client.get(
+        `/user/search/${encodeURIComponent(friendNickname)}`,
+      );
       await client.post(`/friendship/request/${res.data.id}`);
 
       setIsAddModalVisible(false);
@@ -224,7 +226,9 @@ export default function FriendScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${blockNickname}`);
+      const res = await client.get(
+        `/user/search/${encodeURIComponent(blockNickname)}`,
+      );
       blockUserMutation.mutate(res.data.id);
     } catch (error: any) {
       const errorMessage =

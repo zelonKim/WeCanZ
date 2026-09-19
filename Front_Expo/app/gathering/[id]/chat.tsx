@@ -9,6 +9,8 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
+  AppStateStatus,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -40,6 +42,8 @@ export default function GatheringChatScreen() {
   const queryClient = useQueryClient();
   const scrollViewRef = useRef<ScrollView>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  const appState = useRef(AppState.currentState);
 
   const insets = useSafeAreaInsets();
 
@@ -85,9 +89,8 @@ export default function GatheringChatScreen() {
     enabled: !!id,
   });
 
-  // 3. 웹소켓 핸들링
   useEffect(() => {
-    if (!id) return;
+    if (!id || !me?.id) return;
 
     const socket = getSocket();
 
@@ -96,8 +99,27 @@ export default function GatheringChatScreen() {
     }
 
     socketRef.current = socket;
-    socket.emit("joinGatheringRoom", { gatheringId: id });
 
+    // 1. 첫 진입 시 소켓 룸 입장
+    socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
+
+    // 2. 앱 상태(Foreground / Background) 변화 감지
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        // 앱으로 다시 돌아왔을 때 -> 백엔드 Map에 재등록
+        socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
+      } else if (nextAppState.match(/inactive|background/)) {
+        // 화면이 꺼지거나 홈 화면으로 나갔을 때 -> 백엔드 Map에서 제거 (푸시 수신 가능 상태로 변경)
+        socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+
+    // 메시지 핸들러
     const handleNewMessage = (newMessage: ChatMessage) => {
       queryClient.setQueryData<ChatMessage[]>(
         ["gathering-messages", id],
@@ -121,11 +143,12 @@ export default function GatheringChatScreen() {
     socket.on("gatheringMessageDeleted", handleDeletedMessage);
 
     return () => {
-      socket.emit("leaveGatheringRoom", { gatheringId: id });
+      socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
       socket.off("newGatheringMessage", handleNewMessage);
       socket.off("gatheringMessageDeleted", handleDeletedMessage);
+      appStateSubscription.remove(); // AppState 리스너 해제
     };
-  }, [id, queryClient]);
+  }, [id, me?.id, queryClient]);
 
   // 네트워크 감지
   useEffect(() => {
@@ -145,9 +168,8 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
-
   ///////////////////////////////////////////////////////////////////////////
-  
+
   // 메시지 전송
   const handleSend = () => {
     if (!messageText.trim() || !socketRef.current || !me?.id) return;
@@ -160,8 +182,6 @@ export default function GatheringChatScreen() {
 
     setMessageText("");
   };
-
-
 
   // 메시지 삭제
   const handleDeletePrompt = (msg: ChatMessage) => {
@@ -198,7 +218,7 @@ export default function GatheringChatScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.navIconButton}
-          onPress={() => router.back()}
+          onPress={() => router.push(`/gathering/${id}`)}
         >
           <Ionicons name="chevron-back" size={22} color="#FFF" />
         </TouchableOpacity>
