@@ -145,6 +145,9 @@ export default function GatheringChatScreen() {
     };
   }, [id, queryClient]);
 
+
+  ///////////////////////////////////////////////////////////////////////////
+  
   // 메시지 전송
   const handleSend = () => {
     if (!messageText.trim() || !socketRef.current || !me?.id) return;
@@ -157,6 +160,8 @@ export default function GatheringChatScreen() {
 
     setMessageText("");
   };
+
+
 
   // 메시지 삭제
   const handleDeletePrompt = (msg: ChatMessage) => {
@@ -210,7 +215,6 @@ export default function GatheringChatScreen() {
         <View style={{ width: 38 }} />
       </View>
 
-      {/* 💡 안드로이드 탭바 가림 방지 KeyboardAvoidingView */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -235,10 +239,10 @@ export default function GatheringChatScreen() {
                   <Ionicons
                     name="chatbubbles-outline"
                     size={32}
-                    color="#FFE814"
+                    color="white"
                   />
                 </View>
-                <Text style={styles.emptyTitle}>비어있는 채팅방</Text>
+                <Text style={styles.emptyTitle}>아직 메시지가 없습니다.</Text>
                 <Text style={styles.emptySubText}>
                   첫 번째 대화를 시작해 보세요!
                 </Text>
@@ -332,7 +336,7 @@ export default function GatheringChatScreen() {
           <View style={styles.inputCapsule}>
             <TextInput
               style={styles.textInput}
-              placeholder="메시지 입력..."
+              placeholder="메시지를 입력하세요"
               placeholderTextColor="#71717A"
               value={messageText}
               onChangeText={setMessageText}
@@ -409,14 +413,14 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 120,
+    marginTop: 150,
     gap: 8,
   },
   emptyIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: "rgba(255, 232, 20, 0.1)",
+    backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,

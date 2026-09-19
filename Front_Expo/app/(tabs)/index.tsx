@@ -1,7 +1,11 @@
 import { client } from "@/api/client";
+import { saveTokenToServer } from "@/api/saveTokenToServer";
+import Colors from "@/constants/Colors";
 import { formatDateTime } from "@/utils/formatDateTime";
+import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -21,6 +25,14 @@ import {
 import { Calendar, DateData } from "react-native-calendars";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export enum GatheringCategory {
   DRINK = "DRINK",
@@ -59,7 +71,7 @@ const CATEGORIES = [
   { label: "전체", value: "ALL" },
   { label: "술벙", value: GatheringCategory.DRINK },
   { label: "클럽벙", value: GatheringCategory.CLUB },
-  { label: "술+클럽", value: GatheringCategory.DRINK_CLUB },
+  { label: "술+클럽벙", value: GatheringCategory.DRINK_CLUB },
 ];
 
 const fetchGatherings = async (): Promise<Gathering[]> => {
@@ -100,6 +112,14 @@ export default function HomeScreen() {
     new Date().getHours(),
   );
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then((token) => {
+      if (token) {
+        saveTokenToServer(token);
+      }
+    });
+  }, []);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -245,7 +265,7 @@ export default function HomeScreen() {
     { label: string; badgeStyle: any; textStyle: any }
   > = {
     OPEN: {
-      label: "모집 중",
+      label: "모집중",
       badgeStyle: styles.statusOpen,
       textStyle: styles.statusOpenText,
     },
@@ -255,15 +275,19 @@ export default function HomeScreen() {
       textStyle: styles.statusFullText,
     },
     IN_PROGRESS: {
-      label: "진행 중",
+      label: "진행중",
       badgeStyle: styles.statusInProgress,
       textStyle: styles.statusInProgressText,
+    },
+    COMPLETED: {
+      label: "종료됨",
+      badgeStyle: styles.statusInCompleted,
+      textStyle: styles.statusInCompletedText,
     },
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 1. 모던 헤더 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
           <Text style={styles.headerTitleHighlight}>⚡️</Text> 벙개의 광장
@@ -277,11 +301,10 @@ export default function HomeScreen() {
             setInviteCode("");
           }}
         >
-          <Ionicons name="qr-code" size={18} color="#FFE600" />
+          <Ionicons name="qr-code" size={20} color="#FFE600" />
         </TouchableOpacity>
       </View>
 
-      {/* 2. 힙한 카테고리 필터 */}
       <View style={styles.categoryContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {CATEGORIES.map((cat) => {
@@ -310,7 +333,6 @@ export default function HomeScreen() {
         </ScrollView>
       </View>
 
-      {/* 3. 모던 리스트 카운트 & 스크롤 */}
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#FFE600" />
@@ -350,7 +372,7 @@ export default function HomeScreen() {
                         STATUS_CONFIG[item.status]?.textStyle,
                       ]}
                     >
-                      ● {STATUS_CONFIG[item.status]?.label || item.status}
+                      {STATUS_CONFIG[item.status]?.label || item.status}
                     </Text>
                   </View>
                   <Text style={styles.cardCategory}>
@@ -369,7 +391,6 @@ export default function HomeScreen() {
                 {item.description}
               </Text>
 
-              {/* 하단 메타 정보 영역 */}
               <View style={styles.cardFooter}>
                 <View style={styles.infoGroup}>
                   <View style={styles.infoRow}>
@@ -407,7 +428,6 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* 4. 힙한 FAB (플로팅 버튼) */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setIsModalOpen(true)}
@@ -416,7 +436,6 @@ export default function HomeScreen() {
         <Ionicons name="add" size={30} color="#000000" />
       </TouchableOpacity>
 
-      {/* 5. 생성 모달 */}
       <Modal
         visible={isModalOpen}
         animationType="slide"
@@ -431,7 +450,7 @@ export default function HomeScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>새 벙개 만들기</Text>
+                <Text style={styles.modalTitle}>New 벙개 만들기</Text>
                 <TouchableOpacity
                   onPress={closeAndResetModal}
                   style={styles.closeBtn}
@@ -484,6 +503,7 @@ export default function HomeScreen() {
                   style={styles.input}
                   placeholder="예) 종로 같이 술마실 분!"
                   placeholderTextColor="#666668"
+                  multiline
                   value={title}
                   onChangeText={setTitle}
                 />
@@ -503,6 +523,7 @@ export default function HomeScreen() {
                   style={styles.input}
                   placeholder="예) 종로3가역 6번 출구 앞"
                   placeholderTextColor="#666668"
+                  multiline
                   value={location}
                   onChangeText={setLocation}
                 />
@@ -616,7 +637,7 @@ export default function HomeScreen() {
                 {createMutation.isPending ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.submitButtonText}>벙개 게시하기</Text>
+                  <Text style={styles.submitButtonText}>방 만들기</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -624,7 +645,6 @@ export default function HomeScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 6. 룸코드 입력 모달 */}
       <Modal
         visible={isInviteModalOpen}
         transparent
@@ -641,11 +661,7 @@ export default function HomeScreen() {
         >
           <View style={styles.inviteModalOverlay}>
             <View style={styles.inviteModalContainer}>
-              <View style={styles.inviteIconCircle}>
-                <Ionicons name="qr-code" size={24} color="#FFE600" />
-              </View>
-
-              <Text style={styles.inviteModalTitle}>룸 코드 입장</Text>
+              <Text style={styles.inviteModalTitle}>🔡 룸 코드 입장</Text>
               <Text style={styles.inviteModalSubTitle}>
                 공유받은 4자리 코드를 입력하세요.
               </Text>
@@ -654,7 +670,7 @@ export default function HomeScreen() {
                 style={styles.codeInput}
                 value={inviteCode}
                 onChangeText={(text) => setInviteCode(text.toLowerCase())}
-                placeholder="••••"
+                placeholder="____"
                 placeholderTextColor="#52525B"
                 maxLength={4}
                 autoCapitalize="none"
@@ -693,21 +709,22 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#09090B", // 깊고 고급스러운 다크 메인 배경
+    backgroundColor: "#09090B",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-
-  /* 헤더 */
   header: {
     paddingHorizontal: 20,
     paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border || "#E9ECEF",
+    marginBottom: 12,
   },
   headerTitle: {
     fontSize: 24,
@@ -721,21 +738,15 @@ const styles = StyleSheet.create({
   roomSearchButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#18181B",
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
   },
   roomSearchText: {
     color: "#FFE600",
     fontSize: 13,
     fontWeight: "700",
   },
-
-  /* 카테고리 필터 */
   categoryContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -762,8 +773,6 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontWeight: "800",
   },
-
-  /* 모임 리스트 */
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 100,
@@ -783,8 +792,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "500",
   },
-
-  /* 모던 카드 디자인 */
   card: {
     backgroundColor: "#18181B",
     borderRadius: 20,
@@ -809,36 +816,39 @@ const styles = StyleSheet.create({
     fontWeight: Platform.OS === "ios" ? "700" : "600",
     color: "#A1A1AA",
   },
-
-  /* 뱃지 */
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   statusBadgeText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: "700",
   },
   statusOpen: {
-    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    backgroundColor: "#155dfc",
   },
   statusOpenText: {
-    color: "#60A5FA",
+    color: "white",
   },
   statusFull: {
-    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    backgroundColor: "#fb2c36",
   },
   statusFullText: {
-    color: "#F87171",
+    color: "white",
   },
   statusInProgress: {
-    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    backgroundColor: "#fb2c36",
   },
   statusInProgressText: {
-    color: "#F87171",
+    color: "white",
   },
-
+  statusInCompleted: {
+    backgroundColor: "#364153",
+  },
+  statusInCompletedText: {
+    color: "white",
+  },
   peopleBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -867,7 +877,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
-
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -889,7 +898,6 @@ const styles = StyleSheet.create({
     color: "#D4D4D8",
     fontWeight: Platform.OS === "ios" ? "500" : "400",
   },
-
   hostContainer: {
     justifyContent: "flex-end",
   },
@@ -906,8 +914,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-
-  /* 모던 FAB */
   fab: {
     position: "absolute",
     right: 20,
@@ -924,8 +930,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
   },
-
-  /* 생성 모달 */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.85)",
@@ -1073,8 +1077,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "800",
   },
-
-  /* 룸코드 모달 */
   inviteModalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.85)",
@@ -1092,20 +1094,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
-  inviteIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255, 230, 0, 0.1)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 12,
-  },
+
   inviteModalTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: "#FFFFFF",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   inviteModalSubTitle: {
     fontSize: 13,
@@ -1119,8 +1113,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#27272A",
     borderRadius: 12,
     color: "#FFE600",
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "600",
     textAlign: "center",
     letterSpacing: 8,
     marginBottom: 20,

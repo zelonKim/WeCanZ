@@ -375,7 +375,7 @@ export default function SettingScreen() {
             onPress={() => setIsModalVisible(true)}
             style={styles.profileSearchBtn}
           >
-            <Ionicons name="person-outline" size={26} color={Colors.yellow} />
+            <Ionicons name="search-outline" size={26} color={Colors.yellow} />
           </TouchableOpacity>
         </View>
 
@@ -440,7 +440,7 @@ export default function SettingScreen() {
             {/* 이용약관 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://example.com/terms")}
+              onPress={() => openTerms("https://www.jongtaewon.com/terms")}
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -460,7 +460,7 @@ export default function SettingScreen() {
             {/* 개인정보 처리방침 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://example.com/privacy")}
+              onPress={() => openTerms("https://www.jongtaewon.com/privacy")}
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -757,6 +757,7 @@ export default function SettingScreen() {
                 placeholder="닉네임 입력"
                 placeholderTextColor="#666"
                 value={searchNickname}
+                multiline
                 onChangeText={setSearchNickname}
                 autoCapitalize="none"
               />
@@ -845,6 +846,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border || "#E9ECEF",
+    marginBottom: 12,
   },
   headerTitle: { fontSize: 22, fontWeight: "800", color: Colors.text },
 

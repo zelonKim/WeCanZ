@@ -424,6 +424,7 @@ export default function FriendScreen() {
                 placeholder="닉네임 입력"
                 placeholderTextColor="#888"
                 value={friendNickname}
+                multiline
                 onChangeText={setFriendNickname}
                 autoCapitalize="none"
               />
@@ -451,7 +452,6 @@ export default function FriendScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 💡 [복합 모달] 차단하기(닉네임 입력) + 차단 유저 목록 확인 및 차단 해제 */}
       <Modal
         visible={isBlockModalVisible}
         transparent={true}
@@ -473,7 +473,6 @@ export default function FriendScreen() {
               style={styles.modalContentCard}
               onPress={(e) => e.stopPropagation()}
             >
-              {/* 모달 헤더 */}
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>🚫 차단 관리</Text>
                 <TouchableOpacity onPress={() => setIsBlockModalVisible(false)}>
@@ -485,13 +484,13 @@ export default function FriendScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* 1. 닉네임 직접 입력 차단 영역 */}
               <View style={styles.directBlockContainer}>
                 <TextInput
                   style={styles.directBlockInput}
                   placeholder="닉네임 입력"
                   placeholderTextColor="#888"
                   value={blockNickname}
+                  multiline
                   onChangeText={setBlockNickname}
                   autoCapitalize="none"
                 />
@@ -503,7 +502,6 @@ export default function FriendScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* 구분선 */}
               <View style={styles.divider} />
 
               <Text style={styles.subListTitle}>
@@ -743,7 +741,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border || "#E9ECEF",
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     fontSize: 14,
     color: Colors.text,
     backgroundColor: Colors.card,
@@ -822,6 +820,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 10,
     paddingHorizontal: 14,
+    paddingVertical: 10,
     color: "#FFF",
     fontSize: 15,
     marginBottom: 20,

@@ -171,4 +171,13 @@ export class UserService {
 
     return user;
   }
+
+  /////////////////////////////////////////
+
+  async updatePushToken(userId: string, pushToken: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { pushToken },
+    });
+  }
 }

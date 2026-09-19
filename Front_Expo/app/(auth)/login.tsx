@@ -3,6 +3,7 @@ import { setAccessToken } from "@/api/token";
 import { CustomAppleLoginButton } from "@/components/CustomAppleLoginButton";
 import { CustomGoogleLoginButton } from "@/components/CustomGoogleLoginButton";
 import Colors from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 import {
   GoogleSignin,
   statusCodes,
@@ -232,18 +233,30 @@ export default function LoginScreen() {
           {/* 2. 이메일 & 비밀번호 입력 폼 */}
           <View style={styles.formSection}>
             <View style={styles.inputGroup}>
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color="#666"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="아이디"
                 placeholderTextColor="#666"
-                // keyboardType="email-address"
                 autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
               />
             </View>
 
+            {/* 비밀번호 입력창 */}
             <View style={styles.inputGroup}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color="#666"
+                style={styles.icon}
+              />
               <TextInput
                 style={styles.input}
                 placeholder="비밀번호"
@@ -325,12 +338,24 @@ const styles = StyleSheet.create({
   },
 
   formSection: { gap: 12 },
-  inputGroup: { width: "100%" },
-  input: {
+
+  inputGroup: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#1C1C1E",
     height: 52,
     borderRadius: 10,
     paddingHorizontal: 16,
+  },
+
+  icon: {
+    marginRight: 10,
+  },
+
+  input: {
+    flex: 1,
+    height: "100%",
     color: "#FFF",
     fontSize: 15,
   },
@@ -358,7 +383,7 @@ const styles = StyleSheet.create({
   signupLinkText: {
     fontSize: 14,
     fontWeight: Platform.OS === "ios" ? "600" : "500",
-    textDecorationLine: "underline",
+    // textDecorationLine: "underline",
   },
 
   dividerContainer: {

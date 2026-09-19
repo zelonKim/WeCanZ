@@ -274,13 +274,13 @@ export default function HomeScreen() {
   };
 
   return (
-    <main className=" min-h-screen  text-white max-w-5xl w-full mx-auto relative px-6 pb-10">
+    <main className=" min-h-screen text-white max-w-5xl w-full mx-auto relative px-6 pb-10">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between py-4 ">
         <h1 className="text-2xl font-bold">⚡️ 벙개의 광장</h1>
 
         <button
-          className="p-1.5 rounded-full hover:bg-[#2C2C2E] transition-colors"
+          className="p-1.5 rounded-full  hover:bg-[#2C2C2E] transition-colors"
           onClick={() => {
             setIsInviteModalOpen(true);
             setInviteCode("");

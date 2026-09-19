@@ -250,12 +250,12 @@ export default function DMScreen() {
     };
   }, [myInfo?.id, queryClient]);
 
+
+  
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 헤더 영역 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>💬 다이렉트 메시지</Text>
-        {/* 💡 DM 보내기 아이콘 버튼 추가 */}
         <TouchableOpacity
           style={styles.iconBtn}
           onPress={() => setIsModalVisible(true)}
@@ -407,7 +407,6 @@ export default function DMScreen() {
         }
       />
 
-      {/* 💡 [모달 추가] 닉네임 입력 기반 DM 요청 모달 */}
       <Modal
         animationType="fade"
         transparent={true}
@@ -431,6 +430,7 @@ export default function DMScreen() {
                 placeholder="닉네임 입력"
                 placeholderTextColor="#888"
                 value={targetNickname}
+                multiline
                 onChangeText={setTargetNickname}
                 autoCapitalize="none"
               />
@@ -612,8 +612,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8E8E93",
   },
-
-  // 💡 DM 모달 스타일
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -643,10 +641,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   modalInput: {
+    flexDirection: "row",
     backgroundColor: "#2C2C2E",
     height: 42,
     borderRadius: 10,
     paddingHorizontal: 14,
+    paddingVertical: 10,
     color: "#FFF",
     fontSize: 15,
     marginBottom: 20,

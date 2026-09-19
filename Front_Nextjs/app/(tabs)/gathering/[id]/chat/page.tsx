@@ -67,7 +67,6 @@ export default function GatheringChatPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // ⚡️ 삭제 확인 모달 대상 State
   const [deletingMessage, setDeletingMessage] = useState<ChatMessage | null>(
     null,
   );

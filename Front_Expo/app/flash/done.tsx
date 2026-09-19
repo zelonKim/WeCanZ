@@ -136,9 +136,7 @@ export default function DoneGatheringsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#121212" }, // 진한 다크 배경
-
-  // 헤더
+  container: { flex: 1, backgroundColor: "#121212" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -150,8 +148,6 @@ const styles = StyleSheet.create({
   },
   backButton: { padding: 4 },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: "#FFFFFF" },
-
-  // 탭
   tabContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -161,13 +157,11 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 15, color: "#777777" },
   activeCompleteTab: { borderBottomWidth: 2, borderColor: Colors.orange },
   activeCompleteTabText: { color: Colors.orange, fontWeight: "bold" },
-
   activeCancelTab: { borderBottomWidth: 2, borderColor: Colors.red },
   activeCancelTabText: { color: Colors.red, fontWeight: "bold" },
-  // 리스트 및 카드
   listContainer: { padding: 16 },
   card: {
-    backgroundColor: "#1E1E1E", // 카드 다크 배경
+    backgroundColor: "#1E1E1E",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -190,6 +184,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.05)",
   },
   cardLocation: {
     fontSize: 13,

@@ -5,11 +5,7 @@ import { getSocket } from "@/lib/socket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import {
-  ChatbubbleEllipsesOutline,
-  Person,
-  CloseOutline,
-} from "react-ionicons";
+import { ChatbubbleEllipsesOutline, Person } from "react-ionicons";
 
 interface User {
   id: string;
@@ -18,7 +14,7 @@ interface User {
 }
 
 interface DirectChatRoom {
-  id: string; // roomId
+  id: string;
   status: "PENDING" | "ACCEPTED" | "REJECTED";
   user1Id: string;
   user2Id: string;

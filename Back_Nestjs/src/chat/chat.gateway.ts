@@ -10,11 +10,14 @@ import { DirectChatService } from './direct-chat.service';
 import { GatheringChatService } from './gathering-chat.service';
 import { FriendshipStatus } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
+import Expo from 'expo-server-sdk';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
+
+  private expo = new Expo();
 
   constructor(
     private readonly gatheringChatService: GatheringChatService,
@@ -62,8 +65,55 @@ export class ChatGateway {
         gatheringId: data.gatheringId,
       });
 
+    this.sendGatheringPushNoti(
+      data.gatheringId,
+      data.userId,
+      data.message,
+    ).catch((err) => console.error('푸시 알림 전송 에러:', err));
+
     return savedMessage;
   }
+
+  ///////////////////////////////////////////
+
+  private async sendGatheringPushNoti(
+    gatheringId: string,
+    senderId: string,
+    message: string,
+  ) {
+    const targetUsers = await this.gatheringChatService.getUsersPushTokens(
+      gatheringId,
+      senderId,
+    );
+
+    const pushMessages: any = [];
+
+    for (const user of targetUsers) {
+      if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
+        continue;
+      }
+
+      pushMessages.push({
+        to: user.pushToken,
+        sound: 'default' as const,
+        title: '⚡️ 벙개 채팅방',
+        body: message,
+        data: { gatheringId, type: 'CHAT' }, // 앱에서 클릭 시 특정 페이지 이동용
+      });
+    }
+
+    const chunks = this.expo.chunkPushNotifications(pushMessages);
+
+    for (const chunk of chunks) {
+      try {
+        await this.expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error('Expo 푸시 전송 실패:', error);
+      }
+    }
+  }
+
+  ///////////////////////////////////////////
 
   @SubscribeMessage('deleteGatheringMessage')
   async handleDeleteMessage(

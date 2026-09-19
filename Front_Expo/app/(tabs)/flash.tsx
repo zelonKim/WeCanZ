@@ -1,4 +1,5 @@
 import { client } from "@/api/client";
+import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -15,7 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// 모임 및 참여 정보 타입 정의
 export interface Gathering {
   id: string;
   title: string;
@@ -33,7 +33,6 @@ export interface Gathering {
 export default function FlashScreen() {
   const router = useRouter();
 
-  // 1. 내 프로필 정보 조회
   const { data: me } = useQuery({
     queryKey: ["me"],
     queryFn: async () => {
@@ -42,7 +41,6 @@ export default function FlashScreen() {
     },
   });
 
-  // 2. 내가 방장이거나 신청/참여 중인 모임 목록 조회
   const {
     data: myGatherings = [],
     isLoading,
@@ -62,12 +60,10 @@ export default function FlashScreen() {
       ),
   });
 
-  // 3. 모임 상세 페이지로 이동
   const handlePressGathering = (gatheringId: string) => {
     router.push(`/gathering/${gatheringId}`);
   };
 
-  // 나의 상태(방장, 승인됨, 대기중) 구분 뱃지 렌더링
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
@@ -203,6 +199,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border || "#E9ECEF",
   },
   headerTitle: {
     fontSize: 24,

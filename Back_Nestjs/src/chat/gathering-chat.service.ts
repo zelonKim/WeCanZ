@@ -6,7 +6,6 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { ParticipantStatus } from '@prisma/client';
 
-
 @Injectable()
 export class GatheringChatService {
   constructor(private readonly prisma: PrismaService) {}
@@ -124,5 +123,35 @@ export class GatheringChatService {
     return await this.prisma.gatheringChatMessage.delete({
       where: { id: messageId },
     });
+  }
+
+  ////////////////////////////////////////////////////////////
+
+  async getUsersPushTokens(gatheringId: string, senderId: string) {
+    // 모임에 속한 멤버 중 보낸 사람을 제외하고, pushToken이 존재하는 유저 조회
+    const members = await this.prisma.participant.findMany({
+      where: {
+        gatheringId: gatheringId,
+        userId: {
+          not: senderId, 
+        },
+        user: {
+          pushToken: {
+            not: null, 
+          },
+        },
+      },
+      select: {
+        user: {
+          select: {
+            pushToken: true,
+          },
+        },
+      },
+    });
+
+    return members
+      .map((member) => ({ pushToken: member.user.pushToken }))
+      .filter((item) => item.pushToken !== null);
   }
 }

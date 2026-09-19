@@ -25,6 +25,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  pushToken         String?   @map("push_token")
+  
   termsAgreedAt     DateTime? // 서비스 이용약관 동의 일시
   privacyAgreedAt   DateTime? // 개인정보 처리방침 동의 일시
   marketingAgreedAt DateTime? // 마케팅 수신 동의 일시 (선택)

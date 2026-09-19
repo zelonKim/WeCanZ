@@ -223,6 +223,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border || "#E9ECEF",
+    marginBottom: 8,
   },
   headerIconBtn: {
     padding: 4,
@@ -234,7 +237,7 @@ const styles = StyleSheet.create({
   },
 
   iconButton: {
-    padding: 4, // 터치 영역 확보
+    padding: 4,
   },
   center: {
     flex: 1,

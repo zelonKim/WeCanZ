@@ -342,7 +342,6 @@ export default function SignupScreen() {
             </View>
           </View>
 
-          {/* 가입하기 버튼 */}
           <TouchableOpacity
             style={[styles.submitBtn, { backgroundColor: Colors.red }]}
             onPress={handleSignup}
@@ -351,7 +350,7 @@ export default function SignupScreen() {
             {isPending ? (
               <ActivityIndicator size="small" color={Colors.text} />
             ) : (
-              <Text style={styles.submitBtnText}>가입하기</Text>
+              <Text style={styles.submitBtnText}>시작하기</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

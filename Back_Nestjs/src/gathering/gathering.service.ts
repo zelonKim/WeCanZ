@@ -107,10 +107,10 @@ export class GatheringService {
   }
   //////////////////////////////////////////////////////////////////
 
-  // 2. 전체 모임 목록 조회 (활성 모임 + 최근 완료 모임 5개 합쳐서 배열로 반환)
+  // 2. 전체 모임 목록 조회 
   async findAllGathering() {
     const [activeGatherings, completedGatherings] = await Promise.all([
-      // 1) 모집 중 / 진행 중인 모임 (최근 생성순)
+      // 1) 모집 중 / 인원 마감 / 진행 중인 모임 
       this.prisma.gathering.findMany({
         where: {
           status: {
@@ -129,13 +129,13 @@ export class GatheringService {
         },
       }),
 
-      // 2) 최근 종료된 모임 (최근 생성순 5개만 제한)
+      // 2) 최근 종료된 모임 
       this.prisma.gathering.findMany({
         where: {
           status: GatheringStatus.COMPLETED,
         },
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: 10,
         include: {
           host: {
             select: { id: true, nickname: true, profileImage: true },
@@ -460,7 +460,6 @@ export class GatheringService {
 
     if (myParticipants.length === 0) return [];
 
-    
     // 2. OR 조건으로 안 읽은 메시지가 존재하는 모임 찾기
     // (내가 보낸 메시지 제외, 내 lastReadAt 이후 생성된 메시지)
     const unreadGatherings = await this.prisma.gathering.findMany({

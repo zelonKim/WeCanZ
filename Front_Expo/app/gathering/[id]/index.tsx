@@ -353,7 +353,6 @@ export default function GatheringDetailScreen() {
 
   const [isNoShowModalOpen, setIsNoShowModalOpen] = useState(false);
 
-  
   const noShowMutation = useMutation({
     mutationFn: async (participantId: string) => {
       return await client.patch(`/participant/${participantId}/no-show`);
@@ -365,8 +364,6 @@ export default function GatheringDetailScreen() {
       Alert.alert("오류", err.response?.data?.message || "노쇼 처리 실패");
     },
   });
-
-
 
   const handleCompleteCheck = async () => {
     const restParticipants = (gathering?.participants || []).filter(
@@ -723,7 +720,6 @@ export default function GatheringDetailScreen() {
           </View>
         )}
 
-
         {gathering.status === "CANCELED" && (
           <View style={[styles.statusBanner, styles.canceledBanner]}>
             <Ionicons
@@ -741,7 +737,6 @@ export default function GatheringDetailScreen() {
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            marginTop: 10,
           }}
         >
           <View style={styles.statusRow}>
@@ -762,7 +757,6 @@ export default function GatheringDetailScreen() {
             <Text style={styles.categoryText}>
               {CATEGORY_LABEL[gathering.category] || gathering.category}
             </Text>
-
           </View>
           {isHost &&
             (gathering.status === "OPEN" || gathering.status === "FULL") && (
@@ -922,7 +916,6 @@ export default function GatheringDetailScreen() {
             marginBottom: 8,
           }}
         >
-          {/* <Ionicons name="checkbox-outline" size={16} color={Colors.text} /> */}
           <Text style={styles.listSectionTitle}>✅ 참가자</Text>
         </View>
         {approvedParticipants.length === 0 ? (
@@ -944,7 +937,6 @@ export default function GatheringDetailScreen() {
             marginBottom: 8,
           }}
         >
-          {/* <Ionicons name="hourglass-outline" size={16} color={Colors.text} /> */}
           <Text style={styles.listSectionTitle}>⏳ 대기자</Text>
         </View>
         {pendingParticipants.length === 0 ? (
@@ -1268,16 +1260,12 @@ export default function GatheringDetailScreen() {
           </View>
         </View>
       </Modal>
-
-
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   userCard: {
-    // 상대 위치 기준점 잡기
     position: "relative",
     flexDirection: "row",
     alignItems: "center",
@@ -1334,10 +1322,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
   },
 
-  // --- 추가할 채팅 버튼 스타일 ---
   chatButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1364,8 +1351,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingBottom: -36,
   },
+
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },

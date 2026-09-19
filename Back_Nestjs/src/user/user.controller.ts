@@ -76,4 +76,11 @@ export class UserController {
   async getUserProfile(@Param('id') id: string) {
     return await this.userService.getUserProfile(id);
   }
+
+
+  // 유저 푸시 토큰 저장
+  @Patch('push-token')
+  async updatePushToken(@GetUser() user: User, @Body('pushToken') pushToken: string) {
+    return this.userService.updatePushToken(user.id, pushToken);
+  }
 }
