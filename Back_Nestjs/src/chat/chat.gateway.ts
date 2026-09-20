@@ -137,7 +137,7 @@ export class ChatGateway implements OnGatewayDisconnect {
       );
 
       console.log(`[방 접속 여부] User: ${user.userId}, Active: ${isUserActiveInRoom}`);
-      
+
       if (isUserActiveInRoom) {
         continue;
       }
@@ -367,9 +367,13 @@ export class ChatGateway implements OnGatewayDisconnect {
         body: message,
         priority: 'high',
         channelId: 'default',
-        data: { roomId, type: 'DM' },
-      });
-    }
+       data: {
+        roomId,
+        type: 'DM',
+        name: user.nickname,
+        profileImage: user.profileImage,
+    }})
+    
 
     const chunks = this.expo.chunkPushNotifications(pushMessages);
 

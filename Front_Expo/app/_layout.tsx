@@ -64,7 +64,14 @@ export default function RootLayout() {
 
       if (data?.type === "DM" && data?.roomId) {
         lastHandledNotificationId.current = notificationId; // 처리됨 기록
-        router.push(`/DM/${data.roomId}`);
+        router.push({
+          pathname: "/DM/[id]", // 💡 실제 id 대신 라우트 파일명 구조 그대로 작성
+          params: {
+            id: String(data.roomId), // 💡 동적 파라미터 id를 params 안으로 이동
+            name: String(data.nickname ?? ""), // 💡 unknown 타입 방지를 위한 타입 단언/변환
+            profileImage: String(data.profileImage ?? ""),
+          },
+        });
       }
     });
 
@@ -86,7 +93,14 @@ export default function RootLayout() {
 
         if (data?.type === "DM" && data?.roomId) {
           lastHandledNotificationId.current = notificationId; // 처리됨 기록
-          router.push(`/DM/${data.roomId}`);
+          router.push({
+            pathname: "/DM/[id]", // 💡 실제 id 대신 라우트 파일명 구조 그대로 작성
+            params: {
+              id: String(data.roomId), // 💡 동적 파라미터 id를 params 안으로 이동
+              name: String(data.nickname ?? ""), // 💡 unknown 타입 방지를 위한 타입 단언/변환
+              profileImage: String(data.profileImage ?? ""),
+            },
+          });
         }
 
         // DM 처리 로직도 동일하게 id 체크

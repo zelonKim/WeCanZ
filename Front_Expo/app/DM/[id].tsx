@@ -85,6 +85,9 @@ export default function DirectChatRoomScreen() {
     },
   });
 
+  const partnerImage = profileImage || roomInfo?.partner?.profileImage;
+  const partnerName = name || roomInfo?.partner?.nickname || "";
+
   // 내 정보 조회
   const { data: myInfo } = useQuery<{ id: string }>({
     queryKey: ["me"],
@@ -331,11 +334,8 @@ export default function DirectChatRoomScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          {profileImage || roomInfo?.partner?.profileImage ? (
-            <Image
-              source={{ uri: profileImage || roomInfo?.partner?.profileImage }}
-              style={styles.headerAvatar}
-            />
+          {partnerImage ? (
+            <Image source={{ uri: partnerImage }} style={styles.headerAvatar} />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
               <Ionicons name="person" size={20} color={Colors.text} />
@@ -343,7 +343,7 @@ export default function DirectChatRoomScreen() {
           )}
 
           <Text style={styles.headerNickname} numberOfLines={1}>
-            {name || roomInfo?.partner?.nickname}
+            {partnerName}
           </Text>
         </View>
 

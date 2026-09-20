@@ -395,7 +395,6 @@ export class DirectChatService {
     };
   }
 
-  
   ////////////////////////////////////////////////////////////
 
   // 11. 최근 메시지 조회
@@ -430,12 +429,16 @@ export class DirectChatService {
           select: {
             id: true,
             pushToken: true,
+            nickname: true,
+            profileImage: true,
           },
         },
         user2: {
           select: {
             id: true,
             pushToken: true,
+            nickname: true,
+            profileImage: true,
           },
         },
       },
@@ -455,6 +458,8 @@ export class DirectChatService {
       {
         userId: receiver.id,
         pushToken: receiver.pushToken,
+        nickname: receiver.nickname,
+        profileImage: receiver.profileImage,
       },
     ];
   }
