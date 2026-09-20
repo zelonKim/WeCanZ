@@ -77,10 +77,18 @@ export class UserController {
     return await this.userService.getUserProfile(id);
   }
 
-
   // 유저 푸시 토큰 저장
   @Patch('push-token')
-  async updatePushToken(@GetUser() user: User, @Body('pushToken') pushToken: string) {
+  async updatePushToken(
+    @GetUser() user: User,
+    @Body('pushToken') pushToken: string,
+  ) {
     return this.userService.updatePushToken(user.id, pushToken);
+  }
+
+  // 유저 푸시 토큰 삭제
+  @Delete('push-token')
+  async deletePushToken(@GetUser() user: User) {
+    return await this.userService.deletePushToken(user.id);
   }
 }

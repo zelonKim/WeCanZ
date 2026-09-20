@@ -1,10 +1,14 @@
 import { client } from "@/api/client";
+import { deleteTokenFromServer } from "@/api/deleteTokenFromServer";
+import { saveTokenToServer } from "@/api/saveTokenToServer";
 import { removeAccessToken } from "@/api/token";
 import Colors from "@/constants/Colors";
+import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
+import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
@@ -12,10 +16,12 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Linking,
   Modal,
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -151,6 +157,39 @@ export default function SettingScreen() {
 
   // 마케팅 동의 즉각 반영용 로컬 상태
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
+
+  const [isPushEnabled, setIsPushEnabled] = useState(true);
+
+
+
+  const handleTogglePush = async (value: boolean) => {
+    setIsPushEnabled(value);
+
+    if (value) {
+      // 💡 1. ON으로 켤 때: 시스템 권한이 거부되어 있다면 설정 앱으로 안내
+      const { status } = await Notifications.getPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "알림 권한 필요",
+          "알림을 받으시려면 기기 설정에서 알림 권한을 허용해 주세요.",
+          [
+            { text: "취소", style: "cancel" },
+            { text: "설정으로 이동", onPress: () => Linking.openSettings() },
+          ],
+        );
+        setIsPushEnabled(false);
+        return;
+      }
+
+      // 권한이 정상이라면 토큰 다시 발급받아 서버에 저장
+      const token = await registerForPushNotificationsAsync();
+      if (token) await saveTokenToServer(token);
+    } else {
+      // 💡 2. OFF로 끌 때: 서버 DB에서 내 푸시 토큰 삭제 또는 알림 수신 거부 상태 반영
+      await deleteTokenFromServer(); 
+    }
+  };
 
   // 서버 데이터 로드시 로컬 상태 동기화
   useEffect(() => {
@@ -436,6 +475,27 @@ export default function SettingScreen() {
           <Text style={styles.sectionTitle}>앱 설정</Text>
 
           <View style={styles.cardGroup}>
+            <View style={styles.menuRow}>
+              <View style={styles.menuLabelGroup}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={18}
+                  color={Colors.tabIconDefault}
+                />
+                <Text style={styles.menuLabel}>메시지 알림</Text>
+              </View>
+              <Switch
+                value={isPushEnabled}
+                onValueChange={handleTogglePush}
+                trackColor={{
+                  false: "#E0E0E0",
+                  true: Colors.yellow || "#4CAF50",
+                }}
+                thumbColor={Platform.OS === "android" ? "#FFFFFF" : undefined}
+                ios_backgroundColor="#E0E0E0"
+              />
+            </View>
+
             {/* 이용약관 */}
             <TouchableOpacity
               style={styles.menuRow}

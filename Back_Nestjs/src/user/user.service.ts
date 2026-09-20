@@ -180,4 +180,17 @@ export class UserService {
       data: { pushToken },
     });
   }
+
+  /////////////////////////////////////////
+
+  async deletePushToken(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        pushToken: null,
+      },
+    });
+
+    return { message: '푸시 토큰이 성공적으로 삭제되었습니다.' };
+  }
 }
