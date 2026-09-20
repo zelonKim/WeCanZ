@@ -346,6 +346,11 @@ export class ChatGateway implements OnGatewayDisconnect {
     senderId: string,
     message: string,
   ) {
+    const sender = await this.prisma.user.findUnique({
+      where: { id: senderId },
+      select: { nickname: true, profileImage: true },
+    });
+
     const targetUsers = await this.directChatService.getUsersPushTokens(
       roomId,
       senderId,
@@ -374,8 +379,8 @@ export class ChatGateway implements OnGatewayDisconnect {
         data: {
           roomId,
           type: 'DM',
-          name: user.nickname,
-          profileImage: user.profileImage,
+          nickname: sender?.nickname ?? '',
+          profileImage: sender?.profileImage ?? '',
         },
       });
 

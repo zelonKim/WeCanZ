@@ -115,7 +115,7 @@ export default function GatheringChatScreen() {
       if (nextAppState === "active") {
         // 앱으로 다시 돌아왔을 때 -> 백엔드 Map에 재등록
         joinRoom();
-      } else if (nextAppState === "background") {
+      } else if (nextAppState.match(/inactive|background/)) {
         // 화면이 꺼지거나 홈 화면으로 나갔을 때 -> 백엔드 Map에서 제거 (푸시 수신 가능 상태로 변경)
         socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
       }
