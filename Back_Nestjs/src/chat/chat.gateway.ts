@@ -125,6 +125,8 @@ export class ChatGateway implements OnGatewayDisconnect {
     const pushMessages: any[] = [];
 
     for (const user of targetUsers) {
+      console.log(`[푸시 대상 검사] Target User ID: ${user.userId}, Token: ${user.pushToken}`);
+
       if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
         continue;
       }
@@ -134,6 +136,8 @@ export class ChatGateway implements OnGatewayDisconnect {
         gatheringId,
       );
 
+      console.log(`[방 접속 여부] User: ${user.userId}, Active: ${isUserActiveInRoom}`);
+      
       if (isUserActiveInRoom) {
         continue;
       }

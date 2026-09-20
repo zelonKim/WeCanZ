@@ -100,15 +100,22 @@ export default function GatheringChatScreen() {
 
     socketRef.current = socket;
 
-    // 1. 첫 진입 시 소켓 룸 입장
-    socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
+    const joinRoom = () => {
+      if (socket.connected) {
+        socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
+      }
+    };
+
+    // 소켓 최초 진입 및 재연결(connect) 발생 시 자동 방 재입장
+    joinRoom();
+    socket.on("connect", joinRoom);
 
     // 2. 앱 상태(Foreground / Background) 변화 감지
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
         // 앱으로 다시 돌아왔을 때 -> 백엔드 Map에 재등록
-        socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
-      } else if (nextAppState.match(/inactive|background/)) {
+        joinRoom();
+      } else if (nextAppState === "background") {
         // 화면이 꺼지거나 홈 화면으로 나갔을 때 -> 백엔드 Map에서 제거 (푸시 수신 가능 상태로 변경)
         socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
       }
@@ -118,6 +125,16 @@ export default function GatheringChatScreen() {
       "change",
       handleAppStateChange,
     );
+
+    const unsubscribeNetInfo = NetInfo.addEventListener((state) => {
+      if (state.isConnected) {
+        if (!socket.connected) {
+          socket.connect();
+        }
+        joinRoom(); // 네트워크 복구 시 방 재입장
+        queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
+      }
+    });
 
     // 메시지 핸들러
     const handleNewMessage = (newMessage: ChatMessage) => {
@@ -144,9 +161,11 @@ export default function GatheringChatScreen() {
 
     return () => {
       socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
+      socket.off("connect", joinRoom);
       socket.off("newGatheringMessage", handleNewMessage);
       socket.off("gatheringMessageDeleted", handleDeletedMessage);
       appStateSubscription.remove(); // AppState 리스너 해제
+      unsubscribeNetInfo();
     };
   }, [id, me?.id, queryClient]);
 
@@ -158,7 +177,7 @@ export default function GatheringChatScreen() {
       const socket = socketRef.current;
       if (state.isConnected && socket && !socket.connected) {
         socket.connect();
-        socket.emit("joinGatheringRoom", { gatheringId: id });
+        socket.emit("joinGatheringRoom", { gatheringId: id, userId: me.id });
         queryClient.invalidateQueries({ queryKey: ["gathering-messages", id] });
       }
     });
@@ -166,7 +185,7 @@ export default function GatheringChatScreen() {
     return () => {
       unsubscribe();
     };
-  }, [id, queryClient]);
+  }, [id, me?.id, queryClient]);
 
   ///////////////////////////////////////////////////////////////////////////
 

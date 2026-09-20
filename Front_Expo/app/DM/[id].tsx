@@ -172,7 +172,7 @@ export default function DirectChatRoomScreen() {
       const socket = socketRef.current;
       if (state.isConnected && socket && !socket.connected) {
         socket.connect();
-        socket.emit("joinDirectRoom", { roomId });
+        socket.emit("joinDirectRoom", { roomId, userId: myInfo?.id });
         queryClient.invalidateQueries({ queryKey: ["dm-messages", roomId] });
       }
     });
