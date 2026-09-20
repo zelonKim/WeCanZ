@@ -41,10 +41,15 @@ export class ChatGateway implements OnGatewayDisconnect {
 
   // 소켓 연결 해제 시 Map 정리
   handleDisconnect(client: Socket) {
-    const userId = client.data?.userId;
-    if (userId) {
-      this.activeUserGC.delete(userId);
-      this.activeUserDM.delete(userId);
+    const GCuserId = client.data?.userGCId;
+    const DMuserId = client.data?.userDMId;
+
+    if (GCuserId) {
+      this.activeUserGC.delete(GCuserId);
+    }
+
+    if (DMuserId) {
+      this.activeUserDM.delete(DMuserId);
     }
   }
 
@@ -57,7 +62,7 @@ export class ChatGateway implements OnGatewayDisconnect {
 
     // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
-      client.data.userId = data.userId;
+      client.data.GCuserId = data.userId;
       this.activeUserGC.set(data.userId, data.gatheringId);
     }
 
@@ -195,7 +200,7 @@ export class ChatGateway implements OnGatewayDisconnect {
 
     // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
-      client.data.userId = data.userId;
+      client.data.DMuserId = data.userId;
       this.activeUserDM.set(data.userId, data.roomId);
     }
 

@@ -77,14 +77,12 @@ export default function DirectChatRoomScreen() {
     }
   }, []);
 
-
   const { data: roomInfo } = useQuery({
     queryKey: ["dm-room", roomId],
     queryFn: async () => {
       const { data } = await client.get(`/rooms/${roomId}`);
       return data;
     },
-
   });
 
   const partnerImage = profileImage || roomInfo?.partner?.profileImage;
@@ -143,7 +141,7 @@ export default function DirectChatRoomScreen() {
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
         socket.emit("joinDirectRoom", { roomId, userId: myInfo?.id });
-      } else if (nextAppState.match(/inactive|background/)) {
+      } else if (nextAppState === "background") {
         socket.emit("leaveDirectRoom", { roomId, userId: myInfo?.id });
       }
     };

@@ -36,6 +36,8 @@ interface ChatMessage {
   };
 }
 
+
+
 export default function GatheringChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -56,6 +58,7 @@ export default function GatheringChatScreen() {
   }
 
   const [messageText, setMessageText] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // 1. 내 정보 및 모임 정보 조회
   const { data: me } = useQuery({
@@ -80,7 +83,7 @@ export default function GatheringChatScreen() {
   );
 
   // 2. 메시지 목록 조회
-  const { data: messages = [], isLoading } = useQuery<ChatMessage[]>({
+  const { data: serverMessages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: ["gathering-messages", id],
     queryFn: async () => {
       const { data } = await client.get(`/gathering-chat/${id}/messages`);
@@ -88,6 +91,12 @@ export default function GatheringChatScreen() {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (serverMessages.length > 0) {
+      setMessages(serverMessages);
+    }
+  }, [serverMessages]);
 
   useEffect(() => {
     if (!id || !me?.id) return;
@@ -108,7 +117,7 @@ export default function GatheringChatScreen() {
 
     // 소켓 최초 진입 및 재연결(connect) 발생 시 자동 방 재입장
     joinRoom();
-    
+
     socket.on("connect", joinRoom);
 
     // 2. 앱 상태(Foreground / Background) 변화 감지
@@ -192,15 +201,36 @@ export default function GatheringChatScreen() {
 
   // 메시지 전송
   const handleSend = () => {
-    if (!messageText.trim() || !socketRef.current || !me?.id) return;
+    const text = messageText.trim();
 
+    // 1. 유효성 검사
+    if (!text || !socketRef.current || !me?.id || !id) return;
+
+    // 2. 입력창 즉시 비우기 (사용자 입력 반응성 최적화)
+    setMessageText("");
+
+    // 3. UI에 즉시 보여줄 낙관적 임시 메시지 생성
+    const tempMessage = {
+      id: `temp-${Date.now()}`,
+      message: text,
+      createdAt: new Date().toISOString(),
+      gatheringId: id,
+      userId: me.id,
+      user: {
+        id: me.id,
+        nickname: me.nickname ?? "",
+        profileImage: me.profileImage ?? null,
+      },
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+
+    // 5. 소켓으로 서버에 메시지 발송
     socketRef.current.emit("sendGatheringMessage", {
       gatheringId: id,
       userId: me.id,
-      message: messageText.trim(),
+      message: text,
     });
-
-    setMessageText("");
   };
 
   // 메시지 삭제
