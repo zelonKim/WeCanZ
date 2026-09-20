@@ -3,9 +3,10 @@ import { useColorScheme } from "@/components/useColorScheme";
 import { ActionSheetProvider } from "@expo/react-native-action-sheet";
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import "react-native-reanimated";
 
@@ -37,6 +38,55 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
+
+  const responseListener = useRef<Notifications.EventSubscription | undefined>(
+    undefined,
+  );
+
+  // useEffect 외부 또는 컴포넌트 상단에 선언
+  const lastHandledNotificationId = useRef<string | null>(null);
+
+  useEffect(() => {
+    // 1. 앱이 꺼져있거나 백그라운드에서 알림 눌러 켰을 때
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!response) return;
+
+      const notificationId = response.notification.request.identifier;
+
+      // 💡 이미 처리한 알림 ID라면 이동하지 않고 무시
+      if (lastHandledNotificationId.current === notificationId) return;
+
+      const data = response.notification.request.content.data;
+      if (data?.type === "CHAT" && data?.gatheringId) {
+        lastHandledNotificationId.current = notificationId; // 처리됨 기록
+        router.push(`/gathering/${data.gatheringId}/chat`);
+      }
+    });
+
+    // 2. 앱 실행 중(포그라운드/백그라운드)일 때
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const notificationId = response.notification.request.identifier;
+
+        // 💡 이미 처리한 알림 ID라면 무시
+        if (lastHandledNotificationId.current === notificationId) return;
+
+        const data = response.notification.request.content.data;
+        if (data?.type === "CHAT" && data?.gatheringId) {
+          lastHandledNotificationId.current = notificationId; // 처리됨 기록
+          setTimeout(() => {
+            router.push(`/gathering/${data.gatheringId}/chat`);
+          }, 0);
+        }
+        // DM 처리 로직도 동일하게 id 체크
+      });
+
+    return () => {
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, []);
 
   if (!loaded) {
     return null;

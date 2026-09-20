@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#121212"
       },
-      "softwareKeyboardLayoutMode": "pan",
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "package": "com.zelon.jongtaewon"

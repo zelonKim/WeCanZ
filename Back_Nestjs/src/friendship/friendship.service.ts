@@ -134,7 +134,6 @@ export class FriendshipService {
   async getMyFriends(userId: string) {
     const friendships = await this.prisma.friendship.findMany({
       where: {
-        status: FriendshipStatus.ACCEPTED,
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
       include: {
@@ -152,6 +151,7 @@ export class FriendshipService {
       const friendProfile = f.senderId === userId ? f.receiver : f.sender;
       return {
         friendshipId: f.id,
+        status: f.status,
         ...friendProfile,
       };
     });

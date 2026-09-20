@@ -131,15 +131,17 @@ export class GatheringChatService {
     // 모임에 속한 멤버 중 보낸 사람을 제외하고, pushToken이 존재하는 유저 조회
 
     if (!senderId) {
-    console.error('❌ senderId가 넘어오지 않아 푸시 대상을 조회할 수 없습니다.');
-    return [];
-  }
-  
+      console.error(
+        '❌ senderId가 넘어오지 않아 푸시 대상을 조회할 수 없습니다.',
+      );
+      return [];
+    }
+
     const members = await this.prisma.participant.findMany({
       where: {
         gatheringId: gatheringId,
         userId: {
-          not: senderId,
+          notIn: [senderId],
         },
         user: {
           pushToken: {
@@ -159,7 +161,7 @@ export class GatheringChatService {
 
     return members
       .map((member) => ({
-        userId: member.user.id, 
+        userId: member.user.id,
         pushToken: member.user.pushToken,
       }))
       .filter((item) => item.pushToken !== null);

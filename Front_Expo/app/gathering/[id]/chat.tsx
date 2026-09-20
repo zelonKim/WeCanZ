@@ -256,8 +256,8 @@ export default function GatheringChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? -12 : tabBarHeight}
+        behavior={Platform.OS === "ios" ? "padding" : undefined} // 💡 "undefined" 문자열이 아닌 undefined 값
+        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : 0} // 💡 Android offset 조정
       >
         {isLoading ? (
           <View style={styles.center}>
@@ -266,6 +266,7 @@ export default function GatheringChatScreen() {
         ) : (
           <ScrollView
             ref={scrollViewRef}
+            style={{ flex: 1 }}
             contentContainerStyle={styles.chatScroll}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() =>

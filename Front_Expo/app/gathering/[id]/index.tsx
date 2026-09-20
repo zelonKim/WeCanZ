@@ -123,7 +123,6 @@ export default function GatheringDetailScreen() {
       const { data } = await client.get(`/gathering/${id}`);
       return data;
     },
-
     enabled: !!id,
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
@@ -651,7 +650,7 @@ export default function GatheringDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push("/")}>
+        <TouchableOpacity onPress={() => router.replace("/")}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>벙개 상세 정보</Text>
