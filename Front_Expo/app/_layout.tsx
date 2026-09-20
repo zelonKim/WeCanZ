@@ -61,6 +61,11 @@ export default function RootLayout() {
         lastHandledNotificationId.current = notificationId; // 처리됨 기록
         router.push(`/gathering/${data.gatheringId}/chat`);
       }
+
+      if (data?.type === "DM" && data?.roomId) {
+        lastHandledNotificationId.current = notificationId; // 처리됨 기록
+        router.push(`/DM/${data.roomId}`);
+      }
     });
 
     // 2. 앱 실행 중(포그라운드/백그라운드)일 때
@@ -78,6 +83,12 @@ export default function RootLayout() {
             router.push(`/gathering/${data.gatheringId}/chat`);
           }, 0);
         }
+
+        if (data?.type === "DM" && data?.roomId) {
+          lastHandledNotificationId.current = notificationId; // 처리됨 기록
+          router.push(`/DM/${data.roomId}`);
+        }
+
         // DM 처리 로직도 동일하게 id 체크
       });
 

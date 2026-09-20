@@ -290,7 +290,7 @@ export default function FriendScreen() {
 
       {/* 메인 친구 목록 FlatList */}
       <FlatList
-        data={myFriends.filter((item) => item.status === "ACCEPTED")}
+        data={myFriends}
         keyExtractor={(item) => item.id}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
@@ -339,8 +339,7 @@ export default function FriendScreen() {
 
             <View style={[styles.sectionHeader, { marginTop: 24 }]}>
               <Text style={styles.sectionTitle}>
-                친구 목록 (
-                {myFriends.filter((item) => item.status === "ACCEPTED").length})
+                친구 목록 ({myFriends.length})
               </Text>
             </View>
           </View>

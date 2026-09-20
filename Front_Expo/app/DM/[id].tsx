@@ -47,15 +47,10 @@ interface DirectChatMessage {
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 export default function DirectChatRoomScreen() {
-  const {
-    id: roomId,
-    name,
-    profileImage,
-  } = useLocalSearchParams<{
+  const { id: roomId } = useLocalSearchParams<{
     id: string;
-    name?: string;
-    profileImage?: string;
   }>();
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -75,6 +70,14 @@ export default function DirectChatRoomScreen() {
       setupAndroidNavigationBar();
     }
   }, []);
+
+  const { data: roomInfo } = useQuery({
+    queryKey: ["dm-room", roomId],
+    queryFn: async () => {
+      const { data } = await client.get(`/rooms/${roomId}`);
+      return data;
+    },
+  });
 
   // 내 정보 조회
   const { data: myInfo } = useQuery<{ id: string }>({
@@ -322,8 +325,11 @@ export default function DirectChatRoomScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          {profileImage ? (
-            <Image source={{ uri: profileImage }} style={styles.headerAvatar} />
+          {roomInfo?.partner?.profileImage ? (
+            <Image
+              source={{ uri: roomInfo?.partner?.profileImage }}
+              style={styles.headerAvatar}
+            />
           ) : (
             <View style={styles.headerAvatarPlaceholder}>
               <Ionicons name="person" size={20} color={Colors.text} />
@@ -331,7 +337,7 @@ export default function DirectChatRoomScreen() {
           )}
 
           <Text style={styles.headerNickname} numberOfLines={1}>
-            {name || "알 수 없음"}
+            {roomInfo?.partner?.nickname}
           </Text>
         </View>
 

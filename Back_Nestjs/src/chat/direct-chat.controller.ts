@@ -86,8 +86,8 @@ export class DirectChatController {
     @GetUser('id') userId: string,
     @Param('roomId') roomId: string,
   ) {
-    //방 정보 반환
-    return this.directChatService.getRoomById(roomId);
+    // 💡 userId를 2번째 인자로 함께 전달
+    return this.directChatService.getRoomById(roomId, userId);
   }
 
   // 10. 최근 메시지 조회
