@@ -10,6 +10,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
+  AppStateStatus,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -121,7 +123,21 @@ export default function DirectChatRoomScreen() {
     socketRef.current = socket;
 
     // 대화방 입장
-    socket.emit("joinDirectRoom", { roomId });
+    socket.emit("joinDirectRoom", { roomId, userId: myInfo?.id });
+
+    // 2. 앱 상태(Foreground / Background) 변화 감지
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === "active") {
+        socket.emit("joinDirectRoom", { roomId, userId: myInfo?.id });
+      } else if (nextAppState.match(/inactive|background/)) {
+        socket.emit("leaveDirectRoom", { roomId, userId: myInfo?.id });
+      }
+    };
+
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
 
     const handleNewMessage = (newMessage: DirectChatMessage) => {
       setMessages((prev) => {
@@ -142,16 +158,16 @@ export default function DirectChatRoomScreen() {
 
     return () => {
       // 💡 [핵심] 연결을 끊는 disconnect()는 부르지 말고, 방 퇴장 이벤트와 리스너 해제만 진행합니다.
-      socket.emit("leaveDirectRoom", { roomId });
+      socket.emit("leaveDirectRoom", { roomId, userId: myInfo?.id });
       socket.off("newDirectMessage", handleNewMessage);
       socket.off("directMessageDeleted", handleDeletedMessage);
+      appStateSubscription.remove();
     };
-  }, [roomId]);
+  }, [roomId, myInfo?.id]);
 
   // 2. 네트워크 감지 및 재연결
   useEffect(() => {
     if (!roomId) return;
-
     const unsubscribe = NetInfo.addEventListener((state) => {
       const socket = socketRef.current;
       if (state.isConnected && socket && !socket.connected) {
@@ -166,9 +182,10 @@ export default function DirectChatRoomScreen() {
     };
   }, [roomId, queryClient]);
 
+  ///////////////////////////////////////////////////////////////////////////
+
   // 메시지 전송
   const handleSend = () => {
-    // 디버깅용 콘솔 로그
     console.log("Send Check:", {
       text: inputText.trim(),
       myInfoId: myInfo?.id,
@@ -177,11 +194,12 @@ export default function DirectChatRoomScreen() {
     });
 
     if (!inputText.trim() || !myInfo?.id || !roomId || !socketRef.current) {
-      console.warn("메시지 전송 조건 미충족");
+      console.warn("DM 전송 조건 미충족");
       return;
     }
 
     const messageText = inputText.trim();
+
     setInputText("");
 
     // 💡 sender 객체도 함께 포함시켜 상태 업데이트
@@ -294,7 +312,6 @@ export default function DirectChatRoomScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
-      {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.headerButton}

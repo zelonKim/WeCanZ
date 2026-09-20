@@ -12,12 +12,31 @@ export default function TabLayout() {
   );
 
   useEffect(() => {
+    // 1. 앱이 꺼져있을 때 알림을 눌러서 켠 경우 처리
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        const data = response.notification.request.content.data;
+        if (data?.type === "CHAT" && data?.gatheringId) {
+          router.push(`/gathering/${data.gatheringId}/chat`);
+        }
+      }
+    });
+
+    // 2. 앱이 실행 중(포그라운드/백그라운드)일 때 알림을 누른 경우 처리
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
-        
+
         if (data?.type === "CHAT" && data?.gatheringId) {
-          router.push(`/gathering/${data.gatheringId}/chat`);
+          setTimeout(() => {
+            router.push(`/gathering/${data.gatheringId}/chat`);
+          }, 0);
+        }
+
+        if (data?.type === "DM" && data?.roomId) {
+          setTimeout(() => {
+            router.push(`/DM/${data.roomId}`);
+          }, 0);
         }
       });
 

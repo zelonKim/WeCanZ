@@ -29,8 +29,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 Notifications.setNotificationHandler({
   handleNotification: () => ({
     shouldShowList: true, // 알림 센터(드래그 내려서 보는 곳)에 표시
-    shouldPlaySound: true, // 소리 재생
-    shouldSetBadge: true, // 앱 아이콘 배지 설정
+    shouldShowAlert: true, // 💡 배너 팝업 표시 여부
+    shouldPlaySound: true, // 💡 소리 재생 여부
+    shouldSetBadge: true,
   }),
 });
 

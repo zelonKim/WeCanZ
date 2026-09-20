@@ -30,8 +30,8 @@ export class ChatGateway implements OnGatewayDisconnect {
   ) {}
 
   // 💡 2. 외부 및 내부에서 호출 가능한 방 접속 상태 확인 메서드
-  isUserInRoom(userId: string, gatheringId: string): boolean {
-    return this.activeUsers.get(userId) === gatheringId;
+  isUserInRoom(userId: string, roomId: string): boolean {
+    return this.activeUsers.get(userId) === roomId;
   }
 
   // 소켓 연결 해제 시 Map 정리
@@ -151,8 +151,6 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
-  ///////////////////////////////////////////
-
   @SubscribeMessage('deleteGatheringMessage')
   async handleDeleteMessage(
     @MessageBody()
@@ -174,20 +172,34 @@ export class ChatGateway implements OnGatewayDisconnect {
   @SubscribeMessage('joinDirectRoom')
   handleJoinDirectRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string },
+    @MessageBody() data: { roomId: string; userId: string },
   ) {
     client.join(`direct_${data.roomId}`);
+
+    // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
+    if (data.userId) {
+      client.data.userId = data.userId;
+      this.activeUsers.set(data.userId, data.roomId);
+    }
+
     return { event: 'joinedDirectRoom', roomId: data.roomId };
   }
 
   @SubscribeMessage('leaveDirectRoom')
   handleLeaveDirectRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string },
+    @MessageBody() data: { roomId: string; userId: string },
   ) {
     client.leave(`direct_${data.roomId}`);
+
+    if (data.userId) {
+      this.activeUsers.delete(data.userId);
+    }
+
     return { event: 'leftDirectRoom', roomId: data.roomId };
   }
+
+  ////////////////////
 
   // 💡 [추가] 유저 개인 룸 입장 (DM 목록 실시간 업데이트 수신용)
   @SubscribeMessage('joinUserRoom')
@@ -215,6 +227,8 @@ export class ChatGateway implements OnGatewayDisconnect {
       return { event: 'leftUserRoom', userId: data.userId };
     }
   }
+
+  ////////////////////
 
   @SubscribeMessage('sendDirectMessage')
   async handleSendDirectMessage(
@@ -297,12 +311,65 @@ export class ChatGateway implements OnGatewayDisconnect {
         .to(`user_${data.senderId}`)
         .emit('dmListUpdated', updatePayload);
 
+      this.sendDMPushNoti(data.roomId, data.senderId, data.message).catch(
+        (err) => console.error('푸시 알림 전송 에러:', err),
+      );
+
       return savedMessage;
     } catch (error) {
       console.error('[Socket Error] handleSendDirectMessage:', error);
       throw error;
     }
   }
+
+  ///////////////////////////
+
+  private async sendDMPushNoti(
+    roomId: string,
+    senderId: string,
+    message: string,
+  ) {
+    const targetUsers = await this.directChatService.getUsersPushTokens(
+      roomId,
+      senderId,
+    );
+
+    const pushMessages: any[] = [];
+
+    for (const user of targetUsers) {
+      if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
+        continue;
+      }
+
+      const isUserActiveInRoom = this.isUserInRoom(user.userId, roomId);
+
+      if (isUserActiveInRoom) {
+        continue;
+      }
+
+      pushMessages.push({
+        to: user.pushToken,
+        sound: 'default' as const,
+        title: '새로운 DM',
+        body: message,
+        priority: 'high',
+        channelId: 'default',
+        data: { roomId, type: 'DM' },
+      });
+    }
+
+    const chunks = this.expo.chunkPushNotifications(pushMessages);
+
+    for (const chunk of chunks) {
+      try {
+        await this.expo.sendPushNotificationsAsync(chunk);
+      } catch (error) {
+        console.error('Expo DM 푸시 전송 실패:', error);
+      }
+    }
+  }
+
+  ///////////////////////////
 
   @SubscribeMessage('deleteDirectMessage')
   async handleDeleteDirectMessage(

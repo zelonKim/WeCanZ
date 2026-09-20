@@ -402,4 +402,46 @@ export class DirectChatService {
 
     return lastMessage;
   }
+
+  ////////////////////////////////////////////////////////////////
+
+  async getUsersPushTokens(roomId: string, senderId: string) {
+    // 1. roomId로 채팅방 정보와 두 유저의 pushToken을 함께 조회
+    const room = await this.prisma.directChatRoom.findUnique({
+      where: { id: roomId },
+      select: {
+        user1Id: true,
+        user2Id: true,
+        user1: {
+          select: {
+            id: true,
+            pushToken: true,
+          },
+        },
+        user2: {
+          select: {
+            id: true,
+            pushToken: true,
+          },
+        },
+      },
+    });
+
+    if (!room) return [];
+
+    // 2. senderId가 아닌 상대방 유저 객체 찾기
+    const receiver = room.user1Id === senderId ? room.user2 : room.user1;
+
+    // 3. 상대방 및 pushToken이 존재하는지 확인 후 반환
+    if (!receiver || !receiver.pushToken) {
+      return [];
+    }
+
+    return [
+      {
+        userId: receiver.id,
+        pushToken: receiver.pushToken,
+      },
+    ];
+  }
 }

@@ -87,7 +87,7 @@ export default function LoginScreen() {
     },
   });
 
-  // 2. 소셜 로그인 Mutation (NestJS 백엔드로 idToken 전달)
+
   const socialLoginUser = async ({ idToken, provider }: SocialLoginData) => {
     const { data } = await client.post("/auth/social-login", {
       token: idToken,
