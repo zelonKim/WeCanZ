@@ -78,7 +78,7 @@ export default function FriendScreen() {
     queryKey: ["my-friends"],
     queryFn: async () => {
       const { data } = await client.get("/friendship");
-      return data;
+      return data.filter((item: FriendItem) => item.status === "ACCEPTED");
     },
   });
 

@@ -131,22 +131,34 @@ export class FriendshipService {
   //////////////////////////////////////////////////////////////
 
   // 4. 내 친구 목록 조회
+  // 백엔드: getMyFriends
   async getMyFriends(userId: string) {
+    // 1. 내가 차단(BLOCKED)한 유저 ID 목록을 먼저 조회
+    const blockedFriendships = await this.prisma.friendship.findMany({
+      where: {
+        senderId: userId,
+        status: FriendshipStatus.BLOCKED,
+      },
+      select: { receiverId: true },
+    });
+
+    const blockedUserIds = blockedFriendships.map((b) => b.receiverId);
+
+    // 2. 차단한 유저(blockedUserIds)를 제외하고 ACCEPTED 친구 관계 조회
     const friendships = await this.prisma.friendship.findMany({
       where: {
-        OR: [{ senderId: userId }, { receiverId: userId }],
+        status: FriendshipStatus.ACCEPTED,
+        OR: [
+          { senderId: userId, receiverId: { notIn: blockedUserIds } },
+          { receiverId: userId, senderId: { notIn: blockedUserIds } },
+        ],
       },
       include: {
-        sender: {
-          select: { id: true, nickname: true, profileImage: true },
-        },
-        receiver: {
-          select: { id: true, nickname: true, profileImage: true },
-        },
+        sender: { select: { id: true, nickname: true, profileImage: true } },
+        receiver: { select: { id: true, nickname: true, profileImage: true } },
       },
     });
 
-    // 내 계정이 아닌 상대방 프로필 정보만 정제해서 반환
     return friendships.map((f) => {
       const friendProfile = f.senderId === userId ? f.receiver : f.sender;
       return {
