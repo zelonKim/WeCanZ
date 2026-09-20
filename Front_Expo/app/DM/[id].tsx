@@ -47,8 +47,14 @@ interface DirectChatMessage {
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 export default function DirectChatRoomScreen() {
-  const { id: roomId } = useLocalSearchParams<{
+  const {
+    id: roomId,
+    name,
+    profileImage,
+  } = useLocalSearchParams<{
     id: string;
+    name?: string;
+    profileImage?: string;
   }>();
 
   const router = useRouter();
@@ -325,9 +331,9 @@ export default function DirectChatRoomScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          {roomInfo?.partner?.profileImage ? (
+          {profileImage || roomInfo?.partner?.profileImage ? (
             <Image
-              source={{ uri: roomInfo?.partner?.profileImage }}
+              source={{ uri: profileImage || roomInfo?.partner?.profileImage }}
               style={styles.headerAvatar}
             />
           ) : (
@@ -337,7 +343,7 @@ export default function DirectChatRoomScreen() {
           )}
 
           <Text style={styles.headerNickname} numberOfLines={1}>
-            {roomInfo?.partner?.nickname}
+            {name || roomInfo?.partner?.nickname}
           </Text>
         </View>
 

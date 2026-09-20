@@ -365,7 +365,7 @@ export class DirectChatService {
   ////////////////////////////////////////////////////////////
 
   // 10. 일대일 대화방 조회
-  async getRoomById(roomId: string, currentUserId: string) {
+  async getRoomById(roomId: string, currentUserId?: string) {
     const room = await this.prisma.directChatRoom.findUnique({
       where: { id: roomId },
       include: {
@@ -382,16 +382,20 @@ export class DirectChatService {
       throw new NotFoundException('존재하지 않는 대화방입니다.');
     }
 
-    // 💡 내가 user1이면 상대방은 user2, 내가 user2면 상대방은 user1
-    const partner = room.user1Id === currentUserId ? room.user2 : room.user1;
+    // 💡 currentUserId가 넘어온 경우에만 상대방(partner) 정보 계산
+    const partner = currentUserId
+      ? room.user1Id === currentUserId
+        ? room.user2
+        : room.user1
+      : null;
 
     return {
-      id: room.id,
-      user1Id: room.user1Id,
-      user2Id: room.user2Id,
-      partner, // 👈 상대방의 id, nickname, profileImage 정보가 담겨서 반환됨!
+      ...room,
+      ...(partner && { partner }), // partner가 있을 때만 객체에 포함
     };
   }
+
+  
   ////////////////////////////////////////////////////////////
 
   // 11. 최근 메시지 조회
