@@ -141,7 +141,7 @@ export class GatheringChatService {
       where: {
         gatheringId: gatheringId,
         userId: {
-          notIn: [senderId],
+          not: senderId,
         },
         user: {
           pushToken: {

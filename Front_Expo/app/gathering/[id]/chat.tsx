@@ -108,6 +108,7 @@ export default function GatheringChatScreen() {
 
     // 소켓 최초 진입 및 재연결(connect) 발생 시 자동 방 재입장
     joinRoom();
+    
     socket.on("connect", joinRoom);
 
     // 2. 앱 상태(Foreground / Background) 변화 감지
@@ -115,7 +116,7 @@ export default function GatheringChatScreen() {
       if (nextAppState === "active") {
         // 앱으로 다시 돌아왔을 때 -> 백엔드 Map에 재등록
         joinRoom();
-      } else if (nextAppState.match(/inactive|background/)) {
+      } else if (nextAppState === "background") {
         // 화면이 꺼지거나 홈 화면으로 나갔을 때 -> 백엔드 Map에서 제거 (푸시 수신 가능 상태로 변경)
         socket.emit("leaveGatheringRoom", { gatheringId: id, userId: me.id });
       }

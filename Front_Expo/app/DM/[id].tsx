@@ -77,12 +77,14 @@ export default function DirectChatRoomScreen() {
     }
   }, []);
 
+
   const { data: roomInfo } = useQuery({
     queryKey: ["dm-room", roomId],
     queryFn: async () => {
       const { data } = await client.get(`/rooms/${roomId}`);
       return data;
     },
+
   });
 
   const partnerImage = profileImage || roomInfo?.partner?.profileImage;
