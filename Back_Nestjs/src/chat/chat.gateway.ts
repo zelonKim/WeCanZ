@@ -21,7 +21,8 @@ export class ChatGateway implements OnGatewayDisconnect {
   private expo = new Expo();
 
   // 💡 1. 유저 접속 상태를 관리할 Map (Key: userId, Value: gatheringId)
-  private activeUsers = new Map<string, string>();
+  private activeUserGC = new Map<string, string>();
+  private activeUserDM = new Map<string, string>();
 
   constructor(
     private readonly gatheringChatService: GatheringChatService,
@@ -30,15 +31,20 @@ export class ChatGateway implements OnGatewayDisconnect {
   ) {}
 
   // 💡 2. 외부 및 내부에서 호출 가능한 방 접속 상태 확인 메서드
-  isUserInRoom(userId: string, roomId: string): boolean {
-    return this.activeUsers.get(userId) === roomId;
+  isUserInGatheringRoom(userId: string, roomId: string): boolean {
+    return this.activeUserGC.get(userId) === roomId;
+  }
+
+  isUserInDirectRoom(userId: string, roomId: string): boolean {
+    return this.activeUserDM.get(userId) === roomId;
   }
 
   // 소켓 연결 해제 시 Map 정리
   handleDisconnect(client: Socket) {
     const userId = client.data?.userId;
     if (userId) {
-      this.activeUsers.delete(userId);
+      this.activeUserGC.delete(userId);
+      this.activeUserDM.delete(userId);
     }
   }
 
@@ -52,7 +58,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
       client.data.userId = data.userId;
-      this.activeUsers.set(data.userId, data.gatheringId);
+      this.activeUserGC.set(data.userId, data.gatheringId);
     }
 
     return { event: 'joinedRoom', gatheringId: data.gatheringId };
@@ -67,7 +73,7 @@ export class ChatGateway implements OnGatewayDisconnect {
 
     // 💡 Map에서 유저 접속 상태 제거
     if (data.userId) {
-      this.activeUsers.delete(data.userId);
+      this.activeUserGC.delete(data.userId);
     }
 
     return { event: 'leftRoom', gatheringId: data.gatheringId };
@@ -123,7 +129,10 @@ export class ChatGateway implements OnGatewayDisconnect {
         continue;
       }
 
-      const isUserActiveInRoom = this.isUserInRoom(user.userId, gatheringId);
+      const isUserActiveInRoom = this.isUserInGatheringRoom(
+        user.userId,
+        gatheringId,
+      );
 
       if (isUserActiveInRoom) {
         continue;
@@ -179,7 +188,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
       client.data.userId = data.userId;
-      this.activeUsers.set(data.userId, data.roomId);
+      this.activeUserDM.set(data.userId, data.roomId);
     }
 
     return { event: 'joinedDirectRoom', roomId: data.roomId };
@@ -193,7 +202,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     client.leave(`direct_${data.roomId}`);
 
     if (data.userId) {
-      this.activeUsers.delete(data.userId);
+      this.activeUserDM.delete(data.userId);
     }
 
     return { event: 'leftDirectRoom', roomId: data.roomId };
@@ -341,7 +350,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         continue;
       }
 
-      const isUserActiveInRoom = this.isUserInRoom(user.userId, roomId);
+      const isUserActiveInRoom = this.isUserInDirectRoom(user.userId, roomId);
 
       if (isUserActiveInRoom) {
         continue;
@@ -410,9 +419,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         },
       });
 
-      // 🚨 차단 관계라면 메시지 삭제 금지 처리
       if (isBlockedRelation) {
-        // 소켓 에러 이벤트를 던지거나 조용히 마감 처리
         return;
       }
 
