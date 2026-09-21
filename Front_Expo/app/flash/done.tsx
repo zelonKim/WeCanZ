@@ -53,7 +53,7 @@ export default function DoneGatheringsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>지난 벙개 내역</Text>
+        <Text style={styles.headerTitle}>🕒 지난 벙개 내역</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E1E1E",
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 14,
     borderWidth: 1,
     borderColor: "#2C2C2C",
   },

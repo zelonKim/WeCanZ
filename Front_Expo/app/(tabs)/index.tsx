@@ -171,12 +171,13 @@ export default function HomeScreen() {
   } = useQuery({
     queryKey: ["gatherings"],
     queryFn: fetchGatherings,
+    refetchInterval: 15000,
   });
 
   const createMutation = useMutation({
     mutationFn: createGathering,
     onSuccess: () => {
-      Alert.alert("성공", "벙개가 생성되었습니다! 🎉");
+      Alert.alert("성공", "방이 생성되었습니다! ⚡️");
       queryClient.invalidateQueries({ queryKey: ["gatherings"] });
       closeAndResetModal();
     },
@@ -695,7 +696,7 @@ export default function HomeScreen() {
                   disabled={isInviteLoading}
                 >
                   <Text style={styles.submitBtnText}>
-                    {isInviteLoading ? "확인 중..." : "입장하기"}
+                    {isInviteLoading ? "확인중..." : "입장하기"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -711,6 +712,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#09090B",
+    paddingBottom: -50,
   },
   center: {
     flex: 1,
@@ -728,8 +730,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: Platform.OS === "ios" ? "900" : "800",
+    fontSize: 22,
+    fontWeight: Platform.OS === "ios" ? "900" : "700",
     color: "#FFFFFF",
     letterSpacing: -0.5,
   },
@@ -815,11 +817,11 @@ const styles = StyleSheet.create({
   cardCategory: {
     fontSize: 12,
     fontWeight: Platform.OS === "ios" ? "700" : "600",
-    color: "#A1A1AA",
+    color: Colors.yellow,
   },
   statusBadge: {
     paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 12,
   },
   statusBadgeText: {
@@ -827,7 +829,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   statusOpen: {
-    backgroundColor: "#155dfc",
+    backgroundColor: Colors.blue,
   },
   statusOpenText: {
     color: "white",
@@ -864,11 +866,10 @@ const styles = StyleSheet.create({
     color: "#D4D4D8",
     fontWeight: "600",
   },
-
   cardTitle: {
-    fontSize: 18,
-    fontWeight: Platform.OS === "ios" ? "800" : "600",
-    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: Platform.OS === "ios" ? "600" : "500",
+    color: "#f3f4f6",
     marginBottom: 6,
     letterSpacing: -0.3,
   },
@@ -968,7 +969,6 @@ const styles = StyleSheet.create({
   modalBody: {
     marginBottom: 16,
   },
-
   inputLabel: {
     fontSize: 13,
     fontWeight: "700",

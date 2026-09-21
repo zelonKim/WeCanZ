@@ -250,8 +250,6 @@ export default function DMScreen() {
     };
   }, [myInfo?.id, queryClient]);
 
-
-  
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
@@ -464,7 +462,8 @@ export default function DMScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background || "#F8F9FA",
+    backgroundColor: "#09090B",
+    paddingBottom: -50,
   },
   header: {
     flexDirection: "row",

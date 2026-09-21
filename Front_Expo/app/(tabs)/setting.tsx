@@ -160,8 +160,6 @@ export default function SettingScreen() {
 
   const [isPushEnabled, setIsPushEnabled] = useState(true);
 
-
-
   const handleTogglePush = async (value: boolean) => {
     setIsPushEnabled(value);
 
@@ -187,7 +185,7 @@ export default function SettingScreen() {
       if (token) await saveTokenToServer(token);
     } else {
       // 💡 2. OFF로 끌 때: 서버 DB에서 내 푸시 토큰 삭제 또는 알림 수신 거부 상태 반영
-      await deleteTokenFromServer(); 
+      await deleteTokenFromServer();
     }
   };
 
@@ -850,7 +848,11 @@ export default function SettingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: {
+    flex: 1,
+    backgroundColor: "#09090B",
+    paddingBottom: -50,
+  },
   profileSearchBtn: { padding: 4 },
   modalBackground: {
     flex: 1,

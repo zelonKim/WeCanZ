@@ -579,7 +579,8 @@ export default function FriendScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background || "#F8F9FA",
+    backgroundColor: "#09090B",
+    paddingBottom: -50,
   },
   header: {
     flexDirection: "row",

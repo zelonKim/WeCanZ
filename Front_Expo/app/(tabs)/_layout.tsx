@@ -1,13 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Notifications from "expo-notifications";
-import { router, Tabs } from "expo-router";
-import { useEffect, useRef } from "react";
+import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
- 
 
   return (
     <Tabs
@@ -22,10 +19,8 @@ export default function TabLayout() {
           marginTop: 3, // 아이콘과 글자 사이의 간격 조절
         },
         tabBarStyle: {
-          backgroundColor: "#000000",
-          borderTopColor: "#1C1C1E",
-          // 기본 탭바 높이(약 60px)에 안드로이드 하단 소프트키 높이(insets.bottom)를 더해줍니다.
-          height: 60 + insets.bottom,
+          backgroundColor: "#121212",
+          height: (Platform.OS === "android" ? 75 : 55) + insets.bottom,
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 8,
         },

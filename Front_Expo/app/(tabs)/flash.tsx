@@ -184,7 +184,8 @@ export default function FlashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#09090B", // 다크 메인 배경
+    backgroundColor: "#09090B",
+    paddingBottom: -50,
   },
   center: {
     flex: 1,
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border || "#E9ECEF",
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: Platform.OS === "ios" ? "900" : "700",
     color: "#FFFFFF",
     letterSpacing: -0.5,
@@ -233,6 +234,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 40,
+    marginTop: 6,
   },
   emptyContainer: {
     paddingVertical: 120,

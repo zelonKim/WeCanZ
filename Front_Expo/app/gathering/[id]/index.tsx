@@ -76,9 +76,9 @@ const MINUTES = [0, 10, 20, 30, 40, 50];
 
 // 상태 한글 매핑
 const STATUS_LABEL: Record<string, string> = {
-  OPEN: "모집 중",
+  OPEN: "모집중",
   FULL: "인원 마감",
-  IN_PROGRESS: "진행 중",
+  IN_PROGRESS: "진행중",
   CANCELED: "취소됨",
   COMPLETED: "종료됨",
 };
@@ -1356,7 +1356,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },
-  content: { padding: 16, paddingBottom: 50 },
+  content: { padding: 16, paddingBottom: 50, paddingTop: 20 },
   editIconButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1379,18 +1379,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   categoryText: { color: Colors.yellow, fontWeight: "bold", fontSize: 13 },
   title: {
     fontSize: 22,
     fontWeight: Platform.OS === "ios" ? "800" : "600",
-    color: Colors.text,
+    color: "#f3f4f6",
     marginBottom: 8,
   },
-  description: { fontSize: 15, color: Colors.tabIconDefault, lineHeight: 22 },
-  divider: { height: 1, backgroundColor: Colors.border, marginVertical: 16 },
+  description: { fontSize: 15, color: "#99a1af", lineHeight: 22 },
+  divider: { height: 1, backgroundColor: Colors.border, marginTop: 12 },
 
   infoSection: { gap: 10 },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -1490,7 +1490,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 15,
   },
   completedBanner: {
     backgroundColor: "rgba(255, 149, 0, 0.15)",
@@ -1588,7 +1588,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.red,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 8,
     gap: 6,
     borderWidth: 1,

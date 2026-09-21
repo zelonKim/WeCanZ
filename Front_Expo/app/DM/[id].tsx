@@ -273,7 +273,7 @@ export default function DirectChatRoomScreen() {
   });
 
   const handleLeaveRoom = () => {
-    Alert.alert("나가기", "정말 메시지방을 나가시겠습니까?", [
+    Alert.alert("나가기", "정말 메시지방을 삭제하고 나가시겠습니까?", [
       { text: "취소", style: "cancel" },
       {
         text: "나가기",
@@ -320,6 +320,18 @@ export default function DirectChatRoomScreen() {
 
   const insets = useSafeAreaInsets();
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
@@ -359,6 +371,7 @@ export default function DirectChatRoomScreen() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : 0}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -391,23 +404,34 @@ export default function DirectChatRoomScreen() {
                   ]}
                 >
                   <View
-                    style={[
-                      styles.bubble,
-                      isMyMessage ? styles.myBubble : styles.otherBubble,
-                    ]}
+                    style={{ flexDirection: "row", alignItems: "flex-end" }}
                   >
-                    <Text
+                    {isMyMessage && (
+                      <Text style={styles.timeText}>
+                        {formatTime(item.createdAt)}
+                      </Text>
+                    )}
+                    <View
                       style={[
-                        styles.messageText,
-                        isMyMessage ? styles.myText : styles.otherText,
+                        styles.bubble,
+                        isMyMessage ? styles.myBubble : styles.otherBubble,
                       ]}
                     >
-                      {item.message}
-                    </Text>
+                      <Text
+                        style={[
+                          styles.messageText,
+                          isMyMessage ? styles.myText : styles.otherText,
+                        ]}
+                      >
+                        {item.message}
+                      </Text>
+                    </View>
+                    {!isMyMessage && (
+                      <Text style={styles.timeText}>
+                        {formatTime(item.createdAt)}
+                      </Text>
+                    )}
                   </View>
-                  <Text style={styles.timeText}>
-                    {formatTime(item.createdAt)}
-                  </Text>
                 </TouchableOpacity>
               );
             }}
@@ -417,7 +441,12 @@ export default function DirectChatRoomScreen() {
         <View
           style={[
             styles.inputContainer,
-            { paddingBottom: insets.bottom || 12 },
+            {
+              paddingBottom:
+                Platform.OS === "ios"
+                  ? Math.max(insets.bottom, 32)
+                  : Math.max(insets.bottom + 12, 60),
+            },
           ]}
         >
           {isBlocked ? (
@@ -536,14 +565,15 @@ const styles = StyleSheet.create({
   },
   myText: {
     color: Colors.card,
+    fontWeight: "500",
   },
   otherText: {
     color: "#F2F2F7",
   },
   timeText: {
-    fontSize: 10,
-    color: "#8E8E93",
-    marginTop: 2,
+    fontSize: 9,
+    color: "#4c4c4c",
+    marginTop: 3,
     marginHorizontal: 4,
   },
   inputContainer: {

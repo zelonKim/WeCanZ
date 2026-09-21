@@ -36,8 +36,6 @@ interface ChatMessage {
   };
 }
 
-
-
 export default function GatheringChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -262,6 +260,18 @@ export default function GatheringChatScreen() {
     ]);
   };
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* 헤더 */}
@@ -390,17 +400,14 @@ export default function GatheringChatScreen() {
           </ScrollView>
         )}
 
-        {/* 💡 하단 입력 바 (탭바 및 Inset 고려한 패딩값 설정) */}
         <View
           style={[
             styles.inputContainer,
             {
               paddingBottom:
                 Platform.OS === "ios"
-                  ? Math.max(insets.bottom, 12)
-                  : tabBarHeight > 0
-                    ? 12
-                    : Math.max(insets.bottom, 12),
+                  ? Math.max(insets.bottom, 32)
+                  : Math.max(insets.bottom + 12, 60),
             },
           ]}
         >
@@ -438,7 +445,7 @@ export default function GatheringChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F0F12",
+    backgroundColor: "#121212",
   },
   center: {
     flex: 1,
@@ -446,11 +453,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   header: {
-    height: 56,
+    height: 60,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
+    backgroundColor: "#1E1E1E",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
@@ -571,7 +579,7 @@ const styles = StyleSheet.create({
   },
   myMessageText: {
     color: "#000000",
-    fontWeight: "600",
+    fontWeight: "500",
   },
   otherMessageText: {
     color: "#F4F4F5",
@@ -589,8 +597,10 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    backgroundColor: "#0F0F12",
+    paddingTop: 12,
+    backgroundColor: "#1E1E1E",
+    borderTopWidth: 1,
+    borderTopColor: "#2C2C2E",
   },
   inputCapsule: {
     flexDirection: "row",
@@ -609,6 +619,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     maxHeight: 90,
+    fontWeight: "500",
   },
   sendButton: {
     width: 34,
