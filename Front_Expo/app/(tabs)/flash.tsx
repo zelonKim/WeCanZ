@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: Platform.OS === "ios" ? 16.5 : 15.5,
     fontWeight: Platform.OS === "ios" ? "800" : "600",
     color: "#FFFFFF",
     flex: 1,

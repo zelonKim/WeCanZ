@@ -277,8 +277,20 @@ export default function SettingScreen() {
 
   // 프로필 저장
   const handleSaveProfile = async () => {
-    if (!nickname.trim()) {
+    const trimmedNickname = nickname.trim();
+
+    if (!trimmedNickname) {
       Alert.alert("경고", "닉네임을 입력해 주세요.");
+      return;
+    }
+
+    if (trimmedNickname.length < 2) {
+      Alert.alert("경고", "닉네임을 2자 이상으로 입력해주세요.");
+      return;
+    }
+
+    if (trimmedNickname.length > 12) {
+      Alert.alert("경고", "닉네임을 12자 이하로 입력해주세요.");
       return;
     }
 

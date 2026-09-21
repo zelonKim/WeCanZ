@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* 개인정보 처리방침 본문 */}
-        <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-xs md:text-sm">
+        <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-sm md:text-[15px]">
           <section>
             <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
               제 1 조 (수집하는 개인정보 항목)
@@ -74,10 +74,77 @@ export default function PrivacyPage() {
                 피해구제 등에 관한 사항은 아래의 문의처로 연락해 주시기
                 바랍니다.
               </p>
-              <div className="pt-2 text-xs text-[#A1A1A6]">
+              <div className="pt-2  text-[#A1A1A6] font-semibold">
+                <p>
+                  • 서비스명:{" "}
+                  <span className="text-white font-bold">종태원</span>
+                </p>
+                <p>
+                  • 문의 및 개인정보 보호 담당:{" "}
+                  <span className="text-white font-bold">종태원 운영팀</span>
+                </p>
                 <p>
                   • 문의 이메일:{" "}
-                  <span className="text-white font-medium">
+                  <span className="text-white font-bold">
+                    ksz18601@gmail.com
+                  </span>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+              제 6 조 (계정 삭제 및 데이터 파기 요청)
+            </h2>
+            <div className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA] space-y-2">
+              <p>
+                사용자는 언제든지 서비스 내 설정 메뉴 또는 문의 이메일을 통해
+                계정 삭제(회원 탈퇴)를 요청할 수 있습니다.
+              </p>
+              <div className=" text-[#E5E5EA] space-y-1">
+                <p>
+                  - 삭제 요청 방법: 앱 내{" "}
+                  <b>
+                    [마이페이지] {">"} [설정] {">"} [회원 탈퇴]{" "}
+                  </b>
+                  버튼 클릭 혹은 문의 이메일로 요청
+                </p>
+                <p>
+                  - 삭제되는 데이터: 계정 프로필 정보, 개인 설정 및 서비스 이용
+                  기록 일체
+                </p>
+                <p>
+                  - 보완 보관 데이터: 관련 법령에 의해 보존 의무가 있는 데이터는
+                  법정 기간 동안 분리 보관 후 파기됩니다.
+                </p>
+              </div>
+              <div className="pt-2 font-bold text-[#A1A1A6]">
+                <p>
+                  • 문의 이메일:{" "}
+                  <span className="text-white font-bold">
+                    ksz18601@gmail.com
+                  </span>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+              제 7 조 (아동 및 청소년 보호 정책)
+            </h2>
+            <div className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA] space-y-1">
+              <p>
+                본 서비스는 아동 성적 학대 및 착취(CSAM/CSAE) 콘텐츠를 엄격히
+                금지합니다. 해당 콘텐츠나 사용자가 발견될 경우 즉시 계정 정지 및
+                관련 기관 신고가 이루어지며, 서비스 내 신고 기능을 통해 24시간
+                제보할 수 있습니다.
+              </p>
+              <div className="pt-2 font-bold text-[#A1A1A6]">
+                <p>
+                  • 제보 이메일:{" "}
+                  <span className="text-white font-bold">
                     ksz18601@gmail.com
                   </span>
                 </p>
@@ -87,7 +154,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* 푸터 영역 */}
-        <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[11px] text-[#8E8E93]">
+        <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[13px] text-[#8E8E93]">
           시행 일자: 2026년 9월 4일
         </div>
       </div>

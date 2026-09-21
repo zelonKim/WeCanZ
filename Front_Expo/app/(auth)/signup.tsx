@@ -110,7 +110,7 @@ export default function SignupScreen() {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
       }
-      alert("회원가입이 완료되었습니다! ⚡️");
+      Alert.alert("완료", "회원가입이 완료되었습니다! 😘");
 
       // 2. 토큰 저장 후 마이페이지(메인)로 이동
       router.replace("/(tabs)");
@@ -151,6 +151,10 @@ export default function SignupScreen() {
       return;
     }
 
+    if (nickname.trim().length > 12) {
+      Alert.alert("알림", "닉네임은 최대 12글자 이하이어야 합니다.");
+      return;
+    }
     // 5. 필수 약관 동의 검증
     if (!isTermsAgreed) {
       Alert.alert("알림", "서비스 이용 약관에 동의해야 합니다.");

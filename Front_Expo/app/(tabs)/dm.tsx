@@ -130,7 +130,7 @@ export default function DMScreen() {
   // 💡 5. DM 요청 보내기 Mutation
   const requestDmMutation = useMutation({
     mutationFn: (targetUserId: string) =>
-      client.post(`/direct-chat/request/${targetUserId}`),
+      client.post(`/direct-chat/request/${encodeURIComponent(targetUserId)}`),
     onSuccess: () => {
       Alert.alert("성공", "DM 요청을 보냈습니다.");
       setIsModalVisible(false);
@@ -153,7 +153,9 @@ export default function DMScreen() {
     }
 
     try {
-      const res = await client.get(`/user/search/${targetNickname}`);
+      const res = await client.get(
+        `/user/search/${encodeURIComponent(targetNickname)}`,
+      );
       requestDmMutation.mutate(res.data.id);
     } catch (error: any) {
       const errorMessage =

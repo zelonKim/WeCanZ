@@ -313,7 +313,7 @@ export default function FriendScreen() {
                 <View key={req.id} style={styles.card}>
                   <View style={styles.userInfo}>
                     {renderAvatar(req.sender?.profileImage)}
-                    <Text style={styles.nickname}>
+                    <Text style={styles.nickname} numberOfLines={2}>
                       {req.sender?.nickname || "알 수 없는 유저"}
                     </Text>
                   </View>
@@ -628,6 +628,7 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
+    width: 160,
     gap: 12,
   },
   avatar: {

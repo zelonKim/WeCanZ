@@ -22,7 +22,7 @@ export default function TermsPage() {
         </div>
 
         {/* 약관 본문 */}
-        <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-xs md:text-sm">
+        <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-sm md:text-[15px]">
           <section>
             <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
               제 1 조 (목적)
@@ -77,7 +77,7 @@ export default function TermsPage() {
         </div>
 
         {/* 푸터 영역 */}
-        <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[11px] text-[#8E8E93]">
+        <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[13px] text-[#8E8E93]">
           시행 일자: 2026년 9월 4일
         </div>
       </div>
