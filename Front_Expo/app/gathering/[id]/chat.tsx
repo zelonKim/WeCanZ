@@ -11,7 +11,7 @@ import NetInfo from "@react-native-community/netinfo";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"; // 💡 탭바 높이 가져오기
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -79,7 +79,13 @@ export default function GatheringChatScreen() {
     null,
   );
 
-  const handleCloseMenu = () => setActiveMenuUserId(null);
+  // 💡 상단 useState 변경
+  const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(
+    null,
+  );
+
+  // 메뉴 닫기 함수
+  const handleCloseMenu = () => setActiveMenuMessageId(null);
 
   const searchUserByNickname = async (nickname: string) => {
     const { data } = await client.get(
@@ -166,6 +172,28 @@ export default function GatheringChatScreen() {
     me?.id && gathering?.hostId && String(me.id) === String(gathering.hostId),
   );
 
+  ////////////////////////////////
+
+  const { data: blockedUsers = [] } = useQuery({
+    queryKey: ["blocked-users"],
+    queryFn: async () => {
+      const res = await client.get("/friendship/blocked");
+      return res.data?.data || res.data;
+    },
+  });
+
+  const blockedUserIds = useMemo(() => {
+    if (!Array.isArray(blockedUsers)) return [];
+    return blockedUsers.map((b) => String(b.receiverId || b.receiver?.id));
+  }, [blockedUsers]);
+
+  const visibleMessages = useMemo(() => {
+    return messages.filter(
+      (msg) => !blockedUserIds.includes(String(msg.userId || msg.user?.id)),
+    );
+  }, [messages, blockedUserIds]);
+
+  ////////////////////////////////
   // 2. 메시지 목록 조회
   const { data: serverMessages = [], isLoading } = useQuery<ChatMessage[]>({
     queryKey: ["gathering-messages", id],
@@ -405,7 +433,7 @@ export default function GatheringChatScreen() {
     },
     onSuccess: () => {
       Alert.alert("성공", "해당 유저를 차단했습니다.");
-      // 차단 후 목록 갱신 등이 필요하면 추가 (예: invalidateQueries)
+      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
     },
     onError: (err: any) => {
       Alert.alert(
@@ -552,7 +580,7 @@ export default function GatheringChatScreen() {
               scrollViewRef.current?.scrollToEnd({ animated: true })
             }
           >
-            {messages.length === 0 ? (
+            {visibleMessages.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <View style={styles.emptyIconCircle}>
                   <Ionicons
@@ -567,7 +595,7 @@ export default function GatheringChatScreen() {
                 </Text>
               </View>
             ) : (
-              messages.map((msg) => {
+              visibleMessages.map((msg) => {
                 const isMenuOpen = activeMenuUserId === msg.user?.id;
                 const isMyMessage = String(msg.userId) === String(me?.id);
                 const timeString = new Date(msg.createdAt).toLocaleTimeString(
@@ -591,8 +619,8 @@ export default function GatheringChatScreen() {
                           activeOpacity={me.id ? 1 : 0.5}
                           onPress={() => {
                             if (msg.user && msg.user.id !== me.id) {
-                              setActiveMenuUserId(
-                                isMenuOpen ? null : msg.user.id,
+                              setActiveMenuMessageId(
+                                activeMenuMessageId === msg.id ? null : msg.id,
                               );
                             }
                           }}
@@ -618,7 +646,7 @@ export default function GatheringChatScreen() {
                       </View>
                     )}
 
-                    {isMenuOpen && msg.user && (
+                    {activeMenuMessageId === msg.id && msg.user && (
                       <View style={styles.inlineTabPopover}>
                         <TouchableOpacity
                           style={styles.popoverItem}
