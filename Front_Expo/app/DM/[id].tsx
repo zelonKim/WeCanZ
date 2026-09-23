@@ -15,6 +15,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   StatusBar,
   StyleSheet,
@@ -28,6 +29,11 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
+import {
+  createReport,
+  REPORT_REASON_LABELS,
+  ReportReason,
+} from "../(tabs)/setting";
 
 interface MessageUser {
   id: string;
@@ -64,6 +70,16 @@ export default function DirectChatRoomScreen() {
   const flatListRef = useRef<FlatList>(null);
   const socketRef = useRef<Socket | null>(null);
 
+  const [isMenuOpen, setIsMenuOpen] = React.useState<boolean>(false);
+
+  // 신고 모달 상태 (ID 대신 닉네임 입력)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<ReportReason>(
+    ReportReason.SPAM,
+  );
+  const [reportDetails, setReportDetails] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
   useEffect(() => {
     if (Platform.OS === "android") {
       const setupAndroidNavigationBar = async () => {
@@ -80,20 +96,23 @@ export default function DirectChatRoomScreen() {
   const { data: roomInfo } = useQuery({
     queryKey: ["dm-room", roomId],
     queryFn: async () => {
-      const { data } = await client.get(`/rooms/${roomId}`);
+      const { data } = await client.get(`direct-chat/rooms/${roomId}`);
       return data;
     },
+    enabled: !!roomId,
   });
 
-  const partnerImage = profileImage || roomInfo?.partner?.profileImage;
-  const partnerName = name || roomInfo?.partner?.nickname || "";
+  const partnerImage = roomInfo?.partner?.profileImage;
+
+  const partnerName = roomInfo?.partner?.nickname || "";
+
+  const partnerId = roomInfo?.partner?.id || "";
 
   // 내 정보 조회
   const { data: myInfo } = useQuery<{ id: string }>({
     queryKey: ["me"],
     queryFn: async () => {
       const res = await client.get("/user/me");
-      // axios/client 설정에 따라 res.data 혹은 res.data.data 확인
       return res.data?.data || res.data;
     },
   });
@@ -257,32 +276,6 @@ export default function DirectChatRoomScreen() {
     ]);
   };
 
-  // 방 나가기
-  const leaveRoomMutation = useMutation({
-    mutationFn: () => client.delete(`/direct-chat/rooms/${roomId}/leave`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
-      router.back();
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "방 나가기에 실패했습니다.",
-      );
-    },
-  });
-
-  const handleLeaveRoom = () => {
-    Alert.alert("나가기", "정말 메시지방을 삭제하고 나가시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "나가기",
-        style: "destructive",
-        onPress: () => leaveRoomMutation.mutate(),
-      },
-    ]);
-  };
-
   const formatTime = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -299,6 +292,9 @@ export default function DirectChatRoomScreen() {
       const res = await client.get("/friendship/blocked");
       return res.data?.data || res.data;
     },
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 
   // 2. 메시지 목록 또는 params/props에서 상대방 User ID를 도출
@@ -332,6 +328,85 @@ export default function DirectChatRoomScreen() {
     }
   }, [messages.length]);
 
+  ////////////////////////////////////////////////////////
+
+  const reportMutation = useMutation({
+    mutationFn: createReport,
+    onSuccess: () => {
+      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+      setIsReportModalOpen(false);
+      setSelectedReason(ReportReason.SPAM);
+      setReportDetails("");
+    },
+    onError: (error: any) => {
+      const msg =
+        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
+      Alert.alert("오류", msg);
+    },
+    onSettled: () => {
+      setIsSubmittingReport(false);
+    },
+  });
+
+  const handleSubmitReport = async () => {
+    if (!reportDetails.trim()) {
+      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      return;
+    }
+    setIsSubmittingReport(true);
+
+    try {
+      reportMutation.mutate({
+        reportedUserId: partnerId,
+        reason: selectedReason,
+        details: reportDetails.trim(),
+      });
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        "존재하지 않는 유저이거나 조회 실패했습니다.";
+      Alert.alert("조회 실패", msg);
+      setIsSubmittingReport(false);
+    }
+  };
+
+  ////////////////////////////////////////////////////////
+
+  // 친구 신청 보내기
+  const sendFriendRequestMutation = useMutation({
+    mutationFn: async (receiverId: string) => {
+      return await client.post(`/friendship/request/${receiverId}`);
+    },
+    onSuccess: () => {
+      Alert.alert("성공", "친구 요청을 보냈습니다.");
+    },
+    onError: (err: any) => {
+      Alert.alert(
+        "오류",
+        err.response?.data?.message || "친구 신청에 실패했습니다.",
+      );
+    },
+  });
+
+  //  유저 차단하기
+  const blockUserMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      return await client.patch(`/friendship/block/${targetUserId}`);
+    },
+    onSuccess: () => {
+      Alert.alert("성공", "해당 유저를 차단했습니다.");
+      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
+    },
+    onError: (err: any) => {
+      Alert.alert(
+        "오류",
+        err.response?.data?.message || "유저 차단에 실패했습니다.",
+      );
+    },
+  });
+
+  const handleCloseMenu = () => setIsMenuOpen(false);
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
@@ -346,11 +421,73 @@ export default function DirectChatRoomScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          {partnerImage ? (
-            <Image source={{ uri: partnerImage }} style={styles.headerAvatar} />
-          ) : (
-            <View style={styles.headerAvatarPlaceholder}>
-              <Ionicons name="person" size={20} color={Colors.text} />
+          <TouchableOpacity
+            activeOpacity={0.5}
+            onPress={() => {
+              setIsMenuOpen(!isMenuOpen);
+            }}
+          >
+            {partnerImage ? (
+              <Image
+                source={{ uri: partnerImage }}
+                style={styles.headerAvatar}
+              />
+            ) : (
+              <View style={styles.headerAvatarPlaceholder}>
+                <Ionicons name="person" size={20} color={Colors.text} />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {isMenuOpen && (
+            <View style={styles.inlineTabPopover}>
+              <TouchableOpacity
+                style={styles.popoverItem}
+                onPress={() => {
+                  handleCloseMenu();
+                  router.push(`/profile/${partnerId}`);
+                }}
+              >
+                <Text style={styles.popoverText}>프로필 보기</Text>
+              </TouchableOpacity>
+
+              <View style={styles.popoverDivider} />
+
+              <TouchableOpacity
+                style={styles.popoverItem}
+                onPress={() => {
+                  handleCloseMenu();
+                  sendFriendRequestMutation.mutate(partnerId);
+                }}
+              >
+                <Text style={styles.popoverText}>친구 요청</Text>
+              </TouchableOpacity>
+
+              <View style={styles.popoverDivider} />
+
+              <TouchableOpacity
+                style={styles.popoverItem}
+                onPress={() => {
+                  handleCloseMenu();
+                  Alert.alert(
+                    "유저 차단",
+                    `${partnerName}님을 차단하시겠습니까?`,
+                    [
+                      { text: "취소", style: "cancel" },
+                      {
+                        text: "차단",
+                        style: "destructive",
+                        onPress: () =>
+                          blockUserMutation.mutate(partnerId || ""),
+                      },
+                    ],
+                  );
+                }}
+              >
+                <Text style={[styles.popoverText, { color: "#FF5252" }]}>
+                  차단
+                </Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -360,12 +497,97 @@ export default function DirectChatRoomScreen() {
         </View>
 
         <TouchableOpacity
-          style={styles.headerButton}
-          onPress={handleLeaveRoom}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => {
+            setIsReportModalOpen(true);
+          }}
         >
-          <Ionicons name="log-out-outline" size={24} color="#FF453A" />
+          <Ionicons name="warning-outline" size={20} color="#FF453A" />
         </TouchableOpacity>
+
+        <Modal
+          visible={isReportModalOpen}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsReportModalOpen(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={"padding"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 30 : -50}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>🚨 채팅 신고하기</Text>
+                  <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
+                    <Ionicons name="close" size={22} color={Colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.modalBody}>
+                  <Text style={styles.inputLabel}>유저 닉네임</Text>
+                  <TextInput
+                    style={styles.ReportInput}
+                    value={partnerName}
+                    editable={false}
+                    placeholder="상대방 닉네임을 입력해주세요"
+                    placeholderTextColor={Colors.tabIconDefault}
+                  />
+
+                  <Text style={styles.inputLabel}>신고 사유 선택</Text>
+                  <View style={styles.chipContainer}>
+                    {Object.values(ReportReason).map((reason) => {
+                      const isSelected = selectedReason === reason;
+                      return (
+                        <TouchableOpacity
+                          key={reason}
+                          style={[
+                            styles.chip,
+                            isSelected && styles.chipSelected,
+                          ]}
+                          onPress={() => setSelectedReason(reason)}
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              isSelected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {REPORT_REASON_LABELS[reason]}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={styles.inputLabel}>상세 내용</Text>
+                  <TextInput
+                    style={[styles.ReportInput, styles.textArea]}
+                    value={reportDetails}
+                    onChangeText={setReportDetails}
+                    placeholder="신고 사유에 대한 상세 내용을 적어주세요."
+                    placeholderTextColor={Colors.tabIconDefault}
+                    multiline
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.saveButton, { backgroundColor: Colors.red }]}
+                  onPress={handleSubmitReport}
+                  disabled={isSubmittingReport}
+                >
+                  {isSubmittingReport ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
+                      신고 접수하기
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
       </View>
 
       <KeyboardAvoidingView
@@ -499,8 +721,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#2C2C2E",
   },
   headerButton: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "flex-start",
+    alignItems: "flex-start",
   },
   headerTitleContainer: {
     flexDirection: "row",
@@ -595,6 +817,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#FFFFFF",
   },
+  ReportInput: {
+    backgroundColor: "#2C2C2E",
+    color: Colors.text,
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 14,
+  },
   sendButton: {
     width: 36,
     height: 36,
@@ -620,4 +849,119 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
+  popoverItem: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  popoverText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  popoverDivider: {
+    width: 80,
+    height: 1,
+    marginVertical: 5,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  // 💡 프로필 이미지 바로 옆에 뜰 인라인 팝업 탭 스타일
+  inlineTabPopover: {
+    position: "absolute",
+    left: 38, // 아바타 너비(40) + 여백
+    top: 5,
+    flexDirection: "column",
+    alignItems: "center",
+    backgroundColor: "#2C2C2E", // 모던한 다크 팝업/카드 배경색 (앱 테마에 맞게 조정)
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    // 그림자 효과
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 8,
+    zIndex: 9999,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: Colors.card,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    maxHeight: "85%",
+    marginBottom: Platform.OS === "android" ? 32 : 0,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },
+  modalBody: { marginBottom: 16 },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: Colors.text,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  subInputLabel: {
+    fontSize: 12,
+    color: Colors.tabIconDefault,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+
+  textArea: { height: 80, textAlignVertical: "top" },
+  categorySelectRow: { flexDirection: "row", gap: 8 },
+  modalCategoryChip: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: "#2C2C2E",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  modalCategoryChipActive: { backgroundColor: Colors.yellow },
+  modalCategoryText: { color: Colors.text, fontSize: 13, fontWeight: "600" },
+  modalCategoryTextActive: { color: Colors.card },
+
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: "#2C2C2E",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  chipSelected: {
+    backgroundColor: "rgba(255, 69, 58, 0.15)",
+    borderColor: Colors.red,
+  },
+  chipText: {
+    fontSize: 13,
+    color: Colors.tabIconDefault,
+  },
+  chipTextSelected: {
+    color: Colors.red,
+    fontWeight: "600",
+  },
+
+  saveButton: {
+    backgroundColor: Colors.yellow,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  saveButtonText: { color: "#000000", fontSize: 16, fontWeight: "700" },
 });

@@ -4,12 +4,12 @@ import { ReportReason } from '@prisma/client';
 export class CreateReportDto {
   @IsNotEmpty()
   @IsString()
-  reportedUserId: string;
+  reportedUserId!: string;
 
   @IsNotEmpty()
   @IsEnum(ReportReason)
-  reason: ReportReason;
+  reason!: ReportReason;
 
   @IsString()
-  details: string;
+  details!: string;
 }

@@ -21,7 +21,8 @@ export class ReportService {
     const existingReport = await this.prisma.report.findFirst({
       where: {
         reporterId,
-        reportedUserId: dto.reportedUserId,
+        reportedId: dto.reportedUserId,
+        reason: dto.reason,
       },
     });
 

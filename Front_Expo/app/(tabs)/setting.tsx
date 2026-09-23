@@ -34,7 +34,7 @@ import {
 } from "react-native-safe-area-context";
 
 // 신고 사유 Enum (백엔드 ReportReason Enum 매핑)
-enum ReportReason {
+export enum ReportReason {
   SPAM = "SPAM",
   INAPPROPRIATE = "INAPPROPRIATE",
   ABUSE = "ABUSE",
@@ -42,7 +42,7 @@ enum ReportReason {
   OTHER = "OTHER",
 }
 
-const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
   [ReportReason.SPAM]: "불법 광고 및 도배",
   [ReportReason.INAPPROPRIATE]: "부적절한 콘텐츠",
   [ReportReason.ABUSE]: "욕설 및 혐오 발언",
@@ -88,7 +88,7 @@ const searchUserByNickname = async (nickname: string) => {
 };
 
 // 신고 API 요청 함수
-const createReport = async (reportDto: {
+export const createReport = async (reportDto: {
   reportedUserId: string;
   reason: ReportReason;
   details: string;
@@ -217,7 +217,7 @@ export default function SettingScreen() {
   });
 
   // 신고 Mutation
-  const reportMutation = useMutation({
+const reportMutation = useMutation({
     mutationFn: createReport,
     onSuccess: () => {
       Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");

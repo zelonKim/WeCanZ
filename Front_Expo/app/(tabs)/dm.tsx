@@ -252,6 +252,30 @@ export default function DMScreen() {
     };
   }, [myInfo?.id, queryClient]);
 
+  const leaveRoomMutation = useMutation({
+    mutationFn: (roomId) => client.delete(`/direct-chat/rooms/${roomId}/leave`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
+    },
+    onError: (err: any) => {
+      Alert.alert(
+        "오류",
+        err.response?.data?.message || "방 나가기에 실패했습니다.",
+      );
+    },
+  });
+
+  const handleLeaveRoom = (roomId: any) => {
+    Alert.alert("나가기", "정말 메시지방을 삭제하고 나가시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "나가기",
+        style: "destructive",
+        onPress: () => leaveRoomMutation.mutate(roomId),
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
@@ -330,11 +354,11 @@ export default function DMScreen() {
         }
         renderItem={({ item }) => {
           const partner = item.targetUser;
-
           return (
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.6}
+              onLongPress={() => handleLeaveRoom(item.id)}
               onPress={() => {
                 queryClient.setQueryData<DirectChatRoom[]>(
                   ["dm-rooms"],

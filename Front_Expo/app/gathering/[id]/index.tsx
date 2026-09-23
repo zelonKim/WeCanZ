@@ -1,4 +1,9 @@
 import { client } from "@/api/client";
+import {
+  createReport,
+  REPORT_REASON_LABELS,
+  ReportReason,
+} from "@/app/(tabs)/setting";
 import Colors from "@/constants/Colors";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { useActionSheet } from "@expo/react-native-action-sheet";
@@ -21,6 +26,7 @@ import {
   View,
 } from "react-native";
 import { Calendar, DateData } from "react-native-calendars";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GatheringCategory } from "../../(tabs)";
 
@@ -35,7 +41,7 @@ export interface UserProfile {
 export interface Participant {
   id: string;
   userId: string;
-  status: "PENDING" | "APPROVED" | "BANNED";
+  status: "PENDING" | "APPROVED" | "BANNED" | "YES_SHOW" | "NO_SHOW";
   user?: UserProfile;
 }
 
@@ -106,6 +112,15 @@ export default function GatheringDetailScreen() {
   const queryClient = useQueryClient();
   const { showActionSheetWithOptions } = useActionSheet();
 
+  // 신고 모달 상태 (ID 대신 닉네임 입력)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  const [selectedReason, setSelectedReason] = useState<ReportReason>(
+    ReportReason.SPAM,
+  );
+  const [reportDetails, setReportDetails] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
   const refreshDetail = () => {
     queryClient.invalidateQueries({ queryKey: ["gathering", id] });
     queryClient.invalidateQueries({ queryKey: ["gatherings"] });
@@ -133,6 +148,7 @@ export default function GatheringDetailScreen() {
 
   // 모임 수정 모달
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [category, setCategory] = useState<string>(GatheringCategory.DRINK);
@@ -234,6 +250,26 @@ export default function GatheringDetailScreen() {
   const handleDayPress = (day: DateData) => {
     setSelectedDateStr(day.dateString);
   };
+
+  ////////////////////////////////////////////////////////
+
+  const reportMutation = useMutation({
+    mutationFn: createReport,
+    onSuccess: () => {
+      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+      setIsReportModalOpen(false);
+      setSelectedReason(ReportReason.SPAM);
+      setReportDetails("");
+    },
+    onError: (error: any) => {
+      const msg =
+        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
+      Alert.alert("오류", msg);
+    },
+    onSettled: () => {
+      setIsSubmittingReport(false);
+    },
+  });
 
   ////////////////////////////////////////////////////////
 
@@ -645,6 +681,27 @@ export default function GatheringDetailScreen() {
   const isApprovedParticipant = myParticipant?.status === "APPROVED";
   const canAccessChat = isHost || isApprovedParticipant;
 
+  const handleSubmitReport = async () => {
+    if (!reportDetails.trim()) {
+      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      return;
+    }
+    setIsSubmittingReport(true);
+    try {
+      reportMutation.mutate({
+        reportedUserId: gathering.hostId,
+        reason: selectedReason,
+        details: reportDetails.trim(),
+      });
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        "존재하지 않는 유저이거나 조회 실패했습니다.";
+      Alert.alert("조회 실패", msg);
+      setIsSubmittingReport(false);
+    }
+  };
+
   //////////////////////////////////////////////////////////////////
 
   return (
@@ -758,6 +815,7 @@ export default function GatheringDetailScreen() {
               {CATEGORY_LABEL[gathering.category] || gathering.category}
             </Text>
           </View>
+
           {isHost &&
             (gathering.status === "OPEN" || gathering.status === "FULL") && (
               <TouchableOpacity
@@ -768,7 +826,111 @@ export default function GatheringDetailScreen() {
                 <Text style={styles.editButtonText}>수정</Text>
               </TouchableOpacity>
             )}
+          {!isHost && (
+            <TouchableOpacity
+              style={styles.editIconButton} // 필요시 styles.reportIconButton 등 별도 스타일 지정
+              onPress={() => setIsReportModalOpen(true)}
+            >
+              <Ionicons name="warning-outline" size={15} color="#FF453A" />
+              <Text style={[styles.editButtonText, { color: "#FF453A" }]}>
+                신고
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        <Modal
+          visible={isReportModalOpen}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsReportModalOpen(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 120 : -100}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                {/* 모달 헤더 */}
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>🚨 게시글 신고하기</Text>
+                  <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
+                    <Ionicons name="close" size={22} color={Colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.modalBody}>
+                  {/* 1. 신고할 유저 닉네임 (자동 입력 및 수정 불가 처리) */}
+                  <Text style={styles.inputLabel}>신고 대상</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { backgroundColor: "#2C2C2E", color: "#edebeb" },
+                    ]}
+                    value={gathering.host?.nickname}
+                    editable={false} // 💡 수동 입력 방지 (자동 매핑)
+                    placeholder="신고할 상대방"
+                    placeholderTextColor={Colors.tabIconDefault}
+                  />
+
+                  {/* 2. 신고 사유 선택 */}
+                  <Text style={styles.inputLabel}>신고 사유 선택</Text>
+                  <View style={styles.chipContainer}>
+                    {Object.values(ReportReason).map((reason) => {
+                      const isSelected = selectedReason === reason;
+                      return (
+                        <TouchableOpacity
+                          key={reason}
+                          style={[
+                            styles.chip,
+                            isSelected && styles.chipSelected,
+                          ]}
+                          onPress={() => setSelectedReason(reason)}
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              isSelected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {REPORT_REASON_LABELS[reason]}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* 3. 상세 내용 */}
+                  <Text style={styles.inputLabel}>상세 내용</Text>
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    value={reportDetails}
+                    onChangeText={setReportDetails}
+                    placeholder="신고 사유에 대한 상세 내용을 적어주세요."
+                    placeholderTextColor={Colors.tabIconDefault}
+                    multiline
+                  />
+                </View>
+
+                {/* Submit 버튼 */}
+                <TouchableOpacity
+                  style={[styles.saveButton, { backgroundColor: Colors.red }]}
+                  onPress={handleSubmitReport}
+                  disabled={isSubmittingReport}
+                >
+                  {isSubmittingReport ? (
+                    <ActivityIndicator color="#FFF" />
+                  ) : (
+                    <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
+                      신고 접수하기
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
 
         <Text style={styles.title}>{gathering.title}</Text>
         <Text style={styles.description}>{gathering.description}</Text>
@@ -1366,7 +1528,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  editButtonText: { color: Colors.text, fontSize: 13, fontWeight: "600" },
+  editButtonText: { color: Colors.text, fontSize: 12, fontWeight: "600" },
   statusRow: {
     flexDirection: "row",
     gap: 8,
@@ -1512,6 +1674,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: 20,
     maxHeight: "85%",
+    marginBottom: Platform.OS === "android" ? 32 : 0,
   },
   modalHeader: {
     flexDirection: "row",
@@ -1696,5 +1859,39 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: "hidden",
     letterSpacing: 1, // 4자리 문자가 잘 보이도록 자간 조정
+  },
+
+  saveButton: {
+    backgroundColor: Colors.yellow,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  saveButtonText: { color: "#000000", fontSize: 16, fontWeight: "700" },
+
+  chipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  chip: {
+    backgroundColor: "#2C2C2E",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  chipSelected: {
+    backgroundColor: "rgba(255, 69, 58, 0.15)",
+    borderColor: Colors.red,
+  },
+  chipText: {
+    fontSize: 13,
+    color: Colors.tabIconDefault,
+  },
+  chipTextSelected: {
+    color: Colors.red,
+    fontWeight: "600",
   },
 });
