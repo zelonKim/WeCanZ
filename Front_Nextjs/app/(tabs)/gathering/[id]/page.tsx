@@ -839,9 +839,10 @@ export default function GatheringDetailPage() {
               ) : (
                 <button
                   onClick={() => applyMutation.mutate()}
-                  className="w-full py-3 mb-6 bg-[#bef408]/90 hover:[#bef408]/80 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-[#bef408]/10"
+                  className="flex flex-row gap-1 justify-center cursor-pointer hover:opacity-90 w-full py-3 mb-6 bg-[#bef408]/90 hover:[#bef408]/80 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-[#bef408]/10"
                 >
                   참여 신청하기
+                  <FaceSlightlySmiling size={20} className="mt-0.5" />
                 </button>
               )}
             </div>

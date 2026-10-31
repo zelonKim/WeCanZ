@@ -13,6 +13,7 @@ import {
 // API 클라이언트 및 모달 컴포넌트 (프로젝트 환경에 맞게 경로 확인)
 import { client } from "@/api/client";
 import TermsModal from "@/components/TermsModal";
+import Image from "next/image";
 
 export default function AgreementPage() {
   const router = useRouter();
@@ -87,14 +88,22 @@ export default function AgreementPage() {
     nickname.trim().length > 0 && termsAgreed && privacyAgreed;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[#121212] px-6 text-white">
+    <div className="flex min-h-screen w-full items-start justify-center pt-32  bg-[#121212] px-6 text-white">
       <div className="w-full max-w-md space-y-6">
         {/* 헤더 타이틀 */}
         <div>
-          <h1 className="text-2xl font-bold text-white">
-            거의 다 완료됐어요
-          </h1>
-          <p className="mt-2 text-sm text-neutral-400">
+          <div className="flex flex-row items-end gap-2">
+            <h1 className="text-2xl italic font-bold text-[#bef408]">
+              거의 다 완료됐어요
+            </h1>
+            <Image
+              src="/logo/sticker.png"
+              alt="WeCanZ_sticker"
+              width={40}
+              height={40}
+            />
+          </div>
+          <p className="mt-2 text-[15px] text-neutral-400">
             서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.
           </p>
         </div>
@@ -111,7 +120,7 @@ export default function AgreementPage() {
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               maxLength={12}
-              className="h-13 w-full rounded-xl bg-[#1C1C1E] px-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-amber-400"
+              className="h-13 w-full rounded-xl bg-[#1C1C1E] px-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-[#bef408]"
             />
           </div>
 
@@ -121,14 +130,14 @@ export default function AgreementPage() {
             <button
               type="button"
               onClick={handleAllAgree}
-              className="flex items-center gap-3 text-left w-full"
+              className="cursor-pointer flex items-center gap-3 text-left w-full"
             >
               {termsAgreed && privacyAgreed ? (
-                <IoCheckbox size={20} className="text-red-500" />
+                <IoCheckbox size={20} className="text-[#bef408]" />
               ) : (
                 <IoSquareOutline size={20} className="text-neutral-500" />
               )}
-              <span className="text-base font-bold text-white">
+              <span className="text-base font-bold text-white ">
                 전체 동의하기
               </span>
             </button>
@@ -140,10 +149,10 @@ export default function AgreementPage() {
               <button
                 type="button"
                 onClick={() => setTermsAgreed(!termsAgreed)}
-                className="flex items-center gap-3 text-left"
+                className="cursor-pointer flex items-center gap-3 text-left"
               >
                 {termsAgreed ? (
-                  <IoCheckmarkCircle size={20} className="text-red-500" />
+                  <IoCheckmarkCircle size={20} className="text-[#bef408]" />
                 ) : (
                   <IoEllipseOutline size={20} className="text-neutral-500" />
                 )}
@@ -154,7 +163,7 @@ export default function AgreementPage() {
               <button
                 type="button"
                 onClick={() => setModalType("terms")}
-                className="text-xs text-neutral-400 underline hover:text-white"
+                className="cursor-pointer text-xs text-neutral-400 underline hover:text-white"
               >
                 보기
               </button>
@@ -165,10 +174,10 @@ export default function AgreementPage() {
               <button
                 type="button"
                 onClick={() => setPrivacyAgreed(!privacyAgreed)}
-                className="flex items-center gap-3 text-left"
+                className="cursor-pointer flex items-center gap-3 text-left"
               >
                 {privacyAgreed ? (
-                  <IoCheckmarkCircle size={20} className="text-red-500" />
+                  <IoCheckmarkCircle size={20} className="text-[#bef408]" />
                 ) : (
                   <IoEllipseOutline size={20} className="text-neutral-500" />
                 )}
@@ -179,7 +188,7 @@ export default function AgreementPage() {
               <button
                 type="button"
                 onClick={() => setModalType("privacy")}
-                className="text-xs text-neutral-400 underline hover:text-white"
+                className="cursor-pointer text-xs text-neutral-400 underline hover:text-white"
               >
                 보기
               </button>
@@ -192,12 +201,19 @@ export default function AgreementPage() {
             disabled={!isFormValid || isPending}
             className={`flex h-13 w-full items-center justify-center rounded-xl text-base font-bold transition ${
               isFormValid
-                ? "bg-amber-400 text-neutral-900 hover:bg-amber-500"
+                ? "bg-[#bef408] text-neutral-900 hover:opacity-80 cursor-pointer"
                 : "bg-[#333333] text-neutral-500 cursor-not-allowed"
             }`}
           >
             {isPending ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-neutral-900" />
+              <div className="animate-spin text-4xl">
+                <Image
+                  src="/logo/sticker.png"
+                  alt="WeCanZ_sticker"
+                  width={40}
+                  height={40}
+                />
+              </div>
             ) : (
               "시작하기"
             )}

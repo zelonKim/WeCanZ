@@ -133,7 +133,7 @@ function LoginContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4 py-8">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 pb-6 shadow-xl">
+      <div className="w-full max-w-md space-y-8 rounded-2xl   bg-[#1C1C1E] p-8 pb-6 ">
         {/* 1. 상단 로고 & 타이틀 */}
         <div className="flex flex-col items-center">
           <Image
@@ -146,10 +146,8 @@ function LoginContent() {
             WeCanZ
           </span>
 
-          <p className="mt-2 text-[15px] text-[#A1A1A6] font-medium text-center">
-            {/* 우리도 주말에 Gen-Z가 될 수 있어요 */}
-            WeCanZ is a global social meetup platform for sharing weekend
-            leisure, activities, and local spots.
+          <p className="mt-1 text-[15px] text-[#A1A1A6] font-medium text-center">
+            우리도 주말에 Gen-Z가 될 수 있어요
           </p>
         </div>
 
