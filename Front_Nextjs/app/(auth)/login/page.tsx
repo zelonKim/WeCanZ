@@ -146,8 +146,10 @@ function LoginContent() {
             WeCanZ
           </span>
 
-          <p className="mt-2 text-[15px] text-[#A1A1A6] font-medium">
-            우리도 주말에 Gen-Z가 될 수 있어요
+          <p className="mt-2 text-[15px] text-[#A1A1A6] font-medium text-center">
+            {/* 우리도 주말에 Gen-Z가 될 수 있어요 */}
+            WeCanZ is a global social meetup platform for sharing weekend
+            leisure, activities, and local spots.
           </p>
         </div>
 
