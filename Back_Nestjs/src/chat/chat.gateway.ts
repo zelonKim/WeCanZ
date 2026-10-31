@@ -16,7 +16,7 @@ import Expo from 'expo-server-sdk';
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private expo = new Expo();
 

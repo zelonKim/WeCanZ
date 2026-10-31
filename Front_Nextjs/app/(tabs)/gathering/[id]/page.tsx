@@ -21,7 +21,7 @@ import {
   IoClose,
 } from "react-icons/io5";
 import { client } from "@/api/client";
-import { getSocket } from "@/lib/socket";
+
 import { useUnreadStore } from "@/stores/useUnreadStore";
 
 // ================= TYPES =================
@@ -85,9 +85,9 @@ const STATUS_COLOR_CLASS: Record<string, string> = {
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
-  DRINK: "🍺 술벙",
-  CLUB: "🎉 클럽벙",
-  DRINK_CLUB: "🔥 술+클럽벙",
+  US: "미국",
+  UK: "영국",
+  KR: "한국",
 };
 
 // ================= HELPER FUNCTIONS =================
@@ -181,7 +181,7 @@ export default function GatheringDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("DRINK");
+  const [category, setCategory] = useState("US");
   const [maxPeople, setMaxPeople] = useState<number | string>("");
   const [location, setLocation] = useState("");
   const [selectedDateStr, setSelectedDateStr] = useState(
@@ -594,7 +594,7 @@ export default function GatheringDetailPage() {
         >
           <IoArrowBack size={22} />
         </button>
-        <h1 className="font-semibold text-lg">벙개 상세 정보</h1>
+        <h1 className="font-semibold text-lg">밋업 상세 정보</h1>
 
         <button
           onClick={handleChatClick}
@@ -805,7 +805,7 @@ export default function GatheringDetailPage() {
                 myParticipant.status !== "BANNED" && (
                   <button
                     onClick={() => {
-                      if (confirm("정말 벙개 참여를 취소하시겠습니까?")) {
+                      if (confirm("정말 밋업 참여를 취소하시겠습니까?")) {
                         cancelApplyMutation.mutate();
                       }
                     }}
@@ -819,7 +819,7 @@ export default function GatheringDetailPage() {
                   onClick={() => applyMutation.mutate()}
                   className="w-full py-3 mb-6 bg-yellow-400/90 hover:bg-yellow-500/90 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-yellow-400/10"
                 >
-                  참여 신청하기 ⚡️
+                  참여 신청하기
                 </button>
               )}
             </div>
@@ -838,7 +838,7 @@ export default function GatheringDetailPage() {
           >
             {/* 모달 헤더 */}
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-              <h3 className="text-lg font-bold text-white">벙개 정보 수정</h3>
+              <h3 className="text-lg font-bold text-white">밋업 정보 수정</h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="text-neutral-400 hover:text-white transition"
@@ -859,9 +859,9 @@ export default function GatheringDetailPage() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: "🍺 술벙", value: "DRINK" },
-                    { label: "🎉 클럽벙", value: "CLUB" },
-                    { label: "🔥 술+클럽벙", value: "DRINK_CLUB" },
+                    { label: "미국", value: "US" },
+                    { label: "영국", value: "UK" },
+                    { label: "한국", value: "KR" },
                   ].map((item) => (
                     <button
                       key={item.value}

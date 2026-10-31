@@ -234,17 +234,17 @@ export default function FriendScreen() {
     <div className="flex flex-col min-h-screen  text-white max-w-5xl mx-auto px-4 py-1">
       {/* 헤더 영역 */}
       <div className="flex items-center justify-between py-3 border-b border-zinc-800 mb-4">
-        <h1 className="text-2xl font-bold">👥 나의 친구</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">Z-Mate</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsAddModalVisible(true)}
-            className="p-2 hover:bg-zinc-800 rounded-xl transition"
+            className="p-2 hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
           >
-            <PersonAddOutline color="#FFE600" height="24px" width="24px" />
+            <PersonAddOutline color="#bef408" height="24px" width="24px" />
           </button>
           <button
             onClick={() => setIsBlockModalVisible(true)}
-            className="p-2 hover:bg-zinc-800 rounded-xl transition"
+            className="p-2 hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
           >
             <PersonRemoveOutline color="#EF4444" height="24px" width="24px" />
           </button>
@@ -256,12 +256,12 @@ export default function FriendScreen() {
         {/* 받은 친구 요청 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-white mb-3">
-            받은 친구 요청 ({pendingRequests.length})
+            받은 메이트 요청 ({pendingRequests.length})
           </h2>
 
           {pendingRequests.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl text-center text-zinc-400 text-base">
-              받은 친구 요청이 없습니다.
+              받은 메이트 요청이 없습니다.
             </div>
           ) : (
             <div className="space-y-3">
@@ -300,7 +300,7 @@ export default function FriendScreen() {
         {/* 친구 목록 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-white mb-3">
-            친구 목록 ({myFriends.length})
+            메이트 목록 ({myFriends.length})
           </h2>
 
           {myFriends.length === 0 ? (
@@ -330,7 +330,7 @@ export default function FriendScreen() {
                         onClick={() =>
                           requestDmMutation.mutate({ targetUserId, friend })
                         }
-                        className="p-2 bg-[#FFE600] rounded-xl hover:opacity-90 transition"
+                        className="cursor-pointer p-2 bg-[#bef408] rounded-xl hover:opacity-90 transition"
                         title="DM 보내기"
                       >
                         <ChatbubblesOutline
@@ -348,7 +348,7 @@ export default function FriendScreen() {
                             blockUserMutation.mutate(targetUserId);
                           }
                         }}
-                        className="p-2 bg-zinc-800 rounded-xl hover:bg-zinc-700 transition"
+                        className="cursor-pointer p-2 bg-zinc-800 rounded-xl hover:bg-zinc-700 transition"
                         title="차단하기"
                       >
                         <PersonRemoveOutline
@@ -370,9 +370,11 @@ export default function FriendScreen() {
       {isAddModalVisible && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-center mb-1">👋 친구 추가</h3>
+            <h3 className="text-lg font-bold text-center mb-1">
+              👋 메이트 추가
+            </h3>
             <p className="text-sm text-zinc-400 text-center mb-5">
-              추가할 친구의 닉네임을 입력해주세요.
+              추가할 메이트의 닉네임을 입력해주세요.
             </p>
 
             <input
@@ -380,7 +382,7 @@ export default function FriendScreen() {
               placeholder="닉네임 입력"
               value={friendNickname}
               onChange={(e) => setFriendNickname(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base text-white outline-none focus:border-[#FFE600] mb-4"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base text-white outline-none focus:border-[#bef408] mb-4"
             />
 
             <div className="flex gap-2">
@@ -389,13 +391,13 @@ export default function FriendScreen() {
                   setIsAddModalVisible(false);
                   setFriendNickname("");
                 }}
-                className="flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-[15px] text-zinc-300 hover:bg-zinc-700 transition"
+                className="cursor-pointer flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-[15px] text-zinc-300 hover:bg-zinc-700 transition"
               >
                 취소
               </button>
               <button
                 onClick={handleSendFriendRequest}
-                className="flex-1 bg-[#FFE600] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
+                className="cursor-pointer flex-1 bg-[#bef408] hover:bg-[#bef408]/90 py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
               >
                 요청 보내기
               </button>

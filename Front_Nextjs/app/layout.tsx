@@ -16,8 +16,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "종태원 Jongtaewon",
-  description: "오늘 밤, 가장 핫한 술번개 & 클럽번개",
+  title: "WeCanZ",
+  description: "We Can be Gen-Z on weekends!",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/logo/sticker.png",
+  },
 };
 
 export default function RootLayout({

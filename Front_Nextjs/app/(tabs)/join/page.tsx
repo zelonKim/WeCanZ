@@ -2,6 +2,7 @@
 
 import { client } from "@/api/client";
 import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 // 사용 중이신 ionicons 패키지 경로에 맞게 임포트해 주세요 (예: react-ionicons)
@@ -90,14 +91,16 @@ export default function FlashScreen() {
     <div className="flex flex-col min-h-screen  text-white max-w-5xl mx-auto px-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between py-3">
-        <h1 className="text-2xl font-bold">✅ 참여중인 벙개</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">
+          Joined Meetup
+        </h1>
 
         {/* 🚀 우측 아이콘 버튼 */}
         <button
           onClick={() => router.push("/join/done")}
-          className="p-2 hover:bg-zinc-800 rounded-full transition"
+          className="p-2  hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
         >
-          <TimeOutline color="#FFE600" height="25px" width="25px" />
+          <TimeOutline color="#bef408" height="25px" width="25px" />
         </button>
       </div>
       <div className="h-[1px] bg-zinc-800 mb-4" />
@@ -105,11 +108,19 @@ export default function FlashScreen() {
       {/* 목록 콘텐츠 */}
       {isLoading ? (
         <div className="flex-1 flex justify-center items-start py-32">
-          <div className="animate-spin text-4xl">⚡️</div>
+          <div className="animate-spin text-4xl">
+            {" "}
+            <Image
+              src="/logo/sticker.png"
+              alt="WeCanZ_sticker"
+              width={80}
+              height={80}
+            />
+          </div>
         </div>
       ) : myGatherings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-32 gap-3 text-zinc-400">
-          <p className="text-base">현재 참여 중인 벙개가 없습니다.</p>
+          <p className="text-base">현재 참여 중인 밋업이 없습니다.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-6">

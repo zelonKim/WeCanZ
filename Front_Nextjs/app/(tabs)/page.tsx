@@ -5,7 +5,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { client } from "@/api/client";
 import {
-  IoLogInOutline,
   IoAdd,
   IoClose,
   IoCalendarOutline,
@@ -13,11 +12,12 @@ import {
   IoPerson,
   IoQrCodeOutline,
 } from "react-icons/io5";
+import Image from "next/image";
 
 export enum GatheringCategory {
-  DRINK = "DRINK",
-  CLUB = "CLUB",
-  DRINK_CLUB = "DRINK_CLUB",
+  US = "US",
+  UK = "UK",
+  KR = "KR",
 }
 
 export interface Gathering {
@@ -49,9 +49,9 @@ export interface CreateGatheringDto {
 
 const CATEGORIES = [
   { label: "전체", value: "ALL" },
-  { label: "술벙", value: GatheringCategory.DRINK },
-  { label: "클럽벙", value: GatheringCategory.CLUB },
-  { label: "술+클럽벙", value: GatheringCategory.DRINK_CLUB },
+  { label: "🇺🇸 미국", value: GatheringCategory.US },
+  { label: "🇬🇧 영국", value: GatheringCategory.UK },
+  { label: "🇰🇷 한국", value: GatheringCategory.KR },
 ];
 
 const HOURS = [
@@ -92,7 +92,7 @@ export default function HomeScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<GatheringCategory>(
-    GatheringCategory.DRINK,
+    GatheringCategory.US,
   );
   const [maxPeople, setMaxPeople] = useState("8");
   const [location, setLocation] = useState("");
@@ -144,12 +144,12 @@ export default function HomeScreen() {
   const createMutation = useMutation({
     mutationFn: createGathering,
     onSuccess: () => {
-      alert("벙개가 생성되었습니다! 🎉");
+      alert("밋업이 생성되었습니다! 🎉");
       queryClient.invalidateQueries({ queryKey: ["gatherings"] });
       closeAndResetModal();
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message || "벙개 생성에 실패했습니다.";
+      const msg = error.response?.data?.message || "밋업 생성에 실패했습니다.";
       alert(Array.isArray(msg) ? msg[0] : msg);
     },
   });
@@ -173,7 +173,7 @@ export default function HomeScreen() {
       router.push(`/gathering/${gatheringId}`);
     } catch (error: any) {
       const message =
-        error.response?.data?.message || "벙개를 찾을 수 없습니다.";
+        error.response?.data?.message || "밋업를 찾을 수 없습니다.";
       alert(message);
     } finally {
       setIsInviteLoading(false);
@@ -182,7 +182,7 @@ export default function HomeScreen() {
 
   const filteredGatherings = gatherings.filter((item) => {
     const isNotCanceled = item.status !== "CANCELED";
-    
+
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 
@@ -193,7 +193,7 @@ export default function HomeScreen() {
     setIsModalOpen(false);
     setTitle("");
     setDescription("");
-    setCategory(GatheringCategory.DRINK);
+    setCategory(GatheringCategory.US);
     setMaxPeople("8");
     setLocation("");
     setSelectedDateStr(new Date().toISOString().split("T")[0]);
@@ -236,12 +236,12 @@ export default function HomeScreen() {
 
   const getCategoryLabel = (cat: GatheringCategory) => {
     switch (cat) {
-      case GatheringCategory.DRINK:
-        return "🍺 술벙";
-      case GatheringCategory.CLUB:
-        return "🎉 클럽벙";
-      case GatheringCategory.DRINK_CLUB:
-        return "🔥 술+클럽벙";
+      case GatheringCategory.US:
+        return "🇺🇸 미국";
+      case GatheringCategory.UK:
+        return "🇬🇧 영국";
+      case GatheringCategory.KR:
+        return "🇰🇷 한국";
       default:
         return cat;
     }
@@ -277,17 +277,19 @@ export default function HomeScreen() {
     <main className=" min-h-screen text-white max-w-5xl w-full mx-auto relative px-6 pb-10">
       {/* 상단 헤더 */}
       <header className="flex items-center justify-between py-4 ">
-        <h1 className="text-2xl font-bold">⚡️ 벙개의 광장</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">
+          Z-Meetup
+        </h1>
 
         <button
-          className="p-1.5 rounded-full  hover:bg-[#2C2C2E] transition-colors"
+          className="p-2  hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
           onClick={() => {
             setIsInviteModalOpen(true);
             setInviteCode("");
           }}
           aria-label="룸 코드 입장"
         >
-          <IoQrCodeOutline size={22} className="text-[#FFD700]" />
+          <IoQrCodeOutline size={22} className="text-[#bef408]" />
         </button>
       </header>
 
@@ -301,7 +303,7 @@ export default function HomeScreen() {
             onClick={() => setSelectedCategory(cat.value)}
             className={`px-4 py-2 rounded-full text-[15px] font-semibold whitespace-nowrap transition-colors ${
               selectedCategory === cat.value
-                ? "bg-[#FFD700] text-black"
+                ? "bg-[#bef408] text-black"
                 : "bg-[#2C2C2E] text-gray-400 hover:text-white"
             }`}
           >
@@ -313,11 +315,19 @@ export default function HomeScreen() {
       {/* 모임 리스트 */}
       {isLoading ? (
         <div className="flex-1 flex justify-center items-center py-32">
-          <div className="animate-spin text-4xl">⚡️</div>
+          <div className="animate-spin text-4xl">
+            {" "}
+            <Image
+              src="/logo/sticker.png"
+              alt="WeCanZ_sticker"
+              width={80}
+              height={80}
+            />
+          </div>
         </div>
       ) : filteredGatherings.length === 0 ? (
         <div className="text-center py-24 text-gray-400 text-base leading-relaxed">
-          아직 등록된 벙개가 없습니다. <br /> 밑의 + 버튼을 눌러 첫 벙개를
+          아직 등록된 밋업이 없습니다. <br /> 밑의 + 버튼을 눌러 첫 밋업을
           열어보세요!
         </div>
       ) : (
@@ -337,7 +347,7 @@ export default function HomeScreen() {
                   >
                     {STATUS_CONFIG[item.status]?.label || item.status}
                   </span>
-                  <span className="text-sm font-bold text-[#FFD700]">
+                  <span className="text-sm font-bold text-[#bef408]">
                     {getCategoryLabel(item.category)}
                   </span>
                 </div>
@@ -358,7 +368,7 @@ export default function HomeScreen() {
               <div className="flex items-end justify-between pt-1">
                 <div className="flex flex-col gap-1 text-sm text-neutral-200 ">
                   <div className="flex items-center gap-1.5">
-                    <IoCalendarOutline className="text-[#FFD700]" size={15} />
+                    <IoCalendarOutline className="text-[#bef408]" size={15} />
                     <span>{formatDateTime(item.dateTime)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -391,15 +401,15 @@ export default function HomeScreen() {
         <div className="max-w-5xl mx-auto px-6 flex justify-end">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="pointer-events-auto w-14 h-14 bg-yellow-300 rounded-full flex items-center justify-center text-gray-800 shadow-xs hover:bg-yellow-400 shadow-yellow-100 transition-transform active:scale-95"
-            aria-label="새 벙개 만들기"
+            className="cursor-pointer pointer-events-auto w-14 h-14 bg-[#bef408] rounded-full flex items-center justify-center text-gray-800 shadow-xs hover:bg-[#bef408]/80 shadow-yellow-100 transition-transform active:scale-95"
+            aria-label="새 밋업 만들기"
           >
             <IoAdd size={32} />
           </button>
         </div>
       </div>
 
-      {/* 새 벙개 만들기 모달 */}
+      {/* 새 밋업 만들기 모달 */}
       {isModalOpen && (
         <div className=" fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none">
           <div
@@ -407,7 +417,7 @@ export default function HomeScreen() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
-              <h3 className="text-lg font-bold text-white">New 벙개 만들기</h3>
+              <h3 className="text-lg font-bold text-white">New 밋업 만들기</h3>
               <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-white cursor-pointer"
@@ -421,15 +431,15 @@ export default function HomeScreen() {
               {/* 카테고리 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  카테고리
+                  국가
                 </label>
                 <div className="flex gap-2">
                   {[
-                    { label: "🍺 술벙", value: GatheringCategory.DRINK },
-                    { label: "🎉 클럽벙", value: GatheringCategory.CLUB },
+                    { label: "🇺🇸 미국", value: GatheringCategory.US },
+                    { label: "🇬🇧 영국", value: GatheringCategory.UK },
                     {
-                      label: "🔥 술+클럽벙",
-                      value: GatheringCategory.DRINK_CLUB,
+                      label: "🇰🇷 한국",
+                      value: GatheringCategory.KR,
                     },
                   ].map((item) => (
                     <button
@@ -438,7 +448,7 @@ export default function HomeScreen() {
                       onClick={() => setCategory(item.value)}
                       className={`cursor-pointer flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
                         category === item.value
-                          ? "bg-[#FFD700] text-gray-900"
+                          ? "bg-[#bef408] text-gray-900"
                           : "bg-[#2C2C2E] text-gray-400"
                       }`}
                     >
@@ -451,66 +461,66 @@ export default function HomeScreen() {
               {/* 제목 (ring-inset 적용) */}
               <div>
                 <label className="block text-sm font-bold text-gray-200 mb-1">
-                  제목
+                  모임 제목
                 </label>
                 <input
                   type="text"
-                  placeholder="예) 종로 같이 술마실 분!"
+                  placeholder="모임 제목을 입력해주세요."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm  text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm  text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
                 />
               </div>
 
               {/* 설명 (ring-inset 적용) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  설명
+                  모임 설명
                 </label>
                 <textarea
-                  placeholder="예) 끼, 주사 없는 2030만"
+                  placeholder="모임에 대한 설명을 입력해주세요."
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className=" w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] resize-none"
+                  className=" w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408] resize-none"
                 />
               </div>
 
               {/* 장소 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  장소
+                  모임 장소
                 </label>
                 <input
                   type="text"
-                  placeholder="예) 종로3가역 6번 출구"
+                  placeholder="모임 장소를 입력해주세요."
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
                 />
               </div>
 
               {/* 모임 날짜 선택 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  날짜
+                  모임 날짜
                 </label>
                 <input
                   type="date"
                   min={new Date().toISOString().split("T")[0]}
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className=" w-full bg-[#2C2C2E] font-semibold rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700] [color-scheme:dark]"
+                  className=" w-full bg-[#2C2C2E] font-semibold rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408] [color-scheme:dark]"
                 />
               </div>
 
               {/* 모임 시간 선택 */}
               <div>
                 <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  시간
+                  모임 시간
                 </label>
-                <div className="bg-[#1C1C1E] border border-[#FFD700] rounded-xl py-2.5 text-center mb-3">
-                  <span className="text-2xl font-bold text-[#FFD700] tracking-widest">
+                <div className="bg-[#1C1C1E] border border-[#bef408] rounded-xl py-2.5 text-center mb-3">
+                  <span className="text-2xl font-bold text-[#bef408] tracking-widest">
                     {String(selectedHour).padStart(2, "0")} :{" "}
                     {String(selectedMinute).padStart(2, "0")}
                   </span>
@@ -527,7 +537,7 @@ export default function HomeScreen() {
                       onClick={() => setSelectedHour(h)}
                       className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedHour === h
-                          ? "bg-[#FFD700] text-gray-900"
+                          ? "bg-[#bef408] text-gray-900"
                           : "bg-[#2C2C2E] text-white"
                       }`}
                     >
@@ -547,7 +557,7 @@ export default function HomeScreen() {
                       onClick={() => setSelectedMinute(m)}
                       className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedMinute === m
-                          ? "bg-[#FFD700] text-gray-900"
+                          ? "bg-[#bef408] text-gray-900"
                           : "bg-[#2C2C2E] text-white"
                       }`}
                     >
@@ -579,7 +589,7 @@ export default function HomeScreen() {
                     // 음수 입력 방지 및 일반 값 반영
                     setMaxPeople(e.target.value);
                   }}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#FFD700]"
+                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
                 />
               </div>
             </div>
@@ -587,7 +597,7 @@ export default function HomeScreen() {
             <button
               onClick={handleCreateGathering}
               disabled={createMutation.isPending}
-              className="cursor-pointer w-full bg-yellow-400 hover:bg-yellow-500 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
+              className="cursor-pointer w-full bg-[#bef408] hover:bg-[#bef408]/80 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
             >
               {createMutation.isPending ? (
                 <div className="flex justify-center items-center">
@@ -643,7 +653,7 @@ export default function HomeScreen() {
               </button>
               <button
                 type="button"
-                className="flex-1 h-11 bg-[#FFE600] text-black font-bold rounded-lg text-sm disabled:opacity-50"
+                className="cursor-pointer flex-1 h-11 bg-[#bef408] text-black font-bold rounded-lg text-sm disabled:opacity-50"
                 onClick={handleEnterRoom}
                 disabled={isInviteLoading}
               >

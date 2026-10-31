@@ -16,7 +16,7 @@ export function SocialLoginButtons({
   return (
     <div className="flex flex-col gap-3.5 w-full">
       {/* 1. 구글 로그인 (Tailwind 특수 셀렉터 제거) */}
-      <div className="relative w-full h-14 bg-white hover:bg-gray-100 text-black text-[17px] font-semibold rounded-full border border-neutral-300 flex items-center justify-center gap-2.5 overflow-hidden shadow-sm">
+      <div className="relative w-full h-14 bg-white hover:bg-gray-200 text-black text-[17px] font-semibold rounded-full border border-neutral-300 flex items-center justify-center gap-2.5 overflow-hidden shadow-sm">
         <svg className="w-5 h-5" viewBox="0 0 24 24">
           <path
             fill="#4285F4"

@@ -2,10 +2,9 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Script from "next/script";
 import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { client } from "@/api/client";
 import { setAccessToken } from "@/api/token";
 import { SocialLoginButtons } from "@/components/SocialLoginButtons";
@@ -136,10 +135,19 @@ function LoginContent() {
     <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4 py-8">
       <div className="w-full max-w-md space-y-8 rounded-2xl bg-[#1C1C1E] p-8 pb-6 shadow-xl">
         {/* 1. 상단 로고 & 타이틀 */}
-        <div className="text-center">
-          <span className="text-4xl font-bold text-red-500">⚡️ 종태원</span>
+        <div className="flex flex-col items-center">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={90}
+            height={90}
+          />
+          <span className="mt-2 text-4xl font-bold italic text-[#bef408]">
+            WeCanZ
+          </span>
+
           <p className="mt-2 text-[15px] text-[#A1A1A6] font-medium">
-            오늘 밤, 가장 핫한 술번개 & 클럽번개
+            우리도 주말에 Gen-Z가 될 수 있어요
           </p>
         </div>
 
@@ -152,7 +160,7 @@ function LoginContent() {
               placeholder="아이디"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
               autoCapitalize="none"
             />
           </div>
@@ -165,7 +173,7 @@ function LoginContent() {
               placeholder="비밀번호"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full h-14 rounded-xl bg-[#2C2C2E] pl-12 pr-4 text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
               autoCapitalize="none"
             />
           </div>
@@ -173,9 +181,9 @@ function LoginContent() {
           <button
             type="submit"
             disabled={isPending || isSocialPending}
-            className="text-lg w-full h-14 rounded-xl bg-yellow-400 shadow-sm shadow-yellow-400 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+            className="text-lg w-full h-14 rounded-xl bg-[#bef408] shadow-sm shadow-green-500 font-bold text-black transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
           >
-            {isPending ? "로그인 중...⚡️" : "로그인"}
+            {isPending ? "로그인 중..." : "로그인"}
           </button>
         </form>
 
@@ -185,7 +193,7 @@ function LoginContent() {
           <button
             type="button"
             onClick={() => router.push("/signup")}
-            className="font-semibold text-red-500 underline cursor-pointer hover:font-extrabold transition"
+            className="font-semibold text-[#bef408] underline cursor-pointer hover:font-extrabold transition"
           >
             회원가입
           </button>
@@ -214,13 +222,13 @@ function LoginContent() {
           {/* 앱 출시 예정 안내 박스 */}
           <div className="bg-[#2C2C2E]/50 p-3 rounded-xl border border-[#3A3A3C]/50">
             <p className="text-sm font-medium text-[#A1A1A6] mb-2">
-              ⚡️ 9월 중 앱 출시 예정
+              Android & iOS 앱 출시 예정
             </p>
             <div className="flex justify-center items-center gap-3">
               <button
                 type="button"
                 onClick={() =>
-                  alert("안드로이드 앱이 9월 중에 출시될 예정입니다! 📱")
+                  alert("안드로이드 앱이 11월 중에 출시될 예정입니다! 📱")
                 }
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
@@ -229,13 +237,15 @@ function LoginContent() {
                   alt="Get it on Google Play"
                   width={120}
                   height={36}
-                  className="h-10 w-auto"
+                  className="h-11 w-36"
                 />
               </button>
 
               <button
                 type="button"
-                onClick={() => alert("iOS 앱이 9월 중에 출시될 예정입니다! 📱")}
+                onClick={() =>
+                  alert("iOS 앱이 11월 중에 출시될 예정입니다! 📱")
+                }
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
                 <Image
@@ -243,7 +253,7 @@ function LoginContent() {
                   alt="Download on the App Store"
                   width={120}
                   height={36}
-                  className="h-11.5 w-auto"
+                  className="h-11 w-36"
                 />
               </button>
             </div>
@@ -255,7 +265,7 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={() => router.push("/terms")}
-                className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                className="hover:text-white hover:font-medium transition underline underline-offset-4 cursor-pointer"
               >
                 서비스 이용약관
               </button>
@@ -263,7 +273,7 @@ function LoginContent() {
               <button
                 type="button"
                 onClick={() => router.push("/privacy")}
-                className="hover:text-white transition underline underline-offset-4 cursor-pointer"
+                className="hover:text-white hover:font-medium transition underline underline-offset-4 cursor-pointer"
               >
                 개인정보 처리방침
               </button>

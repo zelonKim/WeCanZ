@@ -350,7 +350,7 @@ export default function GatheringChatPage() {
 
         <div className="flex flex-col items-center justify-center text-center">
           <h1 className="font-bold text-lg truncate max-w-[350px] text-center">
-            {gathering ? gathering.title : "벙개 채팅방"}
+            {gathering ? gathering.title : "밋업 채팅방"}
           </h1>
 
           {gathering?.participants && (

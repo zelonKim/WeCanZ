@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
-  HomeOutline,
   Flash,
   FlashOutline,
   People,
@@ -17,11 +15,17 @@ import {
   LocationOutline,
   CheckmarkCircle,
   CheckmarkCircleOutline,
+  Bulb,
+  BulbOutline,
+  Happy,
+  HappyOutline,
+  HandRight,
+  HandRightOutline,
 } from "react-ionicons";
 
 const navItems = [
   {
-    name: "친구",
+    name: "메이트",
     href: "/friend",
     activeIcon: People,
     inactiveIcon: PeopleOutline,
@@ -39,16 +43,16 @@ const navItems = [
     inactiveIcon: LocationOutline,
   },
   {
-    name: "벙개",
+    name: "밋업",
     href: "/",
-    activeIcon: Flash,
-    inactiveIcon: FlashOutline,
+    activeIcon: Happy,
+    inactiveIcon: HappyOutline,
   },
   {
     name: "참여",
     href: "/join",
-    activeIcon: CheckmarkCircle,
-    inactiveIcon: CheckmarkCircleOutline,
+    activeIcon: HandRight,
+    inactiveIcon: HandRightOutline,
   },
   {
     name: "설정",
@@ -81,7 +85,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1">{children}</main>
 
         {/* 하단 탭 바 (웹용 Bottom Navigation) */}
-        {/* ⚡️ 채팅방이닐 때만 하단 탭바를 렌더링합니다 */}
+
         {!isChatRoom && (
           <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1C1E] border-t border-[#2C2C2E] px-4 py-2 max-w-5xl mx-auto">
             <ul className="flex justify-around items-center">
@@ -90,7 +94,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
                 const SelectedIcon = isActive
                   ? item.activeIcon
                   : item.inactiveIcon;
-                const iconColor = isActive ? "#FFE600" : "#8E8E93";
+                const iconColor = isActive ? "#bef408" : "#8E8E93";
 
                 return (
                   <li key={item.href}>
@@ -105,7 +109,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
                       />
                       <span
                         className={`text-xs font-medium ${
-                          isActive ? "text-[#FFE600]" : "text-[#8E8E93]"
+                          isActive ? "text-[#bef408]" : "text-[#8E8E93]"
                         }`}
                       >
                         {item.name}

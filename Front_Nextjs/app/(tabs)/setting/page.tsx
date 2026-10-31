@@ -4,6 +4,7 @@ import { client } from "@/api/client";
 import { removeAccessToken } from "@/api/token";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import {
@@ -310,7 +311,14 @@ export default function SettingScreen() {
   if (isLoading) {
     return (
       <div className="flex-1 flex justify-center items-center py-68">
-        <div className="animate-spin text-4xl">⚡️</div>
+        <div className="animate-spin text-4xl">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={80}
+            height={80}
+          />
+        </div>
       </div>
     );
   }
@@ -327,12 +335,14 @@ export default function SettingScreen() {
   return (
     <div className="flex flex-col min-h-screen  text-white max-w-4xl w-full mx-auto pb-6">
       <div className="flex items-center justify-between px-5 py-4">
-        <h1 className="text-2xl font-extrabold">⚙️ 환경 설정</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">
+          Settings
+        </h1>
         <button
           onClick={() => setIsModalVisible(true)}
-          className="p-1 cursor-pointer"
+          className="p-2  hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
         >
-          <SearchOutline color="#FFD700" height="26px" width="26px" />
+          <SearchOutline color="#bef408" height="25px" width="25px" />
         </button>
       </div>
 
@@ -344,12 +354,12 @@ export default function SettingScreen() {
               <img
                 src={user.profileImage}
                 alt="avatar"
-                className="w-18 h-18 rounded-full border-2 border-yellow-400 object-cover"
+                className="w-18 h-18 rounded-full border-2 border-[#bef408] object-cover"
                 style={{ width: 72, height: 72 }}
               />
             ) : (
               <div
-                className="w-18 h-18 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-zinc-800"
+                className="w-18 h-18 rounded-full border-2 border-[#bef408] flex items-center justify-center bg-zinc-800"
                 style={{ width: 72, height: 72 }}
               >
                 <Person color="#FFF" height="40px" width="40px" />
@@ -376,7 +386,7 @@ export default function SettingScreen() {
           <div className="flex bg-[#2C2C2E] rounded-xl py-3 items-center">
             <div className="flex-1 text-center">
               <span className="text-sm text-zinc-400 block mb-1">예스쇼</span>
-              <span className="text-base font-bold text-yellow-400">
+              <span className="text-base font-bold text-[#bef408]">
                 {user.yesShowCount ?? 0}회
               </span>
             </div>
@@ -485,13 +495,15 @@ export default function SettingScreen() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">프로필 수정</h3>
               <button onClick={() => setIsModalOpen(false)}>
-                <Close color="#FFF" height="22px" width="22px" />
+                <div className="cursor-pointer hover:bg-zinc-700 transition p-1 rounded-xl">
+                  <Close color="#FFF" height="22px" width="22px" />
+                </div>
               </button>
             </div>
 
             <div className="space-y-4 mb-5">
-              <div className="flex flex-col items-center">
-                <label className="relative cursor-pointer">
+              <div className="flex flex-col items-center ">
+                <label className="relative cursor-pointer hover:opacity-80">
                   <input
                     type="file"
                     accept="image/*"
@@ -502,14 +514,14 @@ export default function SettingScreen() {
                     <img
                       src={profileImage}
                       alt="profile"
-                      className="w-20 h-20 rounded-full border-2 border-yellow-400 object-cover"
+                      className="w-20 h-20 rounded-full border-2 border-[#bef408] object-cover"
                     />
                   ) : (
-                    <div className="w-20 h-20 rounded-full border-2 border-yellow-400 flex items-center justify-center bg-zinc-800">
+                    <div className="w-20 h-20 rounded-full border-2 border-[#bef408] flex items-center justify-center bg-zinc-800">
                       <Person color="#FFF" height="40px" width="40px" />
                     </div>
                   )}
-                  <div className="absolute right-0 bottom-0 bg-yellow-400 rounded-full p-1.5 shadow">
+                  <div className="absolute right-0 bottom-0 bg-[#bef408] rounded-full p-1.5 shadow">
                     <Camera color="#000" height="14px" width="14px" />
                   </div>
                 </label>
@@ -556,7 +568,7 @@ export default function SettingScreen() {
             <button
               onClick={handleSaveProfile}
               disabled={profileMutation.isPending}
-              className="w-full bg-yellow-400 text-black py-3.5 rounded-xl font-bold text-base hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+              className="w-full bg-[#bef408] text-black py-3.5 rounded-xl font-bold text-base hover:opacity-90 transition cursor-pointer disabled:opacity-50"
             >
               {profileMutation.isPending ? "저장 중..." : "저장하기"}
             </button>
@@ -667,7 +679,7 @@ export default function SettingScreen() {
               <button
                 onClick={handleSearchUser}
                 disabled={isLoading}
-                className="flex-1 bg-yellow-400 py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                className="flex-1 bg-[#bef408] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition cursor-pointer disabled:opacity-50"
               >
                 검색하기
               </button>

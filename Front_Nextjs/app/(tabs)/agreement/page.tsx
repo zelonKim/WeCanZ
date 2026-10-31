@@ -92,7 +92,7 @@ export default function AgreementPage() {
         {/* 헤더 타이틀 */}
         <div>
           <h1 className="text-2xl font-bold text-white">
-            거의 다 완료됐어요⚡️
+            거의 다 완료됐어요
           </h1>
           <p className="mt-2 text-sm text-neutral-400">
             서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.

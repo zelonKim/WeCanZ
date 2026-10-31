@@ -51,9 +51,9 @@ model User {
 ///////////////////////////////////////////////////////////////
 
 enum GatheringCategory {
-  DRINK // 술벙
-  CLUB // 클럽벙
-  DRINK_CLUB // 술+클럽벙
+  US // 미국
+  UK // 영국
+  KR // 한국
 }
 
 enum GatheringStatus {

@@ -9,19 +9,19 @@ import { GatheringCategory } from '@prisma/client';
 
 export class CreateGatheringDto {
   @IsString()
-  title: string;
+  title!: string;
 
   @IsString()
-  description: string;
+  description!: string;
 
   @IsEnum(GatheringCategory)
-  category: GatheringCategory;
+  category!: GatheringCategory;
 
   @IsNumber()
-  maxPeople: number;
+  maxPeople!: number;
 
   @IsString()
-  location: string;
+  location!: string;
 
   @IsOptional()
   @IsNumber()
@@ -32,5 +32,5 @@ export class CreateGatheringDto {
   longitude?: number;
 
   @IsDateString({}, { message: '올바른 날짜 형식이어야 합니다.' })
-  dateTime: string;
+  dateTime!: string;
 }

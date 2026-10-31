@@ -64,7 +64,7 @@ export default function CommercialPage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex justify-center items-start py-62">
-        <div className="animate-spin text-4xl">⚡️</div>
+        <div className="animate-spin text-4xl"></div>
       </div>
     );
   }
@@ -83,15 +83,15 @@ export default function CommercialPage() {
     <main className="min-h-screen px-4  text-white max-w-5xl w-full mx-auto pb-10">
       {/* 상단 커스텀 헤더 */}
       <header className="flex flex-row items-center justify-between py-3 my-1">
-        <h1 className="text-2xl font-bold">📍 인기 스팟</h1>
+        <h1 className="text-[28px] font-bold italic text-[#bef408]">Z-Spot</h1>
 
         {/* 우측 아이콘 버튼 */}
         <button
-          className="p-1 bg-transparent border-none cursor-pointer flex items-center"
+          className=" bg-transparent border-none cursor-pointer p-2 hover:bg-zinc-800 rounded-2xl transition flex items-center"
           onClick={() => setModalVisible(true)}
           aria-label="안내 정보"
         >
-          <IoInformationCircleOutline size={26} className="text-[#FFD700]" />
+          <IoInformationCircleOutline size={26} className="text-[#bef408]" />
         </button>
       </header>
 
@@ -162,16 +162,13 @@ export default function CommercialPage() {
               📢 광고 및 제휴 신청 안내
             </h3>
             <p className="text-base text-gray-300 leading-relaxed text-center mb-6">
-              운영하는 술집이나 클럽 등 인기 스팟에 <br /> 제휴 광고를 원하시는
-              사장님께서는 <br /> 아래 채널로 문의해 주세요.
+              Z-Spot에 제휴 광고를 원하시는 분께서는 <br /> 아래 채널로 문의해
+              주세요.
             </p>
 
             <div className="flex flex-col items-start w-full mb-4 ml-10">
               <p className="text-base text-gray-100 mb-1.5 font-medium">
                 • 이메일: ksz18601@gmail.com
-              </p>
-              <p className="text-base text-gray-100 mb-1.5 font-medium">
-                • LINE 아이디: sj1860
               </p>
             </div>
 

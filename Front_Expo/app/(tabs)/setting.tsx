@@ -180,11 +180,9 @@ export default function SettingScreen() {
         return;
       }
 
-      // 권한이 정상이라면 토큰 다시 발급받아 서버에 저장
       const token = await registerForPushNotificationsAsync();
       if (token) await saveTokenToServer(token);
     } else {
-      // 💡 2. OFF로 끌 때: 서버 DB에서 내 푸시 토큰 삭제 또는 알림 수신 거부 상태 반영
       await deleteTokenFromServer();
     }
   };
@@ -217,7 +215,7 @@ export default function SettingScreen() {
   });
 
   // 신고 Mutation
-const reportMutation = useMutation({
+  const reportMutation = useMutation({
     mutationFn: createReport,
     onSuccess: () => {
       Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");

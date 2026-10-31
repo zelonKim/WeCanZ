@@ -76,8 +76,7 @@ export default function PrivacyPage() {
               </p>
               <div className="pt-2  text-[#A1A1A6] font-semibold">
                 <p>
-                  ⚡️ 서비스명:{" "}
-                  <span className="text-white font-bold">종태원</span>
+                  서비스명: <span className="text-white font-bold">종태원</span>
                 </p>
                 <p>
                   👤 문의 및 개인정보 보호 담당:{" "}
@@ -120,7 +119,7 @@ export default function PrivacyPage() {
                 </p>
                 <ul className="pl-8 font-medium list-disc space-y-1 text-gray-400">
                   <li>
-                    계정 로그인/접속 기록: <b>3개월</b>{" "}(통신비밀보호법)
+                    계정 로그인/접속 기록: <b>3개월</b> (통신비밀보호법)
                   </li>
                   <li>
                     소비자의 불만 또는 분쟁처리에 관한 기록: <b>3년</b>{" "}

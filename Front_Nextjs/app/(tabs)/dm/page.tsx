@@ -220,13 +220,13 @@ export default function DMScreen() {
     <div className="flex flex-col min-h-screen text-white max-w-5xl mx-auto px-4 py-1">
       {/* 헤더 영역 */}
       <div className="flex items-center justify-between py-3 border-b border-zinc-800 mb-4">
-        <h1 className="text-2xl font-bold">💬 다이렉트 메시지</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">DM</h1>
         <button
           onClick={() => setIsModalVisible(true)}
-          className="p-2 hover:bg-zinc-800 rounded-xl transition"
+          className="cursor-pointer p-2 hover:bg-zinc-800 rounded-2xl transition"
         >
           <ChatbubbleEllipsesOutline
-            color="#FFE600"
+            color="#bef408"
             height="24px"
             width="24px"
           />
@@ -387,7 +387,7 @@ export default function DMScreen() {
               </button>
               <button
                 onClick={handleSendDmRequest}
-                className="flex-1 bg-[#FFE600] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
+                className="flex-1 bg-[#bef408] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
               >
                 요청 보내기
               </button>

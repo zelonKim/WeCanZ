@@ -54,7 +54,7 @@ export default function DoneGatheringsPage() {
         >
           <IoArrowBack size={24} className="text-white" />
         </button>
-        <h1 className="text-lg font-bold text-white">지난 벙개 내역</h1>
+        <h1 className="text-lg font-bold text-white">지난 밋업 내역</h1>
         <div className="w-6" />
       </header>
 
@@ -68,7 +68,7 @@ export default function DoneGatheringsPage() {
               : "text-neutral-500 hover:text-neutral-300"
           }`}
         >
-          종료된 벙개
+          종료된 밋업
         </button>
 
         <button
@@ -79,7 +79,7 @@ export default function DoneGatheringsPage() {
               : "text-neutral-500 hover:text-neutral-300"
           }`}
         >
-          취소된 벙개
+          취소된 밋업
         </button>
       </nav>
 
