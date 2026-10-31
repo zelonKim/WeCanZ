@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { client } from "@/api/client";
-import { IoInformationCircleOutline, IoReloadOutline } from "react-icons/io5";
+import { IoInformationCircleOutline } from "react-icons/io5";
+import { Location } from "react-ionicons";
 
 interface Store {
   id: string;
@@ -101,7 +102,7 @@ export default function CommercialPage() {
       <div className="flex flex-col gap-8">
         {ads.length === 0 ? (
           <div className="flex flex-col justify-center items-center py-10">
-            <p className="text-sm text-gray-400">
+            <p className="text-base text-gray-400">
               현재 진행 중인 제휴 광고가 없습니다.
             </p>
           </div>

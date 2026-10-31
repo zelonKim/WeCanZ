@@ -31,14 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="bg-[#121212]">
+    <html lang="ko">
       <body
-        className={` ${geistSans.variable} ${geistMono.variable} antialiased bg-[#121212] min-h-screen`}
+        className={` ${geistSans.variable} ${geistMono.variable} antialiased  min-h-screen`}
       >
-        <Providers>
-          <SocketInitializer />
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

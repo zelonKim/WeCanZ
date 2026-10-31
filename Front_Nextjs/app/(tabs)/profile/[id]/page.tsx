@@ -40,7 +40,7 @@ export default function UserProfilePage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#121212]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-400 border-t-transparent" />
       </div>
     );
   }

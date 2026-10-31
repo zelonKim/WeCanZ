@@ -349,7 +349,7 @@ export default function DirectChatRoomPage() {
       <header className="h-13 flex items-center justify-between px-4 py-3 bg-neutral-800 border-b border-neutral-700/80 shrink-0">
         <button
           onClick={() => router.back()}
-          className="p-1 hover:bg-neutral-700/50 rounded-full transition"
+          className="cursor-pointer p-1 hover:bg-neutral-700/50 rounded-full transition"
         >
           <IoChevronBack size={24} className="text-white" />
         </button>
@@ -373,7 +373,7 @@ export default function DirectChatRoomPage() {
 
         <button
           onClick={handleLeaveRoom}
-          className="p-1 hover:bg-neutral-700/50 rounded-full transition text-red-500"
+          className="cursor-pointer p-1 hover:bg-neutral-700/50 rounded-full transition text-red-500"
           title="방 나가기"
         >
           <IoLogOutOutline size={24} />
@@ -384,7 +384,7 @@ export default function DirectChatRoomPage() {
       <main className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
           </div>
         ) : (
           messages.map((item) => {
@@ -406,7 +406,7 @@ export default function DirectChatRoomPage() {
                     isImage
                       ? "p-1 bg-neutral-800 border border-neutral-700/60"
                       : isMyMessage
-                        ? "px-3.5 py-2.5 bg-yellow-400 text-neutral-900 rounded-br-xs font-medium"
+                        ? "px-3.5 py-2.5 bg-[#bef408] text-neutral-900 rounded-br-xs font-medium"
                         : "px-3.5 py-2.5 bg-neutral-800 text-neutral-100 rounded-bl-xs border border-neutral-700/60"
                   }`}
                 >
@@ -425,7 +425,7 @@ export default function DirectChatRoomPage() {
                   {isMyMessage && (
                     <button
                       onClick={() => setDeletingMessage(item)}
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-neutral-900/80 hover:bg-red-500/80 text-white rounded-full transition duration-150"
+                      className="cursor-pointer absolute top-1 right-1 opacity-0 group-hover:opacity-100 p-1 bg-neutral-900/80 hover:bg-red-500/80 text-white rounded-full transition duration-150"
                       title="메시지 삭제"
                     >
                       <IoTrashOutline size={12} />
@@ -487,7 +487,7 @@ export default function DirectChatRoomPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="p-2 text-neutral-400 hover:text-white bg-neutral-700 hover:bg-yellow-400/90 rounded-full transition"
+                className="p-2 text-neutral-400 hover:text-white bg-neutral-700 hover:bg-emerald-400/90 cursor-pointer rounded-full transition"
                 title="사진 첨부"
               >
                 <IoImageOutline size={22} />
@@ -504,7 +504,7 @@ export default function DirectChatRoomPage() {
                 disabled={isUploading}
                 rows={1}
                 maxLength={500}
-                className="flex-1 bg-neutral-900 text-white placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none disabled:opacity-50"
+                className="flex-1 bg-neutral-900 text-white placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[#bef408] max-h-24 scrollbar-none disabled:opacity-50"
               />
 
               <button
@@ -512,7 +512,7 @@ export default function DirectChatRoomPage() {
                 disabled={!canSend}
                 className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition ${
                   canSend
-                    ? "bg-yellow-400 text-neutral-900 hover:bg-yellow-500"
+                    ? "bg-[#bef408] text-neutral-900 hover:bg-[#bef408]/80 cursor-pointer"
                     : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
                 }`}
               >
@@ -547,13 +547,13 @@ export default function DirectChatRoomPage() {
             <div className="flex w-full gap-2 mt-1">
               <button
                 onClick={() => setDeletingMessage(null)}
-                className="flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
+                className="cursor-pointer flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
               >
                 취소
               </button>
               <button
                 onClick={confirmDeleteMessage}
-                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
+                className="cursor-pointer flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
               >
                 삭제하기
               </button>

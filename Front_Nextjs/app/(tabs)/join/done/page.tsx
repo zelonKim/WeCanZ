@@ -50,11 +50,11 @@ export default function DoneGatheringsPage() {
       <header className="flex items-center justify-between px-4 py-3 bg-neutral-900/90 border-b border-neutral-800 shrink-0">
         <button
           onClick={() => router.back()}
-          className="p-1 hover:bg-neutral-800 rounded-full transition"
+          className="p-1.5 hover:bg-neutral-800 rounded-xl transition"
         >
-          <IoArrowBack size={24} className="text-white" />
+          <IoArrowBack size={24} className="text-white cursor-pointer" />
         </button>
-        <h1 className="text-lg font-bold text-white">지난 밋업 내역</h1>
+        <h1 className="text-lg font-bold text-white italic">Meetup History</h1>
         <div className="w-6" />
       </header>
 
@@ -64,8 +64,8 @@ export default function DoneGatheringsPage() {
           onClick={() => setActiveTab("COMPLETED")}
           className={`flex-1 py-3.5 text-center text-base font-medium transition-colors ${
             activeTab === "COMPLETED"
-              ? "text-orange-500 border-b-2 border-orange-500 font-bold"
-              : "text-neutral-500 hover:text-neutral-300"
+              ? "text-[#bef408] border-b-2 border-[#bef408] font-bold"
+              : "text-neutral-500 hover:text-neutral-300 cursor-pointer"
           }`}
         >
           종료된 밋업
@@ -76,7 +76,7 @@ export default function DoneGatheringsPage() {
           className={`flex-1 py-3.5 text-center text-base font-medium transition-colors ${
             activeTab === "CANCELED"
               ? "text-red-500 border-b-2 border-red-500 font-bold"
-              : "text-neutral-500 hover:text-neutral-300"
+              : "text-neutral-500 hover:text-neutral-300 cursor-pointer"
           }`}
         >
           취소된 밋업
@@ -87,13 +87,13 @@ export default function DoneGatheringsPage() {
       <main className=" flex-1 p-4 overflow-y-auto">
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
           </div>
         ) : currentList.length === 0 ? (
           <div className="py-20 text-center text-neutral-500 text-base">
             {activeTab === "COMPLETED"
-              ? "종료된 모임이 없습니다."
-              : "취소된 모임이 없습니다."}
+              ? "종료된 밋업이 없습니다."
+              : "취소된 밋업이 없습니다."}
           </div>
         ) : (
           <ul className="grid md:grid-cols-2 space-y-3">

@@ -15,7 +15,7 @@ export default function PrivacyPage() {
           </h1>
           <button
             onClick={() => router.back()}
-            className="text-xs font-semibold text-[#8E8E93] hover:text-white transition px-2.5 py-1 rounded-md bg-[#2C2C2E]"
+            className="cursor-pointer text-xs font-semibold text-[#8E8E93] hover:text-white transition px-2.5 py-1 rounded-md bg-[#2C2C2E]"
           >
             뒤로가기
           </button>
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
         {/* 개인정보 처리방침 본문 */}
         <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-sm md:text-[15px]">
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 1 조 (수집하는 개인정보 항목)
             </h2>
             <p className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 2 조 (개인정보의 보유 및 이용 기간)
             </h2>
             <p className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 3 조 (개인정보의 파기 절차 및 방법)
             </h2>
             <p className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -55,7 +55,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 4 조 (개인정보의 제3자 제공)
             </h2>
             <p className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 5 조 (개인정보 관리책임자 및 문의처)
             </h2>
             <div className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA] space-y-1">
@@ -76,11 +76,11 @@ export default function PrivacyPage() {
               </p>
               <div className="pt-2  text-[#A1A1A6] font-semibold">
                 <p>
-                  서비스명: <span className="text-white font-bold">종태원</span>
+                  서비스명: <span className="text-white font-bold">WeCanZ</span>
                 </p>
                 <p>
                   👤 문의 및 개인정보 보호 담당:{" "}
-                  <span className="text-white font-bold">종태원 운영팀</span>
+                  <span className="text-white font-bold">WeCanZ 운영팀</span>
                 </p>
                 <p>
                   📧 문의 이메일:{" "}
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 6 조 (계정 삭제 및 데이터 파기 요청)
             </h2>
             <div className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA] space-y-2">
@@ -143,7 +143,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-[15px] font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-[15px] font-bold text-[#bef408] mb-1.5">
               제 7 조 (아동 및 청소년 보호 정책)
             </h2>
             <div className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA] space-y-1">

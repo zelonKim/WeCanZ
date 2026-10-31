@@ -58,7 +58,7 @@ export default function FlashScreen() {
   const renderStatusBadge = (gathering: Gathering) => {
     if (String(gathering.hostId) === String(me?.id)) {
       return (
-        <span className="px-2.5 py-1 rounded-md bg-yellow-500 text-black text-xs font-bold ">
+        <span className="px-2.5 py-1 rounded-md bg-yellow-400 text-black text-xs font-bold ">
           👑 방장
         </span>
       );
@@ -128,7 +128,7 @@ export default function FlashScreen() {
             <div
               key={item.id}
               onClick={() => handlePressGathering(item.id)}
-              className="bg-[#1e1e1e] border border-[#333] p-5 rounded-2xl cursor-pointer hover:border-yellow-400 transition flex flex-col justify-between"
+              className="bg-[#1e1e1e] border border-[#333] p-5 rounded-2xl cursor-pointer hover:border-[#bef408] transition flex flex-col justify-between"
             >
               <div>
                 {renderStatusBadge(item)}
@@ -148,7 +148,11 @@ export default function FlashScreen() {
               <div className="h-[1px] bg-zinc-800 mb-1" />
               {item.location && (
                 <div className="flex items-center gap-1.5 text-sm text-zinc-300 mt-2">
-                  <LocationOutline color="#EF4444" height="14px" width="14px" />
+                  <LocationOutline
+                    color="oklch(76.5% 0.177 163.223)"
+                    height="14px"
+                    width="14px"
+                  />
                   <span className="truncate">{item.location}</span>
                 </div>
               )}

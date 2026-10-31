@@ -407,7 +407,7 @@ export default function SettingScreen() {
           </span>
           <div className="bg-[#1C1C1E] border border-zinc-800 rounded-2xl overflow-hidden">
             <button
-              onClick={() => openTerms("https://www.jongtaewon.com/terms")}
+              onClick={() => openTerms("https://www.wecanbegenz.com/terms")}
               className="w-full flex justify-between items-center px-4 py-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
@@ -422,7 +422,7 @@ export default function SettingScreen() {
             </button>
 
             <button
-              onClick={() => openTerms("https://www.jongtaewon.com/privacy")}
+              onClick={() => openTerms("https://www.wecanbegenz.com/privacy")}
               className="w-full flex justify-between items-center px-4 py-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition cursor-pointer"
             >
               <div className="flex items-center gap-2.5">
@@ -547,7 +547,7 @@ export default function SettingScreen() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="닉네임을 입력하세요"
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-bold text-base text-white outline-none focus:ring-1 focus:ring-yellow-400"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-bold text-base text-white outline-none focus:ring-1 focus:ring-[#bef408]"
                 />
               </div>
 
@@ -560,7 +560,7 @@ export default function SettingScreen() {
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="자기소개를 입력하세요"
                   rows={3}
-                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-medium text-base text-white outline-none focus:ring-1 focus:ring-yellow-400 resize-none"
+                  className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 font-medium text-base text-white outline-none focus:ring-1 focus:ring-[#bef408] resize-none"
                 />
               </div>
             </div>
@@ -582,7 +582,10 @@ export default function SettingScreen() {
           <div className="bg-[#1C1C1E] w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 border border-zinc-800 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">🚨 유저 신고하기</h3>
-              <button onClick={() => setIsReportModalOpen(false)}>
+              <button
+                onClick={() => setIsReportModalOpen(false)}
+                className="cursor-pointer p-1 hover:bg-zinc-800 rounded-xl"
+              >
                 <Close color="#FFF" height="22px" width="22px" />
               </button>
             </div>
@@ -666,7 +669,7 @@ export default function SettingScreen() {
               placeholder="닉네임 입력"
               value={searchNickname}
               onChange={(e) => setSearchNickname(e.target.value)}
-              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-[15px]  text-white outline-none"
+              className="w-full bg-[#2C2C2E] rounded-xl px-3.5 py-3 text-[15px]  text-white outline-none focus:border-[#bef408] border border-[#2C2C2E]"
             />
 
             <div className="flex gap-2.5">
@@ -679,7 +682,7 @@ export default function SettingScreen() {
               <button
                 onClick={handleSearchUser}
                 disabled={isLoading}
-                className="flex-1 bg-[#bef408] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                className="flex-1 bg-[#bef408] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-80 transition cursor-pointer disabled:opacity-50"
               >
                 검색하기
               </button>

@@ -54,10 +54,7 @@ const CATEGORIES = [
   { label: "🇰🇷 한국", value: GatheringCategory.KR },
 ];
 
-const HOURS = [
-  18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-  16, 17,
-];
+const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
 const fetchGatherings = async (): Promise<Gathering[]> => {
@@ -253,8 +250,8 @@ export default function HomeScreen() {
   > = {
     OPEN: {
       label: "모집 중",
-      badgeClass: "bg-blue-600",
-      textClass: "text-white",
+      badgeClass: "bg-[#bef408]",
+      textClass: "text-gray-900",
     },
     FULL: {
       label: "인원 마감",
@@ -301,7 +298,7 @@ export default function HomeScreen() {
           <button
             key={cat.value}
             onClick={() => setSelectedCategory(cat.value)}
-            className={`px-4 py-2 rounded-full text-[15px] font-semibold whitespace-nowrap transition-colors ${
+            className={`cursor-pointer px-4 py-2 rounded-full text-[15px] font-semibold whitespace-nowrap transition-colors ${
               selectedCategory === cat.value
                 ? "bg-[#bef408] text-black"
                 : "bg-[#2C2C2E] text-gray-400 hover:text-white"
@@ -336,12 +333,12 @@ export default function HomeScreen() {
             <article
               key={item.id}
               onClick={() => router.push(`/gathering/${item.id}`)}
-              className="bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-yellow-500 transition-colors"
+              className="bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#bef408] transition-colors"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-2 py-0.5 rounded text-xs font-bold ${
+                    className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
                       STATUS_CONFIG[item.status]?.badgeClass || "bg-gray-700"
                     } ${STATUS_CONFIG[item.status]?.textClass || "text-white"}`}
                   >
@@ -372,7 +369,7 @@ export default function HomeScreen() {
                     <span>{formatDateTime(item.dateTime)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <IoLocationOutline className="text-red-500" size={15} />
+                    <IoLocationOutline className="text-emerald-400" size={15} />
                     <span>{item.location}</span>
                   </div>
                 </div>
@@ -535,7 +532,7 @@ export default function HomeScreen() {
                       key={h}
                       type="button"
                       onClick={() => setSelectedHour(h)}
-                      className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                      className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedHour === h
                           ? "bg-[#bef408] text-gray-900"
                           : "bg-[#2C2C2E] text-white"
@@ -555,7 +552,7 @@ export default function HomeScreen() {
                       key={m}
                       type="button"
                       onClick={() => setSelectedMinute(m)}
-                      className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
+                      className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
                         selectedMinute === m
                           ? "bg-[#bef408] text-gray-900"
                           : "bg-[#2C2C2E] text-white"
@@ -637,13 +634,13 @@ export default function HomeScreen() {
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toLowerCase())}
               placeholder="____"
-              className="w-full h-12 bg-[#2C2C2E] rounded-lg text-[#FFE600] text-xl font-bold text-center tracking-[6px]  mb-5 focus:outline-none focus:ring-1 focus:ring-[#FFE600]"
+              className="w-full h-12 bg-[#2C2C2E] rounded-lg text-[#bef408] text-xl font-bold text-center tracking-[6px]  mb-5 focus:outline-none focus:ring-1 focus:ring-[#bef408]"
             />
 
             <div className="flex gap-2.5 w-full">
               <button
                 type="button"
-                className="flex-1 h-11 bg-[#2C2C2E] text-gray-400 font-semibold rounded-lg text-sm"
+                className="flex-1 h-11 bg-[#2C2C2E] text-gray-400 hover:bg-[#2C2C2E]/80 cursor-pointer font-semibold rounded-lg text-sm"
                 onClick={() => {
                   setInviteCode("");
                   setIsInviteModalOpen(false);
@@ -653,7 +650,7 @@ export default function HomeScreen() {
               </button>
               <button
                 type="button"
-                className="cursor-pointer flex-1 h-11 bg-[#bef408] text-black font-bold rounded-lg text-sm disabled:opacity-50"
+                className="cursor-pointer flex-1 h-11 bg-[#bef408] hover:bg-[#bef408]/90 text-black font-bold rounded-lg text-sm disabled:opacity-50"
                 onClick={handleEnterRoom}
                 disabled={isInviteLoading}
               >

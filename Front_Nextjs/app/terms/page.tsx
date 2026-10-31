@@ -8,7 +8,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-[#000000] text-white px-4 py-8">
       <div className="max-w-2xl mx-auto bg-[#1C1C1E] rounded-xl p-5 md:p-6 shadow-xl border border-[#2C2C2E]">
-        {/* 상단 헤더 & 뒤로가기 */}
+
         <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#2C2C2E]">
           <h1 className="text-lg md:text-xl font-bold text-white flex items-center gap-2">
             <span className="text-red-500">📋 </span> 서비스 이용약관 및
@@ -16,16 +16,16 @@ export default function TermsPage() {
           </h1>
           <button
             onClick={() => router.back()}
-            className="text-xs font-semibold text-[#8E8E93] hover:text-white transition px-2.5 py-1 rounded-md bg-[#2C2C2E]"
+            className="cursor-pointer text-xs font-semibold text-[#8E8E93] hover:text-white transition px-2.5 py-1 rounded-md bg-[#2C2C2E]"
           >
             뒤로가기
           </button>
         </div>
 
-        {/* 약관 본문 */}
+
         <div className="space-y-4 text-[#D1D1D6] leading-relaxed text-sm md:text-[15px]">
           <section>
-            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-sm font-bold text-[#bef408] mb-1.5">
               제 1 조 (목적)
             </h2>
             <p className="bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -35,9 +35,9 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* 💡 Apple Guideline 1.2 핵심 보완 조항 */}
+
           <section>
-            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-sm font-bold text-[#bef408] mb-1.5">
               제 2 조 (부적절한 콘텐츠 및 악성 사용자에 대한 무관용 원칙)
             </h2>
             <div className="space-y-2 bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -55,9 +55,9 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* 💡 신고 및 차단 시스템 안내 조항 */}
+
           <section>
-            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-sm font-bold text-[#bef408] mb-1.5">
               제 3 조 (신고 및 차단, 모니터링 시스템)
             </h2>
             <div className="space-y-2 bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -80,7 +80,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-sm font-bold text-yellow-400 mb-1.5">
+            <h2 className="text-sm font-bold text-[#bef408] mb-1.5">
               제 4 조 (책임의 제한)
             </h2>
             <div className="space-y-2 bg-[#2C2C2E]/50 p-3 rounded-lg text-[#E5E5EA]">
@@ -99,9 +99,9 @@ export default function TermsPage() {
           </section>
         </div>
 
-        {/* 푸터 영역 */}
+
         <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[13px] text-[#8E8E93]">
-          시행 일자: 2026년 9월 4일
+          시행 일자: 2026년 11월 1일
         </div>
       </div>
     </div>

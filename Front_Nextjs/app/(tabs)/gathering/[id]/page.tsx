@@ -23,8 +23,16 @@ import {
 import { client } from "@/api/client";
 
 import { useUnreadStore } from "@/stores/useUnreadStore";
+import Image from "next/image";
+import {
+  CheckCircle2,
+  Clock,
+  FaceSlightlySmiling,
+  Loader,
+  Trash,
+  UsersCollaboration,
+} from "lucide-react";
 
-// ================= TYPES =================
 export interface UserProfile {
   id: string;
   nickname?: string;
@@ -65,7 +73,7 @@ export interface EditGatheringDto {
 }
 
 // ================= CONSTANTS & LABELS =================
-const HOURS = Array.from({ length: 24 }, (_, i) => (i + 17) % 24);
+const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
 const STATUS_LABEL: Record<string, string> = {
@@ -77,17 +85,17 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR_CLASS: Record<string, string> = {
-  OPEN: "bg-blue-600 text-gray-100 border-blue-500/30",
+  OPEN: "bg-[#bef408] text-gray-900 border-[#bef408]/30",
   FULL: "bg-red-500 text-gray-900 border-red-500/30",
-  IN_PROGRESS: "bg-red-500 text-gray-100 border-red-500/30",
+  IN_PROGRESS: "bg-red-500 text-gray-900 border-red-500/30",
   CANCELED: "bg-red-500 text-gray-900 border-red-500/30",
   COMPLETED: "bg-gray-700 text-gray-100 border-gray-500/30",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
-  US: "미국",
-  UK: "영국",
-  KR: "한국",
+  US: "🇺🇸 미국",
+  UK: "🇬🇧 영국",
+  KR: "🇰🇷 한국",
 };
 
 // ================= HELPER FUNCTIONS =================
@@ -425,7 +433,14 @@ export default function GatheringDetailPage() {
   if (isLoading || !gathering) {
     return (
       <div className="flex-1 flex justify-center items-start py-55">
-        <div className="animate-spin text-4xl">⚡️</div>
+        <div className="animate-spin text-4xl">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={80}
+            height={80}
+          />
+        </div>
       </div>
     );
   }
@@ -550,7 +565,7 @@ export default function GatheringDetailPage() {
               {currentStatus === "APPROVED" && (
                 <button
                   onClick={() => pendMutation.mutate(participantId)}
-                  className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded-md text-amber-400 transition"
+                  className="p-1.5 bg-neutral-700 hover:bg-neutral-600 rounded-md text-[#bef408] transition"
                   title="대기자로 내리기"
                 >
                   <IoHourglassOutline size={16} />
@@ -598,7 +613,7 @@ export default function GatheringDetailPage() {
 
         <button
           onClick={handleChatClick}
-          className="relative cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition border-yellow-400/40 text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"
+          className="relative cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border transition border-[#bef408]/40 text-[#bef408] bg-[#bef408]/10 hover:bg-[#bef408]/20"
         >
           <IoChatbubblesOutline size={14} />
           <span>채팅방</span>
@@ -656,7 +671,7 @@ export default function GatheringDetailPage() {
             >
               {STATUS_LABEL[gathering.status] || gathering.status}
             </span>
-            <span className="text-sm font-bold text-yellow-400 px-2.5 py-1 rounded-lg">
+            <span className="text-sm font-bold text-[#bef408] px-2.5 py-1 rounded-lg">
               {CATEGORY_LABEL[gathering.category] || gathering.category}
             </span>
           </div>
@@ -686,18 +701,21 @@ export default function GatheringDetailPage() {
         {/* 정보 섹션 */}
         <div className="bg-neutral-800/60 border border-neutral-800 rounded-xl p-4 space-y-3 my-6 ">
           <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
-            <IoCalendarOutline size={18} className="text-yellow-400 shrink-0" />
+            <IoCalendarOutline size={18} className="text-[#bef408] shrink-0" />
             <span>{formatDateTime(gathering.dateTime)}</span>
           </div>
           <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
-            <IoLocationOutline size={18} className="text-red-400 shrink-0" />
+            <IoLocationOutline
+              size={18}
+              className="text-emerald-400 shrink-0"
+            />
             <span>{gathering.location}</span>
           </div>
           <div className="flex items-center gap-2.5 text-[15px] text-neutral-200">
-            <IoPeopleOutline size={18} className="text-yellow-400 shrink-0" />
+            <IoPeopleOutline size={18} className="text-[#bef408] shrink-0" />
             <span>
               참여 인원:{" "}
-              <strong className="text-yellow-400 font-semibold">
+              <strong className="text-[#bef408] font-semibold">
                 {currentCount}
               </strong>{" "}
               / {gathering.maxPeople}명
@@ -706,7 +724,7 @@ export default function GatheringDetailPage() {
           {gathering.roomCode && (
             <div className=" flex gap-2 items-center text-[15px] mt-4">
               <span className="text-neutral-400"> 룸 코드</span>
-              <span className=" py-1 px-2 font-mono text-yellow-400 font-bold bg-neutral-800 rounded-lg border border-neutral-700/50">
+              <span className=" py-1 px-2 font-mono text-[#bef408] font-bold bg-neutral-800 rounded-lg border border-neutral-700/50">
                 {gathering.roomCode}
               </span>
             </div>
@@ -732,18 +750,20 @@ export default function GatheringDetailPage() {
                           if (confirm("정말로 모임을 시작하시겠습니까?"))
                             startMutation.mutate();
                         }}
-                        className="cursor-pointer py-2 px-3 bg-yellow-400/90 hover:bg-yellow-500/90 text-neutral-900 font-semibold rounded-lg text-sm transition"
+                        className="cursor-pointer flex flex-row justify-center gap-1 py-2 px-3 bg-[#bef408] hover:bg-[#bef408]/80 text-neutral-900 font-semibold rounded-lg text-sm transition"
                       >
-                        시작하기 🚀
+                        시작하기
+                        <FaceSlightlySmiling size={16} className="mt-0.5" />
                       </button>
+
                       <button
                         onClick={() => {
                           if (confirm("정말로 모임을 취소하시겠습니까?"))
                             cancelMutation.mutate();
                         }}
-                        className="cursor-pointer py-2 px-3 bg-red-600/90 hover:bg-red-700/90 text-white font-semibold rounded-lg text-sm transition"
+                        className="flex flex-row justify-center gap-1 cursor-pointer py-2 px-3 bg-red-500 hover:bg-red-500/80 text-white font-semibold rounded-lg text-sm transition"
                       >
-                        취소하기 🗑️
+                        취소하기 <Trash size={15} className="mt-0.5" />
                       </button>
                     </>
                   )}
@@ -765,10 +785,11 @@ export default function GatheringDetailPage() {
 
         <hr className="border-neutral-800 mt-8" />
 
-        {/* 참가자 목록 */}
         <section>
-          <h3 className=" text-base font-semibold text-neutral-200 mt-6 mb-2.5 flex items-center gap-1">
-            <span>✅ 참가자</span>
+          <h3 className="text-base font-semibold text-neutral-200 mt-6 mb-2.5 flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-[#bef408]" />{" "}
+            {/* 포인트 네온 컬러 적용 */}
+            <span>참가 확정</span>
           </h3>
           {approvedParticipants.length === 0 ? (
             <p className="text-sm text-neutral-500 py-2">
@@ -783,8 +804,9 @@ export default function GatheringDetailPage() {
 
         {/* 대기자 목록 */}
         <section className="mt-8">
-          <h3 className="text-base font-semibold text-neutral-200 mb-2 flex items-center gap-1">
-            <span>⏳ 대기자</span>
+          <h3 className="text-base font-semibold text-neutral-200 mb-2 flex items-center gap-1.5">
+            <UsersCollaboration className="w-4 h-4 text-emerald-400" />
+            <span>대기 중</span>
           </h3>
           {pendingParticipants.length === 0 ? (
             <p className="text-sm text-neutral-500 py-2">
@@ -817,7 +839,7 @@ export default function GatheringDetailPage() {
               ) : (
                 <button
                   onClick={() => applyMutation.mutate()}
-                  className="w-full py-3 mb-6 bg-yellow-400/90 hover:bg-yellow-500/90 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-yellow-400/10"
+                  className="w-full py-3 mb-6 bg-[#bef408]/90 hover:[#bef408]/80 text-neutral-900 font-bold rounded-xl text-base transition shadow-lg shadow-[#bef408]/10"
                 >
                   참여 신청하기
                 </button>
@@ -829,7 +851,7 @@ export default function GatheringDetailPage() {
       {/* 모임 수정 모달 */}
       {isEditModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center p-0 sm:p-4"
+          className="fixed inset-0 z-100 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center p-0 sm:p-4"
           onClick={() => setIsEditModalOpen(false)}
         >
           <div
@@ -838,10 +860,10 @@ export default function GatheringDetailPage() {
           >
             {/* 모달 헤더 */}
             <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-              <h3 className="text-lg font-bold text-white">밋업 정보 수정</h3>
+              <h3 className="text-lg font-bold text-white">밋업 정보 변경</h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-neutral-400 hover:text-white transition"
+                className="cursor-pointer text-neutral-400 hover:text-white transition"
               >
                 <IoClose size={24} />
               </button>
@@ -859,17 +881,17 @@ export default function GatheringDetailPage() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: "미국", value: "US" },
-                    { label: "영국", value: "UK" },
-                    { label: "한국", value: "KR" },
+                    { label: "🇺🇸 미국", value: "US" },
+                    { label: "🇬🇧 영국", value: "UK" },
+                    { label: "🇰🇷 한국", value: "KR" },
                   ].map((item) => (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => setCategory(item.value)}
-                      className={`py-3 rounded-xl text-sm font-bold transition ${
+                      className={`cursor-pointer py-2.5 rounded-xl text-sm font-bold transition ${
                         category === item.value
-                          ? "bg-amber-400 text-neutral-900 shadow-md"
+                          ? "bg-[#bef408] text-neutral-900 shadow-md"
                           : "bg-neutral-800/80 text-neutral-400 hover:text-white hover:bg-neutral-800"
                       }`}
                     >
@@ -889,7 +911,7 @@ export default function GatheringDetailPage() {
                   placeholder="예) 종로 같이 술마실 분!"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#bef408] transition"
                 />
               </div>
 
@@ -903,7 +925,7 @@ export default function GatheringDetailPage() {
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full resize-none rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
+                  className="w-full resize-none rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#bef408] transition"
                 />
               </div>
 
@@ -917,7 +939,7 @@ export default function GatheringDetailPage() {
                   placeholder="예) 종로3가역 6번 출구"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-amber-400 transition"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#bef408] transition"
                 />
               </div>
 
@@ -930,7 +952,7 @@ export default function GatheringDetailPage() {
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition [color-scheme:dark]"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#bef408] transition [color-scheme:dark]"
                 />
               </div>
 
@@ -941,8 +963,8 @@ export default function GatheringDetailPage() {
                 </label>
 
                 {/* 시간 미리보기 배너 */}
-                <div className="mb-3 rounded-xl border border-amber-400/30 bg-neutral-900 py-2.5 text-center">
-                  <span className="text-xl font-bold tracking-widest text-amber-400">
+                <div className="mb-3 rounded-xl border border-[#bef408] bg-neutral-900 py-2.5 text-center">
+                  <span className="text-xl font-bold tracking-widest text-[#bef408]">
                     {String(selectedHour).padStart(2, "0")} :{" "}
                     {String(selectedMinute).padStart(2, "0")}
                   </span>
@@ -951,15 +973,15 @@ export default function GatheringDetailPage() {
                 <span className="mb-1 block text-[11px] text-neutral-500">
                   시
                 </span>
-                <div className="mb-3 flex gap-2 overflow-x-auto py-1 scrollbar-none">
+                <div className=" mb-3 flex gap-2 overflow-x-auto py-1 scrollbar-none">
                   {HOURS.map((h) => (
                     <button
                       key={h}
                       type="button"
                       onClick={() => setSelectedHour(h)}
-                      className={`whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      className={`cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                         selectedHour === h
-                          ? "bg-amber-400 text-neutral-900 font-bold"
+                          ? "bg-[#bef408] text-neutral-900 font-bold"
                           : "bg-neutral-800/80 text-neutral-300 hover:bg-neutral-700"
                       }`}
                     >
@@ -977,9 +999,9 @@ export default function GatheringDetailPage() {
                       key={m}
                       type="button"
                       onClick={() => setSelectedMinute(m)}
-                      className={`whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                      className={`cursor-pointer whitespace-nowrap px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
                         selectedMinute === m
-                          ? "bg-amber-400 text-neutral-900 font-bold"
+                          ? "bg-[#bef408] text-neutral-900 font-bold"
                           : "bg-neutral-800/80 text-neutral-300 hover:bg-neutral-700"
                       }`}
                     >
@@ -998,7 +1020,7 @@ export default function GatheringDetailPage() {
                   type="number"
                   value={maxPeople}
                   onChange={(e) => setMaxPeople(e.target.value)}
-                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition"
+                  className="w-full rounded-xl bg-neutral-800/60 border border-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:border-[#bef408] transition"
                 />
               </div>
 
@@ -1006,12 +1028,12 @@ export default function GatheringDetailPage() {
               <button
                 type="submit"
                 disabled={editMutation.isPending}
-                className="my-4 flex w-full items-center justify-center rounded-xl bg-amber-400 py-3.5 text-base font-bold text-neutral-900 transition hover:bg-amber-500 disabled:opacity-50 shadow-lg shadow-amber-400/10"
+                className="cursor-pointer my-4 flex w-full items-center justify-center rounded-xl bg-[#bef408] py-3.5 text-base font-bold text-neutral-900 transition hover:bg-[#bef408]/80 disabled:opacity-50 shadow-lg shadow-[#bef408]/10"
               >
                 {editMutation.isPending ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-neutral-900" />
                 ) : (
-                  "수정하기"
+                  "변경하기"
                 )}
               </button>
             </form>
@@ -1106,7 +1128,7 @@ export default function GatheringDetailPage() {
                     handleCompleteCheck();
                   }
                 }}
-                className="cursor-pointer w-full rounded-xl bg-amber-400 py-3 text-base font-bold text-neutral-900 hover:bg-amber-500/90 transition shadow-lg shadow-amber-400/10"
+                className="cursor-pointer w-full rounded-xl bg-[#bef408] py-3 text-base font-bold text-neutral-900 hover:bg-amber-500/90 transition shadow-lg shadow-[#bef408]/10"
               >
                 체크 완료
               </button>

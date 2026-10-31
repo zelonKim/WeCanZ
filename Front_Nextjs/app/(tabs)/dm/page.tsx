@@ -264,13 +264,13 @@ export default function DMScreen() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => acceptMutation.mutate(req.id)}
-                        className="bg-blue-600 px-3.5 py-2 rounded-lg text-xs font-bold text-white hover:opacity-90 transition"
+                        className="cursor-pointer bg-blue-600 px-3.5 py-2 rounded-lg text-xs font-bold text-white hover:opacity-90 transition"
                       >
                         수락
                       </button>
                       <button
                         onClick={() => rejectMutation.mutate(req.id)}
-                        className="bg-zinc-800 px-3.5 py-2 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-700 transition"
+                        className="cursor-pointer bg-zinc-800 px-3.5 py-2 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-700 transition"
                       >
                         거절
                       </button>
@@ -282,7 +282,6 @@ export default function DMScreen() {
           )}
         </div>
 
-        {/* 대화 중인 DM 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-white mb-3">
             대화 중인 DM ({myDMRooms.length})
@@ -312,7 +311,7 @@ export default function DMScreen() {
                         `/dm/${item.id}?name=${encodeURIComponent(partner?.nickname || "")}&profileImage=${encodeURIComponent(partner?.profileImage || "")}`,
                       );
                     }}
-                    className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl cursor-pointer hover:border-[#FFE600] transition flex items-center justify-between"
+                    className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl cursor-pointer hover:border-[#bef408] transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0 mr-2">
                       <div className="relative shrink-0">
@@ -336,7 +335,7 @@ export default function DMScreen() {
 
                         {item.lastMessage && (
                           <p
-                            className={`text-xs truncate ${item.hasUnread ? "text-zinc-200 font-medium" : "text-zinc-400"}`}
+                            className={`text-[15px] truncate ${item.hasUnread ? "text-zinc-200 font-medium" : "text-zinc-400"}`}
                           >
                             {item.lastMessage.content ||
                               (item.lastMessage as any).message}
@@ -346,7 +345,7 @@ export default function DMScreen() {
                     </div>
 
                     {item.lastMessage?.createdAt && (
-                      <span className="text-[11px] text-zinc-500 shrink-0 self-start">
+                      <span className="text-[12px] text-zinc-500 shrink-0 self-start">
                         {formatTime(item.lastMessage.createdAt)}
                       </span>
                     )}
@@ -372,7 +371,7 @@ export default function DMScreen() {
               placeholder="닉네임 입력"
               value={targetNickname}
               onChange={(e) => setTargetNickname(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base text-white outline-none focus:border-[#FFE600] mb-4"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-base text-white outline-none focus:border-[#bef408] mb-4"
             />
 
             <div className="flex gap-2">
@@ -381,13 +380,13 @@ export default function DMScreen() {
                   setIsModalVisible(false);
                   setTargetNickname("");
                 }}
-                className="flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-[15px] text-zinc-300 hover:bg-zinc-700 transition"
+                className="flex-1 bg-zinc-800 py-3 rounded-xl font-bold text-[15px] text-zinc-300 hover:bg-zinc-700 cursor-pointer transition"
               >
                 취소
               </button>
               <button
                 onClick={handleSendDmRequest}
-                className="flex-1 bg-[#bef408] py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
+                className="flex-1 bg-[#bef408] py-3 hover:opacity-80 rounded-xl font-bold text-[15px] text-black cursor-pointer transition"
               >
                 요청 보내기
               </button>

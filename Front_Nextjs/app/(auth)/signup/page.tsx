@@ -14,31 +14,31 @@ import {
 } from "react-icons/fi";
 
 const ADJECTIVES = [
-  "끼떠는",
-  "훈훈한",
   "귀여운",
-  "도도한",
   "다정한",
   "매력적인",
   "수줍은",
   "시크한",
-  "발랄한",
-  "설레는",
   "상큼한",
   "풋풋한",
+  "힙한",
+  "자유로운",
+  "러블리한",
+  "즐거운",
 ];
 
 const NOUNS = [
   "메이트",
   "스위티",
-  "베이글",
   "베이비",
-  "러버",
   "뉴페이스",
   "큐티",
-  "공주",
-  "요정",
-  "천사",
+  "크루",
+  "바이브",
+  "브로",
+  "시스터",
+  "걸",
+  "보이",
 ];
 
 const generateRandomNickname = (): string => {
@@ -70,7 +70,6 @@ export default function SignupScreen() {
   const [isPrivacyAgreed, setIsPrivacyAgreed] = useState(false);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
 
-  // 모달 상태 관리 ('terms' | 'privacy' | null) -> 이 상태가 변경되면 모달이 화면에 뜹니다!
   const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
 
   const handleRefreshNickname = () => {
@@ -159,7 +158,7 @@ export default function SignupScreen() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-1 mr-2 text-white hover:opacity-80 transition"
+            className="cursor-pointer p-1 mr-2 text-white hover:bg-zinc-800 rounded-2xl transition"
           >
             <FiChevronLeft size={30} />
           </button>
@@ -179,7 +178,7 @@ export default function SignupScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -194,7 +193,7 @@ export default function SignupScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -209,7 +208,7 @@ export default function SignupScreen() {
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -225,15 +224,15 @@ export default function SignupScreen() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 autoCapitalize="none"
-                className="flex-1 h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-yellow-500"
+                className="flex-1 h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
               />
               <button
                 type="button"
                 onClick={handleRefreshNickname}
-                className="h-14 px-4 bg-[#2C2C2E] rounded-xl flex items-center gap-1.5 hover:bg-[#3A3A3C] transition shrink-0"
+                className="cursor-pointer h-14 px-4 bg-[#2C2C2E] rounded-xl flex items-center gap-1.5 hover:bg-[#3A3A3C] transition shrink-0"
               >
-                <FiRefreshCw size={16} className="text-red-500" />
-                <span className="text-sm font-bold text-red-500">
+                <FiRefreshCw size={16} className="text-[#bef408]" />
+                <span className=" text-sm font-bold text-[#bef408]">
                   랜덤 생성
                 </span>
               </button>
@@ -246,16 +245,14 @@ export default function SignupScreen() {
             <button
               type="button"
               onClick={handleAllAgree}
-              className="flex items-center gap-3 w-full text-left"
+              className="cursor-pointer flex items-center gap-3 w-full text-left"
             >
               {isTermsAgreed && isPrivacyAgreed ? (
-                <FiCheckSquare size={22} className="text-red-500" />
+                <FiCheckSquare size={22} className="text-[#bef408]" />
               ) : (
                 <FiSquare size={22} className="text-[#8E8E93]" />
               )}
-              <span className="text-base font-bold text-white">
-                전체 동의하기
-              </span>
+              <span className="text-base font-bold text-white">전체 동의</span>
             </button>
 
             <div className="h-[1px] bg-[#2C2C2E] my-2" />
@@ -268,10 +265,10 @@ export default function SignupScreen() {
                 className="flex items-center gap-2.5 text-left"
               >
                 <span
-                  className={`text-base ${isTermsAgreed ? "text-red-500 font-bold" : "text-[#666]"}`}
+                  className={`cursor-pointer text-base ${isTermsAgreed ? "text-[#bef408] font-bold" : "text-[#666]"}`}
                 >
                   {isTermsAgreed ? (
-                    <FiCheckSquare size={18} className="text-red-500" />
+                    <FiCheckSquare size={18} className="text-[#bef408]" />
                   ) : (
                     <FiSquare size={18} className="text-[#8E8E93]" />
                   )}
@@ -283,7 +280,7 @@ export default function SignupScreen() {
               <button
                 type="button"
                 onClick={() => setModalType("terms")}
-                className="text-sm text-[#888] underline hover:text-white px-2 py-1"
+                className="cursor-pointer text-sm text-[#888] underline hover:text-white px-2 py-1"
               >
                 보기
               </button>
@@ -297,10 +294,10 @@ export default function SignupScreen() {
                 className="flex items-center gap-2.5 text-left"
               >
                 <span
-                  className={`text-base ${isPrivacyAgreed ? "text-red-500 font-bold" : "text-[#666]"}`}
+                  className={`cursor-pointer text-base ${isPrivacyAgreed ? "text-[#bef408] font-bold" : "text-[#666]"}`}
                 >
                   {isPrivacyAgreed ? (
-                    <FiCheckSquare size={18} className="text-red-500" />
+                    <FiCheckSquare size={18} className="text-[#bef408]" />
                   ) : (
                     <FiSquare size={18} className="text-[#8E8E93]" />
                   )}
@@ -312,7 +309,7 @@ export default function SignupScreen() {
               <button
                 type="button"
                 onClick={() => setModalType("privacy")}
-                className="text-sm text-[#888] underline hover:text-white px-2 py-1"
+                className="cursor-pointer text-sm text-[#888] underline hover:text-white px-2 py-1"
               >
                 보기
               </button>
@@ -323,9 +320,9 @@ export default function SignupScreen() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full h-14 rounded-xl bg-red-500 font-bold text-lg text-white mt-6 hover:opacity-90 transition disabled:opacity-50"
+            className="cursor-pointer w-full h-14 rounded-xl bg-[#bef408] font-bold text-lg text-gray-900 mt-6 hover:opacity-90 transition disabled:opacity-50"
           >
-            {isPending ? "가입 중..." : "가입하기"}
+            {isPending ? "가입 중..." : "시작하기"}
           </button>
         </form>
 

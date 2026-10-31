@@ -280,13 +280,13 @@ export default function FriendScreen() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => acceptMutation.mutate(req.id)}
-                      className="bg-blue-600 px-3.5 py-2 rounded-lg text-xs font-bold text-white hover:opacity-90 transition"
+                      className="cursor-pointer bg-blue-600 px-3.5 py-2 rounded-lg text-xs font-bold text-white hover:opacity-90 transition"
                     >
                       수락
                     </button>
                     <button
                       onClick={() => rejectMutation.mutate(req.id)}
-                      className="bg-zinc-800 px-3.5 py-2 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-700 transition"
+                      className="cursor-pointer bg-zinc-800 px-3.5 py-2 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-700 transition"
                     >
                       거절
                     </button>
@@ -397,7 +397,7 @@ export default function FriendScreen() {
               </button>
               <button
                 onClick={handleSendFriendRequest}
-                className="cursor-pointer flex-1 bg-[#bef408] hover:bg-[#bef408]/90 py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
+                className="cursor-pointer flex-1 bg-[#bef408] hover:bg-[#bef408]/80 py-3 rounded-xl font-bold text-[15px] text-black hover:opacity-90 transition"
               >
                 요청 보내기
               </button>

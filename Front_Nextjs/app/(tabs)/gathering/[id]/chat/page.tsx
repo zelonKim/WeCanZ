@@ -343,7 +343,7 @@ export default function GatheringChatPage() {
       <header className="flex items-center justify-between px-4 bg-neutral-900 border-b border-neutral-800 shrink-0 h-14 z-10">
         <button
           onClick={() => router.back()}
-          className="p-1 hover:bg-neutral-800 rounded-full transition text-neutral-200"
+          className="cursor-pointer p-1.5 hover:bg-neutral-800 rounded-2xl transition text-neutral-200"
         >
           <IoArrowBack size={22} />
         </button>
@@ -373,7 +373,7 @@ export default function GatheringChatPage() {
       <main className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-neutral-500 gap-2">
@@ -423,14 +423,13 @@ export default function GatheringChatPage() {
                 )}
 
                 <div className="relative group">
-                  {/* ⚡️ 말풍선 우측 상단에 배치된 Trash 아이콘 */}
                   {(isMyMessage || isHost) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         openDeleteModal(msg);
                       }}
-                      className="absolute -top-0.5 -right-0.5 z-10 opacity-0 group-hover:opacity-95 p-1 bg-neutral-800 border border-neutral-700 text-neutral-400 hover:text-red-400 rounded-full shadow-md transition-all duration-150"
+                      className="cursor-pointer absolute -top-0.5 -right-0.5 z-10 opacity-0 group-hover:opacity-95 p-1 bg-neutral-800 border border-neutral-700 text-neutral-400 hover:text-red-400 rounded-full shadow-md transition-all duration-150"
                       title="메시지 삭제"
                     >
                       <IoTrashOutline size={13} />
@@ -442,7 +441,7 @@ export default function GatheringChatPage() {
                       isImage
                         ? "p-[3px] bg-neutral-800 "
                         : isMyMessage
-                          ? "px-3.5 py-2.5 bg-yellow-400 text-neutral-900 rounded-br-sm "
+                          ? "px-3.5 py-2.5 bg-[#bef408] text-neutral-900 rounded-br-sm "
                           : "px-3.5 py-2.5 bg-neutral-800 text-neutral-100 rounded-bl-sm border border-neutral-700/60"
                     }`}
                   >
@@ -505,7 +504,7 @@ export default function GatheringChatPage() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="p-2 text-neutral-400 hover:text-neutral-100 bg-neutral-600/60 hover:bg-yellow-500/90 rounded-full transition"
+            className="p-2 text-neutral-400 hover:text-neutral-100 bg-neutral-600/60 hover:bg-green-500 cursor-pointer rounded-full transition"
             title="이미지 첨부"
           >
             <IoImageOutline size={22} />
@@ -520,7 +519,7 @@ export default function GatheringChatPage() {
             disabled={isUploading}
             rows={1}
             maxLength={500}
-            className="flex-1 bg-neutral-900 text-neutral-100 placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-yellow-400 max-h-24 scrollbar-none disabled:opacity-50"
+            className="flex-1 bg-neutral-900 text-neutral-100 placeholder-neutral-500 text-sm rounded-2xl px-4 py-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[#bef408] max-h-24 scrollbar-none disabled:opacity-50"
           />
 
           <button
@@ -528,7 +527,7 @@ export default function GatheringChatPage() {
             disabled={!canSend}
             className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition ${
               canSend
-                ? "bg-yellow-400 text-neutral-900 hover:bg-yellow-500"
+                ? "cursor-pointer bg-[#bef408] text-neutral-900 hover:bg-[#bef408]/80"
                 : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
             }`}
           >
@@ -547,7 +546,7 @@ export default function GatheringChatPage() {
             className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col items-center gap-4 text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
+            <div className=" w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center">
               <IoTrashOutline size={24} />
             </div>
 
@@ -561,13 +560,13 @@ export default function GatheringChatPage() {
             <div className="flex w-full gap-2 mt-1">
               <button
                 onClick={() => setDeletingMessage(null)}
-                className="flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
+                className="cursor-pointer flex-1 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white text-[15px] font-medium rounded-xl transition"
               >
                 취소
               </button>
               <button
                 onClick={confirmDeleteMessage}
-                className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
+                className="cursor-pointer flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[15px] font-semibold rounded-xl transition"
               >
                 삭제하기
               </button>
@@ -590,7 +589,7 @@ export default function GatheringChatPage() {
             />
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-10 right-0 text-white hover:text-neutral-300 text-sm font-semibold py-2 px-3.5 bg-neutral-800/80 hover:bg-neutral-600/60 rounded-full"
+              className="cursor-pointer absolute -top-10 right-0 text-white hover:text-neutral-300 text-sm font-semibold py-2 px-3.5 bg-neutral-800/80 hover:bg-neutral-600/60 rounded-full"
             >
               ✕
             </button>
