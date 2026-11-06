@@ -1179,190 +1179,197 @@ export default function GatheringDetailScreen() {
         transparent={true}
         onRequestClose={closeEditModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>밋업 정보 수정</Text>
-              <TouchableOpacity onPress={closeEditModal}>
-                <Ionicons name="close" size={24} color={Colors.text} />
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -32}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>밋업 정보 수정</Text>
+                <TouchableOpacity onPress={closeEditModal}>
+                  <Ionicons name="close" size={24} color={Colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                style={styles.modalBody}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.inputLabel}>국가</Text>
+                <View style={styles.categorySelectRow}>
+                  {[
+                    { label: " 🇺🇸 미국", value: GatheringCategory.US },
+                    { label: " 🇬🇧 영국", value: GatheringCategory.UK },
+                    { label: " 🇰🇷 한국", value: GatheringCategory.KR },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.value}
+                      style={[
+                        styles.modalCategoryChip,
+                        category === item.value &&
+                          styles.modalCategoryChipActive,
+                      ]}
+                      onPress={() => setCategory(item.value)}
+                    >
+                      <Text
+                        style={[
+                          styles.modalCategoryText,
+                          category === item.value &&
+                            styles.modalCategoryTextActive,
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.inputLabel}>모임 제목</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="예) 종로 같이 술마실 분!"
+                  placeholderTextColor={Colors.tabIconDefault}
+                  value={title}
+                  onChangeText={setTitle}
+                />
+
+                <Text style={styles.inputLabel}>상세 설명</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="예) 끼, 주사 없는 2030만"
+                  placeholderTextColor={Colors.tabIconDefault}
+                  multiline
+                  value={description}
+                  onChangeText={setDescription}
+                />
+
+                <Text style={styles.inputLabel}>장소</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="예) 종로3가역 6번 출구"
+                  placeholderTextColor={Colors.tabIconDefault}
+                  value={location}
+                  onChangeText={setLocation}
+                />
+
+                <Text style={styles.inputLabel}>모임 날짜 선택</Text>
+                <Calendar
+                  current={selectedDateStr}
+                  minDate={getTodayString()}
+                  onDayPress={handleDayPress}
+                  markedDates={{
+                    [selectedDateStr]: {
+                      selected: true,
+                      selectedColor: Colors.green,
+                      selectedTextColor: Colors.background,
+                    },
+                  }}
+                  theme={{
+                    backgroundColor: "#2C2C2E",
+                    calendarBackground: "#2C2C2E",
+                    textSectionTitleColor: Colors.tabIconDefault,
+                    selectedDayBackgroundColor: Colors.green,
+                    selectedDayTextColor: "#FFFFFF",
+                    todayTextColor: Colors.green,
+                    dayTextColor: "#FFFFFF",
+                    textDisabledColor: "#48484A",
+                    arrowColor: Colors.green,
+                    monthTextColor: "#FFFFFF",
+                    indicatorColor: Colors.green,
+                    textDayFontWeight: "600",
+                    textMonthFontWeight: "bold",
+                    textDayHeaderFontWeight: "600",
+                  }}
+                  style={styles.inlineCalendar}
+                />
+
+                <Text style={styles.inputLabel}>모임 시간 선택</Text>
+                <View style={styles.clockDisplayContainer}>
+                  <Text style={styles.clockDisplayText}>
+                    {String(selectedHour).padStart(2, "0")} :{" "}
+                    {String(selectedMinute).padStart(2, "0")}
+                  </Text>
+                </View>
+
+                <Text style={styles.subInputLabel}>시</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.timeChipScroll}
+                >
+                  {HOURS.map((h) => (
+                    <TouchableOpacity
+                      key={h}
+                      style={[
+                        styles.timeChip,
+                        selectedHour === h && styles.timeChipActive,
+                      ]}
+                      onPress={() => setSelectedHour(h)}
+                    >
+                      <Text
+                        style={[
+                          styles.timeChipText,
+                          selectedHour === h && styles.timeChipTextActive,
+                        ]}
+                      >
+                        {String(h).padStart(2, "0")}시
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.subInputLabel}>분</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.timeChipScroll}
+                >
+                  {MINUTES.map((m) => (
+                    <TouchableOpacity
+                      key={m}
+                      style={[
+                        styles.timeChip,
+                        selectedMinute === m && styles.timeChipActive,
+                      ]}
+                      onPress={() => setSelectedMinute(m)}
+                    >
+                      <Text
+                        style={[
+                          styles.timeChipText,
+                          selectedMinute === m && styles.timeChipTextActive,
+                        ]}
+                      >
+                        {String(m).padStart(2, "0")}분
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.inputLabel}>최대 인원 (명)</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={String(maxPeople ?? "")}
+                  onChangeText={setMaxPeople}
+                />
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleEditGathering}
+                disabled={editMutation.isPending}
+              >
+                {editMutation.isPending ? (
+                  <ActivityIndicator color="#000" />
+                ) : (
+                  <Text style={styles.submitButtonText}>수정하기</Text>
+                )}
               </TouchableOpacity>
             </View>
-
-            <ScrollView
-              style={styles.modalBody}
-              showsVerticalScrollIndicator={false}
-            >
-              <Text style={styles.inputLabel}>국가</Text>
-              <View style={styles.categorySelectRow}>
-                {[
-                  { label: " 🇺🇸 미국", value: GatheringCategory.US },
-                  { label: " 🇬🇧 영국", value: GatheringCategory.UK },
-                  { label: " 🇰🇷 한국", value: GatheringCategory.KR },
-                ].map((item) => (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={[
-                      styles.modalCategoryChip,
-                      category === item.value && styles.modalCategoryChipActive,
-                    ]}
-                    onPress={() => setCategory(item.value)}
-                  >
-                    <Text
-                      style={[
-                        styles.modalCategoryText,
-                        category === item.value &&
-                          styles.modalCategoryTextActive,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.inputLabel}>모임 제목</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="예) 종로 같이 술마실 분!"
-                placeholderTextColor={Colors.tabIconDefault}
-                value={title}
-                onChangeText={setTitle}
-              />
-
-              <Text style={styles.inputLabel}>상세 설명</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="예) 끼, 주사 없는 2030만"
-                placeholderTextColor={Colors.tabIconDefault}
-                multiline
-                value={description}
-                onChangeText={setDescription}
-              />
-
-              <Text style={styles.inputLabel}>장소</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="예) 종로3가역 6번 출구"
-                placeholderTextColor={Colors.tabIconDefault}
-                value={location}
-                onChangeText={setLocation}
-              />
-
-              <Text style={styles.inputLabel}>모임 날짜 선택</Text>
-              <Calendar
-                current={selectedDateStr}
-                minDate={getTodayString()}
-                onDayPress={handleDayPress}
-                markedDates={{
-                  [selectedDateStr]: {
-                    selected: true,
-                    selectedColor: Colors.green,
-                    selectedTextColor: Colors.background,
-                  },
-                }}
-                theme={{
-                  backgroundColor: "#2C2C2E",
-                  calendarBackground: "#2C2C2E",
-                  textSectionTitleColor: Colors.tabIconDefault,
-                  selectedDayBackgroundColor: Colors.green,
-                  selectedDayTextColor: "#FFFFFF",
-                  todayTextColor: Colors.green,
-                  dayTextColor: "#FFFFFF",
-                  textDisabledColor: "#48484A",
-                  arrowColor: Colors.green,
-                  monthTextColor: "#FFFFFF",
-                  indicatorColor: Colors.green,
-                  textDayFontWeight: "600",
-                  textMonthFontWeight: "bold",
-                  textDayHeaderFontWeight: "600",
-                }}
-                style={styles.inlineCalendar}
-              />
-
-              <Text style={styles.inputLabel}>모임 시간 선택</Text>
-              <View style={styles.clockDisplayContainer}>
-                <Text style={styles.clockDisplayText}>
-                  {String(selectedHour).padStart(2, "0")} :{" "}
-                  {String(selectedMinute).padStart(2, "0")}
-                </Text>
-              </View>
-
-              <Text style={styles.subInputLabel}>시</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.timeChipScroll}
-              >
-                {HOURS.map((h) => (
-                  <TouchableOpacity
-                    key={h}
-                    style={[
-                      styles.timeChip,
-                      selectedHour === h && styles.timeChipActive,
-                    ]}
-                    onPress={() => setSelectedHour(h)}
-                  >
-                    <Text
-                      style={[
-                        styles.timeChipText,
-                        selectedHour === h && styles.timeChipTextActive,
-                      ]}
-                    >
-                      {String(h).padStart(2, "0")}시
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <Text style={styles.subInputLabel}>분</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.timeChipScroll}
-              >
-                {MINUTES.map((m) => (
-                  <TouchableOpacity
-                    key={m}
-                    style={[
-                      styles.timeChip,
-                      selectedMinute === m && styles.timeChipActive,
-                    ]}
-                    onPress={() => setSelectedMinute(m)}
-                  >
-                    <Text
-                      style={[
-                        styles.timeChipText,
-                        selectedMinute === m && styles.timeChipTextActive,
-                      ]}
-                    >
-                      {String(m).padStart(2, "0")}분
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <Text style={styles.inputLabel}>최대 인원 (명)</Text>
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                value={String(maxPeople ?? "")}
-                onChangeText={setMaxPeople}
-              />
-            </ScrollView>
-
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={handleEditGathering}
-              disabled={editMutation.isPending}
-            >
-              {editMutation.isPending ? (
-                <ActivityIndicator color="#000" />
-              ) : (
-                <Text style={styles.submitButtonText}>수정하기</Text>
-              )}
-            </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* 노쇼 체크하기 모달 */}
@@ -1767,9 +1774,9 @@ const styles = StyleSheet.create({
   timeChipTextActive: { color: Colors.card, fontWeight: "bold" },
   submitButton: {
     backgroundColor: Colors.green,
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginTop: 24,
+    paddingVertical: 15,
+    borderRadius: 16,
+
     alignItems: "center",
   },
   submitButtonText: {

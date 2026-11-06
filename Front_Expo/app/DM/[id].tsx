@@ -14,7 +14,6 @@ import {
   AppStateStatus,
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   StatusBar,
@@ -24,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -513,7 +513,7 @@ export default function DirectChatRoomScreen() {
           <KeyboardAvoidingView
             behavior={"padding"}
             style={{ flex: 1 }}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 30 : -50}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 10 : -40}
           >
             <View style={styles.modalOverlay}>
               <View style={styles.modalContainer}>
@@ -592,8 +592,8 @@ export default function DirectChatRoomScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : 0}
+        behavior={"padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : -50}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>

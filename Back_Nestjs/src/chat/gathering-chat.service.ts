@@ -69,7 +69,12 @@ export class GatheringChatService {
   ////////////////////////////////////////////////////////////
 
   // 2. 모임 채팅 메시지 생성
-  async createMessage(gatheringId: string, userId: string, message: string) {
+  async createMessage(
+    gatheringId: string,
+    userId: string,
+    message: string,
+    imageUrl?: string,
+  ) {
     const { participantId } = await this.validateParticipant(
       gatheringId,
       userId,
@@ -88,6 +93,7 @@ export class GatheringChatService {
     return await this.prisma.gatheringChatMessage.create({
       data: {
         message: message,
+        imageUrl: imageUrl,
         roomId: room.id,
         userId: userId,
         ...(participantId && { senderId: participantId }),

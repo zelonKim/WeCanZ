@@ -131,6 +131,8 @@ model GatheringChatRoom {
 model GatheringChatMessage {
   id        String   @id @default(uuid())
   message   String
+  imageUrl  String?
+  
   createdAt DateTime @default(now())
 
   roomId String

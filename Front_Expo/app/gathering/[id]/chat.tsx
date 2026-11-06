@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"; // 💡 탭바 높이 가져오기
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -31,6 +32,7 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 import { Participant } from ".";
+import { uploadProfileImage } from "@/utils/uploadProfileImage";
 
 interface ChatMessage {
   id: string;
@@ -54,6 +56,8 @@ export default function GatheringChatScreen() {
   const appState = useRef(AppState.currentState);
 
   const insets = useSafeAreaInsets();
+
+  const fileInputRef = useRef(null);
 
   // 💡 탭바 높이 동적 구하기 (탭 스크린이 아니면 0으로 예외 처리)
   let tabBarHeight = 0;
@@ -79,10 +83,11 @@ export default function GatheringChatScreen() {
     null,
   );
 
-  // 💡 상단 useState 변경
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(
     null,
   );
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // 메뉴 닫기 함수
   const handleCloseMenu = () => setActiveMenuMessageId(null);
@@ -312,38 +317,60 @@ export default function GatheringChatScreen() {
   ///////////////////////////////////////////////////////////////////////////
 
   // 메시지 전송
-  const handleSend = () => {
+  const handleSend = async () => {
     const text = messageText.trim();
 
-    // 1. 유효성 검사
-    if (!text || !socketRef.current || !me?.id || !id) return;
+    // 1. 유효성 검사 (텍스트나 이미지 둘 중 하나는 있어야 전송 가능)
+    if ((!text && !selectedImage) || !socketRef.current || !me?.id || !id)
+      return;
 
-    // 2. 입력창 즉시 비우기 (사용자 입력 반응성 최적화)
+    // 2. 입력창 및 미리보기 즉시 초기화 (사용자 경험 최적화)
     setMessageText("");
+    const imageToUpload = selectedImage;
+    setSelectedImage(null);
 
-    // 3. UI에 즉시 보여줄 낙관적 임시 메시지 생성
-    const tempMessage = {
-      id: `temp-${Date.now()}`,
-      message: text,
-      createdAt: new Date().toISOString(),
-      gatheringId: id,
-      userId: me.id,
-      user: {
-        id: me.id,
-        nickname: me.nickname ?? "",
-        profileImage: me.profileImage ?? null,
-      },
-    };
+    let imageUrl = null;
 
-    setMessages((prev) => [...prev, tempMessage]);
+    try {
+      // 3. 이미지가 있다면 클라우드 플레어 R2로 업로드 후 URL 획득
+      if (imageToUpload) {
+        const uploadData = await uploadProfileImage(imageToUpload); // 기존에 작성하신 유틸 함수 활용
+        if (uploadData?.imageUrl) {
+          imageUrl = uploadData.imageUrl;
+        }
+      }
 
-    // 5. 소켓으로 서버에 메시지 발송
-    socketRef.current.emit("sendGatheringMessage", {
-      gatheringId: id,
-      userId: me.id,
-      message: text,
-    });
+      // 4. UI에 즉시 보여줄 낙관적 임시 메시지 생성 
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        message: text,
+        imageUrl: imageUrl, // 임시 메시지에도 이미지 URL 반영
+        createdAt: new Date().toISOString(),
+        gatheringId: id,
+        userId: me.id,
+        user: {
+          id: me.id,
+          nickname: me.nickname ?? "",
+          profileImage: me.profileImage ?? null,
+        },
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
+      // 5. 소켓으로 서버에 메시지 + 이미지 URL 발송
+      socketRef.current.emit("sendGatheringMessage", {
+        gatheringId: id,
+        userId: me.id,
+        message: text,
+        imageUrl: imageUrl, 
+      });
+    } catch (error) {
+      console.error("메시지 전송 또는 이미지 업로드 실패:", error);
+      Alert.alert("오류", "메시지를 전송하지 못했습니다.");
+    }
   };
+
+
 
   // 메시지 삭제
   const handleDeletePrompt = (msg: ChatMessage) => {
@@ -442,6 +469,28 @@ export default function GatheringChatScreen() {
       );
     },
   });
+
+  const handleImagePick = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "접근 권한 필요",
+        "사진을 선택하려면 갤러리 접근 권한이 필요합니다.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -762,30 +811,54 @@ export default function GatheringChatScreen() {
             },
           ]}
         >
-          <View style={styles.inputCapsule}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="메시지를 입력하세요"
-              placeholderTextColor="#71717A"
-              value={messageText}
-              onChangeText={setMessageText}
-              multiline
-              maxLength={500}
-            />
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                !messageText.trim() && styles.sendButtonDisabled,
-              ]}
-              disabled={!messageText.trim()}
-              onPress={handleSend}
-            >
-              <Ionicons
-                name="arrow-up"
-                size={20}
-                color={messageText.trim() ? "#000" : "#52525B"}
+          {selectedImage && (
+            <View style={styles.imagePreviewContainer}>
+              <Image
+                source={{ uri: selectedImage }}
+                style={styles.previewImage}
               />
+              <TouchableOpacity
+                style={styles.removeImageButton}
+                onPress={() => setSelectedImage(null)}
+              >
+                <Ionicons name="close" size={16} color="#FFF" />
+              </TouchableOpacity>
+            </View>
+          )}
+          <View style={styles.inputRowContainer}>
+            <TouchableOpacity
+              onPress={handleImagePick}
+              style={styles.imageButton}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="image-outline" size={22} color="#a3a3a3" />
             </TouchableOpacity>
+
+            <View style={[styles.inputCapsule, { flex: 1 }]}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="메시지를 입력하세요"
+                placeholderTextColor="#71717A"
+                value={messageText}
+                onChangeText={setMessageText}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  !messageText.trim() && styles.sendButtonDisabled,
+                ]}
+                disabled={!messageText.trim()}
+                onPress={handleSend}
+              >
+                <Ionicons
+                  name="arrow-up"
+                  size={20}
+                  color={messageText.trim() ? "#000" : "#52525B"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -947,6 +1020,7 @@ const styles = StyleSheet.create({
     color: "#52525B",
     marginBottom: 2,
   },
+  // inputContainer 수정 (기존 속성에 flexDirection 등 추가)
   inputContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,
@@ -954,13 +1028,34 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#2C2C2E",
   },
+
+  // 새로 추가할 가로 배치용 컨테이너
+  inputRowContainer: {
+    flexDirection: "row", // 가로로 나란히 배치
+    alignItems: "center", // 세로 기준 가운데 정렬
+    gap: 8, // 버튼과 인풋 캡슐 사이의 간격 (RN 0.71+ 지원, 구버전은 marginRight 사용)
+  },
+
+  // 이미지 버튼 스타일 정의
+  imageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   inputCapsule: {
+    flex: 1, // 남은 가로 공간을 전부 차지
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.06)",
     borderRadius: 24,
     paddingHorizontal: 12,
-    paddingVertical: Platform.OS === "ios" ? 6 : 4,
+    paddingVertical: Platform.OS === "ios" ? 4 : 4,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
@@ -977,7 +1072,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: "#FFE814",
+    backgroundColor: Colors.green,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1116,5 +1211,41 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
     zIndex: 9999,
+  },
+  button: {
+    padding: 8, // p-2 (Tailwind p-2는 보통 8px)
+    backgroundColor: "rgba(82, 82, 82, 0.6)", // bg-neutral-600/60
+    borderRadius: 9999, // rounded-full
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  disabledButton: {
+    opacity: 0.5, // 비활성화 시 투명도 조절
+  },
+  imagePreviewContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  previewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: -6,
+    left: 50,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FFF",
   },
 });

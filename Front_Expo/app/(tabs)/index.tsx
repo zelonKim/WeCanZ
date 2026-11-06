@@ -452,7 +452,7 @@ export default function HomeScreen() {
         <KeyboardAvoidingView
           behavior="padding"
           style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -32}
+          keyboardVerticalOffset={Platform.OS === "ios" ? -12 : -32}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
@@ -1072,10 +1072,9 @@ const styles = StyleSheet.create({
 
   submitButton: {
     backgroundColor: Colors.green,
-    paddingVertical: 16,
+    paddingVertical: 15,
     borderRadius: 16,
     alignItems: "center",
-    marginTop: 8,
   },
   submitButtonText: {
     color: "#000000",

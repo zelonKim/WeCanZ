@@ -91,12 +91,14 @@ export class ChatGateway implements OnGatewayDisconnect {
       gatheringId: string;
       userId: string;
       message: string;
+      imageUrl?: string;
     },
   ) {
     const savedMessage = await this.gatheringChatService.createMessage(
       data.gatheringId,
       data.userId,
       data.message,
+      data.imageUrl,
     );
 
     this.server
