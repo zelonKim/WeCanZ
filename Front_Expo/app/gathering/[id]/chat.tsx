@@ -18,7 +18,6 @@ import {
   AppState,
   AppStateStatus,
   Image,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   ScrollView,
@@ -28,6 +27,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 import { Participant } from ".";
@@ -563,12 +563,12 @@ export default function GatheringChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined} // 💡 "undefined" 문자열이 아닌 undefined 값
-        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : 0} // 💡 Android offset 조정
+        behavior={Platform.OS === "ios" ? "padding" : "padding"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? -20 : -50}
       >
         {isLoading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color="#FFE814" />
+            <ActivityIndicator size="large" color={Colors.green} />
           </View>
         ) : (
           <ScrollView
@@ -844,7 +844,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 150,
+    marginTop: 200,
     gap: 8,
   },
   emptyIconCircle: {
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   myBubble: {
-    backgroundColor: "#FFE814",
+    backgroundColor: Colors.green,
     borderBottomRightRadius: 4,
   },
   otherBubble: {
@@ -1040,7 +1040,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

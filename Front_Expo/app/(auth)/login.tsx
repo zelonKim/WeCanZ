@@ -11,10 +11,11 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -86,7 +87,6 @@ export default function LoginScreen() {
       Alert.alert("오류", errorMessage);
     },
   });
-
 
   const socialLoginUser = async ({ idToken, provider }: SocialLoginData) => {
     const { data } = await client.post("/auth/social-login", {
@@ -222,12 +222,14 @@ export default function LoginScreen() {
         >
           {/* 1. 상단 로고 & 타이틀 */}
           <View style={styles.brandSection}>
-            <Text style={[styles.logoText, { color: Colors.red }]}>
-              ⚡️ 종태원
+            <Image
+              source={require("@/assets/images/sticker.png")}
+              style={styles.sticker}
+            />
+            <Text style={[styles.logoText, { color: Colors.green }]}>
+              WeCanZ
             </Text>
-            <Text style={styles.subText}>
-              오늘 밤, 가장 핫한 술번개 & 클럽번개
-            </Text>
+            <Text style={styles.subText}>우리도 주말에 Z세대가 될 수 있다</Text>
           </View>
 
           {/* 2. 이메일 & 비밀번호 입력 폼 */}
@@ -270,7 +272,7 @@ export default function LoginScreen() {
 
             {/* 로그인 버튼 */}
             <TouchableOpacity
-              style={[styles.loginBtn, { backgroundColor: Colors.yellow }]}
+              style={[styles.loginBtn, { backgroundColor: Colors.green }]}
               onPress={handleEmailLogin}
               disabled={isPending || isSocialPending}
             >
@@ -285,7 +287,7 @@ export default function LoginScreen() {
             <View style={styles.signupBox}>
               <Text style={styles.signupPrompt}>아직 계정이 없으신가요?</Text>
               <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
-                <Text style={[styles.signupLinkText, { color: Colors.red }]}>
+                <Text style={[styles.signupLinkText, { color: Colors.green }]}>
                   회원가입
                 </Text>
               </TouchableOpacity>
@@ -307,8 +309,9 @@ export default function LoginScreen() {
               {/* 구글 로그인 */}
               <CustomGoogleLoginButton onPress={handleGoogleLogin} />
 
-              {/* 애플 로그인 */}
-              <CustomAppleLoginButton onPress={handleAppleLogin} />
+              {Platform.OS === "ios" && (
+                <CustomAppleLoginButton onPress={handleAppleLogin} />
+              )}
             </View>
           )}
         </ScrollView>
@@ -327,6 +330,7 @@ const styles = StyleSheet.create({
   },
   brandSection: { alignItems: "center", marginBottom: 32 },
   logoText: {
+    fontStyle: "italic",
     fontSize: 36,
     fontWeight: Platform.OS === "ios" ? "800" : "600",
     marginBottom: 6,
@@ -336,7 +340,11 @@ const styles = StyleSheet.create({
     color: "#A1A1A6",
     fontWeight: Platform.OS === "ios" ? "500" : "400",
   },
-
+  sticker: {
+    width: 90,
+    height: 90,
+    marginBottom: 5,
+  },
   formSection: { gap: 12 },
 
   inputGroup: {
@@ -381,8 +389,8 @@ const styles = StyleSheet.create({
     fontWeight: Platform.OS === "ios" ? "500" : "400",
   },
   signupLinkText: {
-    fontSize: 14,
-    fontWeight: Platform.OS === "ios" ? "600" : "500",
+    fontSize: Platform.OS === "ios" ? 14 : 13,
+    fontWeight: Platform.OS === "ios" ? "600" : "400",
     // textDecorationLine: "underline",
   },
 

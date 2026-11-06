@@ -11,7 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -395,7 +395,7 @@ export default function SettingScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color={Colors.yellow} />
+        <ActivityIndicator size="large" color={Colors.green} />
       </SafeAreaView>
     );
   }
@@ -414,14 +414,14 @@ export default function SettingScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>⚙️ 환경 설정</Text>
+          <Text style={styles.headerTitle}>Settings</Text>
 
           {/* 💡 우측 프로필 보기 아이콘 버튼 */}
           <TouchableOpacity
             onPress={() => setIsModalVisible(true)}
             style={styles.profileSearchBtn}
           >
-            <Ionicons name="search-outline" size={26} color={Colors.yellow} />
+            <Ionicons name="search-outline" size={26} color={Colors.green} />
           </TouchableOpacity>
         </View>
 
@@ -464,7 +464,7 @@ export default function SettingScreen() {
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>예스쇼</Text>
-              <Text style={[styles.statValue, { color: Colors.yellow }]}>
+              <Text style={[styles.statValue, { color: Colors.green }]}>
                 {user.yesShowCount ?? 0}회
               </Text>
             </View>
@@ -497,7 +497,7 @@ export default function SettingScreen() {
                 onValueChange={handleTogglePush}
                 trackColor={{
                   false: "#E0E0E0",
-                  true: Colors.yellow || "#4CAF50",
+                  true: Colors.green || "#4CAF50",
                 }}
                 thumbColor={Platform.OS === "android" ? "#FFFFFF" : undefined}
                 ios_backgroundColor="#E0E0E0"
@@ -507,7 +507,7 @@ export default function SettingScreen() {
             {/* 이용약관 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://www.jongtaewon.com/terms")}
+              onPress={() => openTerms("https://www.wecanbegenz.com/terms")}
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -527,7 +527,7 @@ export default function SettingScreen() {
             {/* 개인정보 처리방침 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://www.jongtaewon.com/privacy")}
+              onPress={() => openTerms("https://www.wecanbegenz.com/privacy")}
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
   },
   cancelBtn: { backgroundColor: "#2C2C2E" },
   cancelBtnText: { color: "#FFF", fontWeight: "600" },
-  confirmBtn: { backgroundColor: Colors.yellow || "#FFD700" },
+  confirmBtn: { backgroundColor: Colors.green || "#FFD700" },
   confirmBtnText: { color: "#000", fontWeight: "bold" },
 
   center: { justifyContent: "center", alignItems: "center" },
@@ -921,7 +921,13 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border || "#E9ECEF",
     marginBottom: 12,
   },
-  headerTitle: { fontSize: 22, fontWeight: "800", color: Colors.text },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
+    letterSpacing: -0.5,
+  },
 
   profileCard: {
     backgroundColor: Colors.card,
@@ -943,7 +949,7 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: Colors.yellow,
+    borderColor: Colors.green,
   },
   editIconButton: {
     flexDirection: "row",
@@ -1026,13 +1032,13 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 2,
-    borderColor: Colors.yellow,
+    borderColor: Colors.green,
   },
   cameraBadge: {
     position: "absolute",
     right: 0,
     bottom: 0,
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     borderRadius: 12,
     padding: 5,
   },
@@ -1053,7 +1059,7 @@ const styles = StyleSheet.create({
   },
   textArea: { height: 70, textAlignVertical: "top" },
   saveButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

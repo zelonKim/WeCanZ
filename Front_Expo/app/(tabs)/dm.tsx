@@ -279,7 +279,7 @@ export default function DMScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>💬 다이렉트 메시지</Text>
+        <Text style={styles.headerTitle}>DM</Text>
         <TouchableOpacity
           style={styles.iconBtn}
           onPress={() => setIsModalVisible(true)}
@@ -288,7 +288,7 @@ export default function DMScreen() {
           <Ionicons
             name="chatbubble-ellipses-outline"
             size={24}
-            color={Colors.yellow || "#FFD600"}
+            color={Colors.green || "#FFD600"}
           />
         </TouchableOpacity>
       </View>
@@ -501,9 +501,11 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border || "#E9ECEF",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.text || "#212529",
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
+    letterSpacing: -0.5,
   },
   iconBtn: {
     padding: 6,
@@ -574,24 +576,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnAccept: {
-    backgroundColor: "#007AFF",
+    backgroundColor: Colors.green,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
   },
   btnAcceptText: {
-    color: "#FFFFFF",
+    color: Colors.background,
     fontSize: 13,
     fontWeight: "600",
   },
   btnReject: {
-    backgroundColor: "#E9ECEF",
+    backgroundColor: Colors.red,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
   },
   btnRejectText: {
-    color: "#495057",
+    color: Colors.text,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -695,7 +697,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   submitBtn: {
-    backgroundColor: Colors.yellow || "#FFD600",
+    backgroundColor: Colors.green || "#FFD600",
   },
   submitBtnText: {
     color: Colors.card || "#FFFFFF",

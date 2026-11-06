@@ -100,9 +100,7 @@ export default function FlashScreen() {
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       {/* 1. 모던 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          <Text style={styles.headerTitleHighlight}>✅</Text> 참여중인 벙개
-        </Text>
+        <Text style={styles.headerTitle}>Joined Meetup</Text>
 
         {/* 히스토리 페이지 이동 버튼 */}
         <TouchableOpacity
@@ -110,14 +108,14 @@ export default function FlashScreen() {
           onPress={() => router.push("/flash/done")}
           activeOpacity={0.7}
         >
-          <Ionicons name="time-outline" size={25} color="#FFE600" />
+          <Ionicons name="time-outline" size={25} color={Colors.green} />
         </TouchableOpacity>
       </View>
 
       {/* 2. 목록 콘텐츠 */}
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#FFE600" />
+          <ActivityIndicator size="large" color={Colors.green} />
         </View>
       ) : (
         <FlatList
@@ -128,14 +126,14 @@ export default function FlashScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor="#FFE600"
+              tintColor={Colors.green}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>⚡️</Text>
+              <Text style={styles.emptyEmoji}></Text>
               <Text style={styles.emptyText}>
-                현재 참여 중인 벙개가 없어요{"\n"}새로운 벙개에 참여해보세요!
+                현재 참여 중인 밋업이 없어요.{"\n"}새로운 밋업에 참여해보세요!
               </Text>
             </View>
           }
@@ -164,7 +162,7 @@ export default function FlashScreen() {
                     <Ionicons
                       name="location-outline"
                       size={14}
-                      color="#FF453A"
+                      color={Colors.emerald}
                     />
                     <Text style={styles.infoText} numberOfLines={1}>
                       {item.location}
@@ -204,9 +202,10 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border || "#E9ECEF",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: Platform.OS === "ios" ? "900" : "700",
-    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
     letterSpacing: -0.5,
   },
   headerTitleHighlight: {
@@ -224,7 +223,7 @@ const styles = StyleSheet.create({
     // borderColor: "rgba(255, 255, 255, 0.08)",
   },
   historyButtonText: {
-    color: "#FFE600",
+    color: Colors.green,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -319,7 +318,7 @@ const styles = StyleSheet.create({
   badgeTextHost: {
     fontSize: 11,
     fontWeight: "800",
-    color: "#FFE600",
+    color: Colors.green,
   },
   badgeApproved: {
     backgroundColor: "rgba(34, 197, 94, 0.15)",

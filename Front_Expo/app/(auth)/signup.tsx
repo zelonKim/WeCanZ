@@ -22,31 +22,31 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 // 랜덤 닉네임 생성 단어 목록
 const ADJECTIVES = [
-  "끼떠는",
-  "훈훈한",
   "귀여운",
-  "도도한",
   "다정한",
   "매력적인",
   "수줍은",
   "시크한",
-  "발랄한",
-  "설레는",
   "상큼한",
   "풋풋한",
+  "힙한",
+  "자유로운",
+  "러블리한",
+  "즐거운",
 ];
 
 const NOUNS = [
   "메이트",
   "스위티",
-  "베이글",
   "베이비",
-  "러버",
   "뉴페이스",
   "큐티",
-  "공주",
-  "요정",
-  "천사",
+  "크루",
+  "바이브",
+  "브로",
+  "시스터",
+  "걸",
+  "보이",
 ];
 
 // 랜덤 닉네임 생성 함수
@@ -259,8 +259,8 @@ export default function SignupScreen() {
                   style={styles.refreshBtn}
                   onPress={handleRefreshNickname}
                 >
-                  <Ionicons name="refresh" size={16} color={Colors.red} />
-                  <Text style={[styles.refreshText, { color: Colors.red }]}>
+                  <Ionicons name="refresh" size={16} color={Colors.green} />
+                  <Text style={[styles.refreshText, { color: Colors.green }]}>
                     랜덤 생성
                   </Text>
                 </TouchableOpacity>
@@ -283,7 +283,7 @@ export default function SignupScreen() {
                   size={22}
                   color={
                     isTermsAgreed && isPrivacyAgreed && isMarketingAgreed
-                      ? Colors.red
+                      ? Colors.green
                       : "#8E8E93"
                   }
                 />
@@ -303,7 +303,7 @@ export default function SignupScreen() {
                       isTermsAgreed ? "checkmark-circle" : "ellipse-outline"
                     }
                     size={20}
-                    color={isTermsAgreed ? Colors.red : "#666"}
+                    color={isTermsAgreed ? Colors.green : "#666"}
                   />
                   <Text style={styles.checkText}>
                     [필수] 서비스 이용 약관 동의
@@ -326,7 +326,7 @@ export default function SignupScreen() {
                       isPrivacyAgreed ? "checkmark-circle" : "ellipse-outline"
                     }
                     size={20}
-                    color={isPrivacyAgreed ? Colors.red : "#666"}
+                    color={isPrivacyAgreed ? Colors.green : "#666"}
                   />
                   <Text style={styles.checkText}>
                     [필수] 개인정보 처리 방침 동의
@@ -347,12 +347,12 @@ export default function SignupScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.submitBtn, { backgroundColor: Colors.red }]}
+            style={[styles.submitBtn, { backgroundColor: Colors.green }]}
             onPress={handleSignup}
             disabled={isPending}
           >
             {isPending ? (
-              <ActivityIndicator size="small" color={Colors.text} />
+              <ActivityIndicator size="small" color={Colors.background} />
             ) : (
               <Text style={styles.submitBtnText}>시작하기</Text>
             )}
@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
+    marginTop: 12,
     marginBottom: 10,
   },
   backBtn: { paddingRight: 12 },
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 24,
   },
-  submitBtnText: { color: Colors.text, fontSize: 16, fontWeight: "bold" },
+  submitBtnText: { color: Colors.background, fontSize: 16, fontWeight: "bold" },
   checkRowContainer: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,3 +1,4 @@
+import Colors from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
@@ -9,7 +10,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#FFE600", // 포인트 컬러
+        tabBarActiveTintColor: Colors.green, // 포인트 컬러
         tabBarInactiveTintColor: "#8E8E93",
         headerShown: false,
         // 💡 탭바 스타일 및 높이/패딩 동적 처리
@@ -26,7 +27,6 @@ export default function TabLayout() {
         },
       }}
     >
-      {/* 4. 친구 */}
       <Tabs.Screen
         name="friend"
         options={{
@@ -41,7 +41,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 3. DM */}
       <Tabs.Screen
         name="dm"
         options={{
@@ -56,7 +55,6 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 6. 스팟 */}
       <Tabs.Screen
         name="spot"
         options={{
@@ -71,14 +69,13 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 1. 홈 */}
       <Tabs.Screen
         name="index"
         options={{
-          title: "벙개",
+          title: "밋업",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "flash" : "flash-outline"}
+              name={focused ? "happy" : "happy-outline"}
               size={24}
               color={color}
             />
@@ -93,7 +90,7 @@ export default function TabLayout() {
           title: "참여",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "checkmark-circle" : "checkmark-circle-outline"}
+              name={focused ? "hand-right" : "hand-right-outline"}
               size={24}
               color={color}
             />

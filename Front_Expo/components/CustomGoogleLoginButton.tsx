@@ -31,10 +31,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
     height: 48,
-    borderRadius: 24,
+    borderRadius: 12,
     paddingHorizontal: 16,
     width: "100%",
-    // Google 흰색 배경 가이드라인 권장 테두리 색상
+
     borderWidth: 1,
     borderColor: "#747775",
   },

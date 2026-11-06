@@ -53,7 +53,7 @@ export default function DoneGatheringsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🕒 지난 벙개 내역</Text>
+        <Text style={styles.headerTitle}>Meetup History</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -72,7 +72,7 @@ export default function DoneGatheringsScreen() {
               activeTab === "COMPLETED" && styles.activeCompleteTabText,
             ]}
           >
-            종료된 벙개
+            종료된 밋업
           </Text>
         </TouchableOpacity>
 
@@ -89,7 +89,7 @@ export default function DoneGatheringsScreen() {
               activeTab === "CANCELED" && styles.activeCancelTabText,
             ]}
           >
-            취소된 벙개
+            취소된 밋업
           </Text>
         </TouchableOpacity>
       </View>
@@ -147,7 +147,12 @@ const styles = StyleSheet.create({
     borderColor: "#2A2A2A",
   },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: "bold", color: "#FFFFFF" },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontStyle: "italic",
+  },
   tabContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -155,8 +160,8 @@ const styles = StyleSheet.create({
   },
   tabButton: { flex: 1, paddingVertical: 14, alignItems: "center" },
   tabText: { fontSize: 15, color: "#777777" },
-  activeCompleteTab: { borderBottomWidth: 2, borderColor: Colors.orange },
-  activeCompleteTabText: { color: Colors.orange, fontWeight: "bold" },
+  activeCompleteTab: { borderBottomWidth: 2, borderColor: Colors.green },
+  activeCompleteTabText: { color: Colors.green, fontWeight: "bold" },
   activeCancelTab: { borderBottomWidth: 2, borderColor: Colors.red },
   activeCancelTabText: { color: Colors.red, fontWeight: "bold" },
   listContainer: { padding: 16 },

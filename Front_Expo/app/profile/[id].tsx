@@ -51,7 +51,7 @@ export default function UserProfileScreen() {
       >
         <ActivityIndicator
           size="large"
-          color={Colors.yellow}
+          color={Colors.green}
           style={{ flex: 1 }}
         />
       </SafeAreaView>
@@ -139,7 +139,7 @@ export default function UserProfileScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>예스쇼</Text>
-            <Text style={[styles.statValue, { color: Colors.yellow }]}>
+            <Text style={[styles.statValue, { color: Colors.green }]}>
               {user.yesShowCount}회
             </Text>
           </View>

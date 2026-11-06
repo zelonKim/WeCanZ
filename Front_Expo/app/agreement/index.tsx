@@ -173,7 +173,7 @@ export default function AgreementScreen() {
         <TouchableOpacity
           style={[
             styles.submitBtn,
-            { backgroundColor: isFormValid ? Colors.yellow : "#333" },
+            { backgroundColor: isFormValid ? Colors.green : "#333" },
           ]}
           onPress={handleSubmit}
           disabled={!isFormValid || isPending}

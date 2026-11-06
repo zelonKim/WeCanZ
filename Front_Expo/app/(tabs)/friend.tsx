@@ -261,7 +261,7 @@ export default function FriendScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 헤더 영역 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>👥 나의 친구</Text>
+        <Text style={styles.headerTitle}>Z-Friend</Text>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <TouchableOpacity
             style={styles.iconBtn}
@@ -271,7 +271,7 @@ export default function FriendScreen() {
             <Ionicons
               name="person-add-outline"
               size={24}
-              color={Colors.yellow}
+              color={Colors.green}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -592,9 +592,11 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border || "#E9ECEF",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.text || "#212529",
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
+    letterSpacing: -0.5,
   },
   iconBtn: {
     padding: 6,
@@ -654,24 +656,24 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   btnAccept: {
-    backgroundColor: "#007AFF",
+    backgroundColor: Colors.green,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
   },
   btnAcceptText: {
-    color: "#FFFFFF",
+    color: Colors.background,
     fontSize: 13,
     fontWeight: "600",
   },
   btnReject: {
-    backgroundColor: "#E9ECEF",
+    backgroundColor: Colors.red,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
   },
   btnRejectText: {
-    color: "#495057",
+    color: Colors.text,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -785,7 +787,7 @@ const styles = StyleSheet.create({
   },
   dmActionBtn: {
     padding: 6,
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     borderRadius: 12,
   },
   blockActionBtn: {
@@ -851,7 +853,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   submitBtn: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
   },
   submitBtnText: {
     color: Colors.card,

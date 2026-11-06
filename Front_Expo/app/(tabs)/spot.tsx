@@ -90,7 +90,7 @@ export default function CommercialScreen() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.yellow} />
+        <ActivityIndicator size="large" color={Colors.green} />
       </View>
     );
   }
@@ -107,7 +107,7 @@ export default function CommercialScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 상단 커스텀 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>📍 인기 스팟</Text>
+        <Text style={styles.headerTitle}>Z-Spot</Text>
 
         {/* 우측 아이콘 버튼 */}
         <TouchableOpacity
@@ -118,7 +118,7 @@ export default function CommercialScreen() {
           <Ionicons
             name="information-circle-outline"
             size={26}
-            color={Colors.yellow}
+            color={Colors.green}
           />
         </TouchableOpacity>
       </View>
@@ -184,8 +184,7 @@ export default function CommercialScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>📢 광고 및 제휴 신청 안내</Text>
             <Text style={styles.modalText}>
-              운영하는 술집이나 클럽 등 제휴 광고를 {"\n"} 원하시는 사장님께서는
-              아래 채널로 {"\n"} 문의해 주세요.
+              Z-Spot에 제휴 광고를 원하시는 분께서는 아래 채널로 문의해 주세요.
             </Text>
             <View
               style={{
@@ -197,7 +196,6 @@ export default function CommercialScreen() {
               <Text style={styles.modalSubText}>
                 • 이메일: ksz18601@gmail.com
               </Text>
-              <Text style={styles.modalSubText}> • LINE 아이디: sj1860</Text>
             </View>
             <TouchableOpacity
               style={styles.modalCloseButton}
@@ -232,9 +230,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: Colors.text,
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
+    letterSpacing: -0.5,
   },
 
   iconButton: {

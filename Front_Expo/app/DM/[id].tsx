@@ -597,7 +597,7 @@ export default function DirectChatRoomScreen() {
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.yellow} />
+            <ActivityIndicator size="large" color={Colors.green} />
           </View>
         ) : (
           <FlatList
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   myBubble: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     borderBottomRightRadius: 2,
   },
   otherBubble: {
@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  modalCategoryChipActive: { backgroundColor: Colors.yellow },
+  modalCategoryChipActive: { backgroundColor: Colors.green },
   modalCategoryText: { color: Colors.text, fontSize: 13, fontWeight: "600" },
   modalCategoryTextActive: { color: Colors.card },
 
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

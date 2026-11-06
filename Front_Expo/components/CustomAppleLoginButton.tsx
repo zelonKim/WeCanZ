@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: "center", // 전체 중앙 정렬
     backgroundColor: "#000000",
     height: 48,
-    borderRadius: 24,
+    borderRadius: 12,
     paddingHorizontal: 16,
     width: "100%",
     // 눈에 띄는 선명한 흰색 테두리

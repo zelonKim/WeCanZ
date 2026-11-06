@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "345213125520",
-    "project_id": "jongtaewon-c7cf7",
-    "storage_bucket": "jongtaewon-c7cf7.firebasestorage.app"
+    "project_number": "716946851146",
+    "project_id": "wecanz",
+    "storage_bucket": "wecanz.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:345213125520:android:07f0e09a56032326b76915",
+        "mobilesdk_app_id": "1:716946851146:android:6d66884338ce1210b76db3",
         "android_client_info": {
-          "package_name": "com.zelon.jongtaewon"
+          "package_name": "com.zelon.wecanz"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "716946851146-6ktgnhbvd24ofkae7u6gscakfm8sopmf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zelon.wecanz",
+            "certificate_hash": "f1afb397dbd6e8904606e8bc0f3dd8704a4908b7"
+          }
+        },
+        {
+          "client_id": "716946851146-fdhf9939k1giu735237ugffrrddv4viu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyB60G94VSP6OLUPYfJWIhXBdcGe8Uxw8IQ"
+          "current_key": "AIzaSyBnw72ZbzNlhqqEfbtV1s846Z1K7AJq8zQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "716946851146-fdhf9939k1giu735237ugffrrddv4viu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "716946851146-s7mmdsl09dobipj8ffu1pd5qtbvklg05.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.zelon.wecanz"
+              }
+            }
+          ]
         }
       }
     }

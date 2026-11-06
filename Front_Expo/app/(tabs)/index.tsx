@@ -36,9 +36,9 @@ Notifications.setNotificationHandler({
 });
 
 export enum GatheringCategory {
-  DRINK = "DRINK",
-  CLUB = "CLUB",
-  DRINK_CLUB = "DRINK_CLUB",
+  US = "US",
+  UK = "UK",
+  KR = "KR",
 }
 
 export interface Gathering {
@@ -70,9 +70,9 @@ export interface CreateGatheringDto {
 
 const CATEGORIES = [
   { label: "전체", value: "ALL" },
-  { label: "술벙", value: GatheringCategory.DRINK },
-  { label: "클럽벙", value: GatheringCategory.CLUB },
-  { label: "술+클럽벙", value: GatheringCategory.DRINK_CLUB },
+  { label: "🇺🇸 미국", value: GatheringCategory.US },
+  { label: "🇬🇧 영국", value: GatheringCategory.UK },
+  { label: "🇰🇷 한국", value: GatheringCategory.KR },
 ];
 
 const fetchGatherings = async (): Promise<Gathering[]> => {
@@ -85,10 +85,7 @@ const createGathering = async (dto: CreateGatheringDto) => {
   return data;
 };
 
-const HOURS = [
-  17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16,
-];
+const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
 export default function HomeScreen() {
@@ -101,7 +98,7 @@ export default function HomeScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<GatheringCategory>(
-    GatheringCategory.DRINK,
+    GatheringCategory.KR,
   );
   const [maxPeople, setMaxPeople] = useState("8");
   const [location, setLocation] = useState("");
@@ -157,7 +154,7 @@ export default function HomeScreen() {
       router.push(`/gathering/${gatheringId}`);
     } catch (error: any) {
       const message =
-        error.response?.data?.message || "벙개를 찾을 수 없습니다.";
+        error.response?.data?.message || "밋업을 찾을 수 없습니다.";
       Alert.alert("오류", message);
     } finally {
       setIsInviteLoading(false);
@@ -177,12 +174,12 @@ export default function HomeScreen() {
   const createMutation = useMutation({
     mutationFn: createGathering,
     onSuccess: () => {
-      Alert.alert("성공", "방이 생성되었습니다! ⚡️");
+      Alert.alert("성공", "밋업이 생성되었습니다! ");
       queryClient.invalidateQueries({ queryKey: ["gatherings"] });
       closeAndResetModal();
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message || "벙개 생성에 실패했습니다.";
+      const msg = error.response?.data?.message || "밋업 생성에 실패했습니다.";
       Alert.alert("오류", Array.isArray(msg) ? msg[0] : msg);
     },
   });
@@ -199,7 +196,7 @@ export default function HomeScreen() {
     setIsModalOpen(false);
     setTitle("");
     setDescription("");
-    setCategory(GatheringCategory.DRINK);
+    setCategory(GatheringCategory.KR);
     setMaxPeople("8");
     setLocation("");
     setSelectedDateStr(new Date().toISOString().split("T")[0]);
@@ -218,6 +215,12 @@ export default function HomeScreen() {
       return Alert.alert("경고", "모임 장소를 입력해주세요.");
     if (!maxPeople || isNaN(Number(maxPeople))) {
       return Alert.alert("경고", "올바른 정원 숫자를 입력해주세요.");
+    }
+    if (Number(maxPeople) < 2) {
+      return Alert.alert("경고", "최대 인원은 2명 이상이어야 합니다.");
+    }
+    if (Number(maxPeople) > 20) {
+      return Alert.alert("경고", "최대 인원은 20명 이하이어야 합니다.");
     }
 
     const [year, month, day] = selectedDateStr.split("-").map(Number);
@@ -243,12 +246,12 @@ export default function HomeScreen() {
 
   const getCategoryLabel = (cat: GatheringCategory) => {
     switch (cat) {
-      case GatheringCategory.DRINK:
-        return "🍺 술벙";
-      case GatheringCategory.CLUB:
-        return Platform.OS === "ios" ? "🪩 클럽벙" : "🎉 클럽벙";
-      case GatheringCategory.DRINK_CLUB:
-        return "🔥 술+클럽벙";
+      case GatheringCategory.US:
+        return "🇺🇸 미국";
+      case GatheringCategory.UK:
+        return "🇬🇧 영국";
+      case GatheringCategory.KR:
+        return "🇰🇷 한국";
       default:
         return cat;
     }
@@ -291,9 +294,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>
-          <Text style={styles.headerTitleHighlight}>⚡️</Text> 벙개의 광장
-        </Text>
+        <Text style={styles.headerTitle}>Z-Meetup</Text>
 
         <TouchableOpacity
           style={styles.roomSearchButton}
@@ -303,7 +304,7 @@ export default function HomeScreen() {
             setInviteCode("");
           }}
         >
-          <Ionicons name="qr-code" size={20} color="#FFE600" />
+          <Ionicons name="qr-code" size={20} color={Colors.green} />
         </TouchableOpacity>
       </View>
 
@@ -337,7 +338,7 @@ export default function HomeScreen() {
 
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#FFE600" />
+          <ActivityIndicator size="large" color={Colors.green} />
         </View>
       ) : (
         <FlatList
@@ -348,9 +349,9 @@ export default function HomeScreen() {
           refreshing={isLoading}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.placeholderEmoji}>⚡️</Text>
+              <Text style={styles.placeholderEmoji}></Text>
               <Text style={styles.placeholderText}>
-                등록된 벙개가 없어요{"\n"}지금 첫 벙개를 만들어보세요!
+                아직 등록된 밋업이 없어요.{"\n"}지금 첫 밋업을 열어보세요!
               </Text>
             </View>
           }
@@ -396,7 +397,11 @@ export default function HomeScreen() {
               <View style={styles.cardFooter}>
                 <View style={styles.infoGroup}>
                   <View style={styles.infoRow}>
-                    <Ionicons name="time-outline" size={14} color="#FFE600" />
+                    <Ionicons
+                      name="time-outline"
+                      size={14}
+                      color={Colors.green}
+                    />
                     <Text style={styles.cardInfoText}>
                       {formatDateTime(item.dateTime)}
                     </Text>
@@ -406,7 +411,7 @@ export default function HomeScreen() {
                     <Ionicons
                       name="location-outline"
                       size={14}
-                      color="#FF453A"
+                      color={Colors.emerald}
                     />
                     <Text style={styles.cardInfoText}>{item.location}</Text>
                   </View>
@@ -452,7 +457,7 @@ export default function HomeScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>New 벙개 만들기</Text>
+                <Text style={styles.modalTitle}>New 밋업 만들기</Text>
                 <TouchableOpacity
                   onPress={closeAndResetModal}
                   style={styles.closeBtn}
@@ -465,17 +470,17 @@ export default function HomeScreen() {
                 style={styles.modalBody}
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.inputLabel}>카테고리</Text>
+                <Text style={styles.inputLabel}>국가</Text>
                 <View style={styles.categorySelectRow}>
                   {[
-                    { label: "🍺 술벙", value: GatheringCategory.DRINK },
+                    { label: "🇺🇸 미국", value: GatheringCategory.US },
                     {
-                      label: Platform.OS === "ios" ? "🪩 클럽벙" : "🎉 클럽벙",
-                      value: GatheringCategory.CLUB,
+                      label: "🇬🇧 영국",
+                      value: GatheringCategory.UK,
                     },
                     {
-                      label: "🔥 술+클럽벙",
-                      value: GatheringCategory.DRINK_CLUB,
+                      label: "🇰🇷 한국",
+                      value: GatheringCategory.KR,
                     },
                   ].map((item) => (
                     <TouchableOpacity
@@ -503,27 +508,27 @@ export default function HomeScreen() {
                 <Text style={styles.inputLabel}>모임 제목</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="예) 종로 같이 술마실 분!"
+                  placeholder="모임 제목을 입력해주세요."
                   placeholderTextColor="#666668"
                   multiline
                   value={title}
                   onChangeText={setTitle}
                 />
 
-                <Text style={styles.inputLabel}>상세 설명</Text>
+                <Text style={styles.inputLabel}>모임 설명</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
-                  placeholder="예) 끼, 주사 없는 2030만 편하게 모여요"
+                  placeholder="모임에 대한 설명을 입력해주세요."
                   placeholderTextColor="#666668"
                   multiline
                   value={description}
                   onChangeText={setDescription}
                 />
 
-                <Text style={styles.inputLabel}>장소</Text>
+                <Text style={styles.inputLabel}>모임 장소</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="예) 종로3가역 6번 출구 앞"
+                  placeholder="모임 장소를 입력해주세요."
                   placeholderTextColor="#666668"
                   multiline
                   value={location}
@@ -538,7 +543,7 @@ export default function HomeScreen() {
                   markedDates={{
                     [selectedDateStr]: {
                       selected: true,
-                      selectedColor: "#FFE600",
+                      selectedColor: Colors.green,
                       selectedTextColor: "#000000",
                     },
                   }}
@@ -546,12 +551,12 @@ export default function HomeScreen() {
                     backgroundColor: "#18181B",
                     calendarBackground: "#18181B",
                     textSectionTitleColor: "#71717A",
-                    selectedDayBackgroundColor: "#FFE600",
+                    selectedDayBackgroundColor: Colors.green,
                     selectedDayTextColor: "#000000",
-                    todayTextColor: "#FFE600",
+                    todayTextColor: Colors.green,
                     dayTextColor: "#FFFFFF",
                     textDisabledColor: "#3F3F46",
-                    arrowColor: "#FFE600",
+                    arrowColor: Colors.green,
                     monthTextColor: "#FFFFFF",
                     textDayFontWeight: "600",
                     textMonthFontWeight: "bold",
@@ -730,14 +735,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: Platform.OS === "ios" ? "900" : "700",
-    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "800",
+    color: Colors.green,
+    fontStyle: "italic",
     letterSpacing: -0.5,
   },
-  headerTitleHighlight: {
-    fontSize: 20,
-  },
+
   roomSearchButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -746,7 +750,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   roomSearchText: {
-    color: "#FFE600",
+    color: Colors.green,
     fontSize: 13,
     fontWeight: "700",
   },
@@ -764,8 +768,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.06)",
   },
   categoryChipActive: {
-    backgroundColor: "#FFE600",
-    borderColor: "#FFE600",
+    backgroundColor: Colors.green,
+    borderColor: Colors.green,
   },
   categoryText: {
     fontSize: 13,
@@ -817,7 +821,7 @@ const styles = StyleSheet.create({
   cardCategory: {
     fontSize: 12,
     fontWeight: Platform.OS === "ios" ? "700" : "600",
-    color: Colors.yellow,
+    color: Colors.gray,
   },
   statusBadge: {
     paddingHorizontal: 9,
@@ -829,10 +833,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   statusOpen: {
-    backgroundColor: Colors.blue,
+    backgroundColor: Colors.green,
   },
   statusOpenText: {
-    color: "white",
+    color: Colors.background,
   },
   statusFull: {
     backgroundColor: "#fb2c36",
@@ -923,10 +927,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#FFE600",
+    backgroundColor: Colors.green,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#FFE600",
+    shadowColor: Colors.green,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -1007,7 +1011,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalCategoryChipActive: {
-    backgroundColor: "#FFE600",
+    backgroundColor: Colors.green,
   },
   modalCategoryText: {
     fontSize: 13,
@@ -1034,12 +1038,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#FFE600",
+    borderColor: Colors.green,
   },
   clockDisplayText: {
     fontSize: 28,
     fontWeight: "900",
-    color: "#FFE600",
+    color: Colors.green,
     letterSpacing: 2,
   },
   timeChipScroll: {
@@ -1054,7 +1058,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   timeChipActive: {
-    backgroundColor: "#FFE600",
+    backgroundColor: Colors.green,
   },
   timeChipText: {
     fontSize: 13,
@@ -1067,7 +1071,7 @@ const styles = StyleSheet.create({
   },
 
   submitButton: {
-    backgroundColor: "#FFE600",
+    backgroundColor: Colors.green,
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
@@ -1113,7 +1117,7 @@ const styles = StyleSheet.create({
     height: 52,
     backgroundColor: "#27272A",
     borderRadius: 12,
-    color: "#FFE600",
+    color: Colors.green,
     fontSize: 20,
     fontWeight: "600",
     textAlign: "center",
@@ -1140,7 +1144,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   submitBtn: {
-    backgroundColor: "#FFE600",
+    backgroundColor: Colors.green,
   },
   submitBtnText: {
     color: "#000000",

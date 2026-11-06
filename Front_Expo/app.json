@@ -1,24 +1,25 @@
 {
   "expo": {
-    "name": "종태원",
-    "slug": "jongtaewon",
-    "scheme": "jongtaewon",
-    "version": "1.0.3",
+    "name": "WeCanZ",
+    "slug": "wecanz",
+    "scheme": "wecanz",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "dark",
     "androidNavigationBar": {
-      "backgroundColor": "#121212",
+      "backgroundColor": "#000000",
       "barStyle": "light-content"
     },
     "splash": {
       "image": "./assets/images/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#121212"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zelon.jongtaewon",
+      "bundleIdentifier": "com.zelon.wecanz",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "We need access to your microphone to record audio for voice messages and voice calls.",
@@ -28,12 +29,12 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#121212"
+        "backgroundColor": "#000000"
       },
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "package": "com.zelon.jongtaewon"
+      "package": "com.zelon.wecanz"
     },
     "web": {
       "bundler": "metro",
@@ -49,7 +50,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.277459634612-2sq917cvk9iv5he2jpfceahno01aqug4"
+          "iosUrlScheme": "com.googleusercontent.apps.716946851146-s7mmdsl09dobipj8ffu1pd5qtbvklg05"
         }
       ]
     ],
@@ -59,8 +60,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "704ff0b6-ec80-4082-b937-a6f340dc9d2a"
+        "projectId": "c6ee3158-447d-401f-adc9-9e1302f3a77e"
       }
-    }
+    },
+    "owner": "zelon"
   }
 }

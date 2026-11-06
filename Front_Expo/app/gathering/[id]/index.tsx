@@ -29,7 +29,6 @@ import { Calendar, DateData } from "react-native-calendars";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GatheringCategory } from "../../(tabs)";
-
 export interface UserProfile {
   id: string;
   nickname?: string;
@@ -74,13 +73,9 @@ export interface EditGatheringDto {
   dateTime?: string;
 }
 
-const HOURS = [
-  17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16,
-];
+const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
-// 상태 한글 매핑
 const STATUS_LABEL: Record<string, string> = {
   OPEN: "모집중",
   FULL: "인원 마감",
@@ -90,18 +85,18 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, { bg: string; text: string }> = {
-  OPEN: { bg: Colors.blue, text: Colors.text },
+  OPEN: { bg: Colors.green, text: Colors.background },
   FULL: { bg: Colors.red, text: Colors.text },
   IN_PROGRESS: { bg: Colors.red, text: Colors.text },
   CANCELED: { bg: Colors.red, text: Colors.text },
-  COMPLETED: { bg: Colors.orange, text: Colors.text },
+  COMPLETED: { bg: Colors.darkGray, text: Colors.text },
 };
 
 // 카테고리 한글 매핑
 const CATEGORY_LABEL: Record<string, string> = {
-  DRINK: "🍺 술벙",
-  CLUB: Platform.OS === "ios" ? "🪩 클럽벙" : "🎉 클럽벙",
-  DRINK_CLUB: "🔥 술+클럽벙",
+  US: "🇺🇸 미국",
+  UK: "🇬🇧 영국",
+  KR: "🇰🇷 한국",
 };
 
 ////////////////////////////////////////////////////////
@@ -491,7 +486,7 @@ export default function GatheringDetailScreen() {
   if (isLoading || !gathering) {
     return (
       <SafeAreaView style={styles.center}>
-        <ActivityIndicator size="large" color={Colors.yellow} />
+        <ActivityIndicator size="large" color={Colors.green} />
       </SafeAreaView>
     );
   }
@@ -710,7 +705,7 @@ export default function GatheringDetailScreen() {
         <TouchableOpacity onPress={() => router.replace("/")}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>벙개 상세 정보</Text>
+        <Text style={styles.headerTitle}>밋업 상세 정보</Text>
 
         <TouchableOpacity
           style={[styles.chatButton, styles.chatButtonActive]}
@@ -725,12 +720,8 @@ export default function GatheringDetailScreen() {
             router.push(`/gathering/${id}/chat`);
           }}
         >
-          <Ionicons
-            name="chatbubbles-outline"
-            size={16}
-            color={Colors.yellow}
-          />
-          <Text style={[styles.chatButtonText, { color: Colors.yellow }]}>
+          <Ionicons name="chatbubbles-outline" size={16} color={Colors.green} />
+          <Text style={[styles.chatButtonText, { color: Colors.green }]}>
             채팅방
           </Text>
         </TouchableOpacity>
@@ -828,7 +819,7 @@ export default function GatheringDetailScreen() {
             )}
           {!isHost && (
             <TouchableOpacity
-              style={styles.editIconButton} // 필요시 styles.reportIconButton 등 별도 스타일 지정
+              style={styles.editIconButton}
               onPress={() => setIsReportModalOpen(true)}
             >
               <Ionicons name="warning-outline" size={15} color="#FF453A" />
@@ -939,17 +930,21 @@ export default function GatheringDetailScreen() {
 
         <View style={styles.infoSection}>
           <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={18} color={Colors.yellow} />
+            <Ionicons name="calendar-outline" size={18} color={Colors.green} />
             <Text style={styles.infoText}>
               {formatDateTime(gathering.dateTime)}
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={18} color={Colors.red} />
+            <Ionicons
+              name="location-outline"
+              size={18}
+              color={Colors.emerald}
+            />
             <Text style={styles.infoText}>{gathering.location}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="people-outline" size={18} color={Colors.yellow} />
+            <Ionicons name="people-outline" size={18} color={Colors.green} />
             <Text style={styles.infoText}>
               참여 인원:{" "}
               <Text style={styles.highlightText}>{currentCount}</Text> /{" "}
@@ -992,11 +987,11 @@ export default function GatheringDetailScreen() {
                       <TouchableOpacity
                         style={[
                           styles.hostBtn,
-                          { backgroundColor: Colors.yellow },
+                          { backgroundColor: Colors.green },
                         ]}
                         onPress={() =>
                           Alert.alert(
-                            "모임 시작 🚀",
+                            "모임 시작 ",
                             "정말로 모임을 시작하시겠습니까?",
                             [
                               { text: "아니오" },
@@ -1011,8 +1006,13 @@ export default function GatheringDetailScreen() {
                         <Text
                           style={[styles.hostBtnText, { color: Colors.card }]}
                         >
-                          시작하기 🚀
+                          시작하기
                         </Text>
+                        <Ionicons
+                          name="happy-outline"
+                          size={21}
+                          color={Colors.card}
+                        />
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -1022,7 +1022,7 @@ export default function GatheringDetailScreen() {
                         ]}
                         onPress={() =>
                           Alert.alert(
-                            "모임 취소 🗑️",
+                            "모임 취소",
                             "정말로 모임을 취소하시겠습니까?",
                             [
                               { text: "아니오" },
@@ -1034,7 +1034,12 @@ export default function GatheringDetailScreen() {
                           )
                         }
                       >
-                        <Text style={styles.hostBtnText}>취소하기 🗑️</Text>
+                        <Text style={styles.hostBtnText}>취소하기</Text>
+                        <Ionicons
+                          name="trash-outline"
+                          size={19}
+                          color={Colors.text}
+                        />
                       </TouchableOpacity>
                     </>
                   )}
@@ -1078,7 +1083,12 @@ export default function GatheringDetailScreen() {
             marginBottom: 8,
           }}
         >
-          <Text style={styles.listSectionTitle}>✅ 참가자</Text>
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={20}
+            color={Colors.green}
+          />
+          <Text style={styles.listSectionTitle}>참가자</Text>
         </View>
         {approvedParticipants.length === 0 ? (
           <Text style={styles.emptyText}>참가 승인된 멤버가 없습니다.</Text>
@@ -1099,7 +1109,13 @@ export default function GatheringDetailScreen() {
             marginBottom: 8,
           }}
         >
-          <Text style={styles.listSectionTitle}>⏳ 대기자</Text>
+          <Ionicons
+            name="swap-horizontal-outline"
+            size={20}
+            color={Colors.emerald}
+          />
+
+          <Text style={styles.listSectionTitle}>대기자</Text>
         </View>
         {pendingParticipants.length === 0 ? (
           <Text style={styles.emptyText}>대기 중인 멤버가 없습니다.</Text>
@@ -1122,7 +1138,7 @@ export default function GatheringDetailScreen() {
                       onPress={() =>
                         Alert.alert(
                           "참여 취소",
-                          "정말 벙개 참여를 취소하시겠습니까?",
+                          "정말 밋업 참여를 취소하시겠습니까?",
                           [
                             { text: "아니오" },
                             {
@@ -1134,8 +1150,13 @@ export default function GatheringDetailScreen() {
                       }
                     >
                       <Text style={styles.applyButtonText}>
-                        벙개 참여 취소하기
+                        밋업 참여 취소하기
                       </Text>
+                      <Ionicons
+                        name="sad-outline"
+                        size={21}
+                        color={Colors.card}
+                      />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1144,9 +1165,7 @@ export default function GatheringDetailScreen() {
                   style={styles.applyButton}
                   onPress={() => applyMutation.mutate()}
                 >
-                  <Text style={styles.applyButtonText}>
-                    벙개 참여 신청하기 ⚡️
-                  </Text>
+                  <Text style={styles.applyButtonText}>참여 신청하기</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1163,7 +1182,7 @@ export default function GatheringDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>벙개 정보 수정</Text>
+              <Text style={styles.modalTitle}>밋업 정보 수정</Text>
               <TouchableOpacity onPress={closeEditModal}>
                 <Ionicons name="close" size={24} color={Colors.text} />
               </TouchableOpacity>
@@ -1173,12 +1192,12 @@ export default function GatheringDetailScreen() {
               style={styles.modalBody}
               showsVerticalScrollIndicator={false}
             >
-              <Text style={styles.inputLabel}>카테고리</Text>
+              <Text style={styles.inputLabel}>국가</Text>
               <View style={styles.categorySelectRow}>
                 {[
-                  { label: "술벙", value: GatheringCategory.DRINK },
-                  { label: "클럽벙", value: GatheringCategory.CLUB },
-                  { label: "술+클럽벙", value: GatheringCategory.DRINK_CLUB },
+                  { label: " 🇺🇸 미국", value: GatheringCategory.US },
+                  { label: " 🇬🇧 영국", value: GatheringCategory.UK },
+                  { label: " 🇰🇷 한국", value: GatheringCategory.KR },
                 ].map((item) => (
                   <TouchableOpacity
                     key={item.value}
@@ -1237,22 +1256,22 @@ export default function GatheringDetailScreen() {
                 markedDates={{
                   [selectedDateStr]: {
                     selected: true,
-                    selectedColor: Colors.red,
-                    selectedTextColor: "#FFFFFF",
+                    selectedColor: Colors.green,
+                    selectedTextColor: Colors.background,
                   },
                 }}
                 theme={{
                   backgroundColor: "#2C2C2E",
                   calendarBackground: "#2C2C2E",
                   textSectionTitleColor: Colors.tabIconDefault,
-                  selectedDayBackgroundColor: Colors.red,
+                  selectedDayBackgroundColor: Colors.green,
                   selectedDayTextColor: "#FFFFFF",
-                  todayTextColor: Colors.yellow,
+                  todayTextColor: Colors.green,
                   dayTextColor: "#FFFFFF",
                   textDisabledColor: "#48484A",
-                  arrowColor: Colors.yellow,
+                  arrowColor: Colors.green,
                   monthTextColor: "#FFFFFF",
-                  indicatorColor: Colors.yellow,
+                  indicatorColor: Colors.green,
                   textDayFontWeight: "600",
                   textMonthFontWeight: "bold",
                   textDayHeaderFontWeight: "600",
@@ -1498,7 +1517,7 @@ const styles = StyleSheet.create({
   },
   // 활성화(권한 있음) 상태 스타일
   chatButtonActive: {
-    borderColor: Colors.yellow,
+    borderColor: Colors.green,
     backgroundColor: "rgba(255, 204, 0, 0.1)", // 은은한 노란색 배경 틴트
   },
   // 비활성화(권한 없음) 상태 스타일
@@ -1536,7 +1555,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statusBadge: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     color: "#000",
     fontWeight: "bold",
     fontSize: 12,
@@ -1544,20 +1563,20 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  categoryText: { color: Colors.yellow, fontWeight: "bold", fontSize: 13 },
+  categoryText: { color: Colors.gray, fontWeight: "bold", fontSize: 12.5 },
   title: {
     fontSize: 22,
     fontWeight: Platform.OS === "ios" ? "800" : "600",
     color: "#f3f4f6",
     marginBottom: 8,
   },
-  description: { fontSize: 15, color: "#99a1af", lineHeight: 22 },
+  description: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
   divider: { height: 1, backgroundColor: Colors.border, marginTop: 12 },
 
   infoSection: { gap: 10 },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   infoText: { fontSize: 14, color: Colors.text },
-  highlightText: { color: Colors.yellow, fontWeight: "bold" },
+  highlightText: { color: Colors.green, fontWeight: "bold" },
 
   hostBox: {
     backgroundColor: "#2C2C2E",
@@ -1581,6 +1600,9 @@ const styles = StyleSheet.create({
   },
   hostBtn: {
     flex: 1,
+    flexDirection: "row",
+    gap: 3,
+    justifyContent: "center",
     paddingVertical: 10,
     borderRadius: 6,
     alignItems: "center",
@@ -1614,12 +1636,12 @@ const styles = StyleSheet.create({
   },
   actionBtnGroup: { flexDirection: "row", gap: 6 },
   btnPending: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     padding: 8,
     borderRadius: 6,
   },
   btnApprove: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     padding: 8,
     borderRadius: 6,
   },
@@ -1634,12 +1656,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   applyButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 3,
   },
   applyButtonText: {
+    marginBottom: 1,
     color: Colors.card,
     fontSize: 15,
     fontWeight: "bold",
@@ -1652,7 +1678,7 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 12,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 24,
   },
   completedBanner: {
     backgroundColor: "rgba(255, 149, 0, 0.15)",
@@ -1688,7 +1714,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: Colors.text,
-    marginTop: 12,
+    marginTop: 24,
     marginBottom: 6,
   },
   subInputLabel: {
@@ -1713,7 +1739,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
   },
-  modalCategoryChipActive: { backgroundColor: Colors.yellow },
+  modalCategoryChipActive: { backgroundColor: Colors.green },
   modalCategoryText: { color: Colors.text, fontSize: 13, fontWeight: "600" },
   modalCategoryTextActive: { color: Colors.card },
   inlineCalendar: { borderRadius: 8, overflow: "hidden" },
@@ -1726,7 +1752,7 @@ const styles = StyleSheet.create({
   clockDisplayText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: Colors.yellow,
+    color: Colors.green,
   },
   timeChipScroll: { flexDirection: "row" },
   timeChip: {
@@ -1736,16 +1762,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginRight: 6,
   },
-  timeChipActive: { backgroundColor: Colors.yellow },
+  timeChipActive: { backgroundColor: Colors.green },
   timeChipText: { color: Colors.text, fontSize: 13 },
   timeChipTextActive: { color: Colors.card, fontWeight: "bold" },
   submitButton: {
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 8,
+    marginTop: 24,
     alignItems: "center",
   },
-  submitButtonText: { color: Colors.text, fontSize: 16, fontWeight: "bold" },
+  submitButtonText: {
+    color: Colors.background,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   noShowButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -1769,6 +1800,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
+    marginBottom: Platform.OS === "android" ? 50 : 0,
     maxHeight: "70%",
   },
 
@@ -1828,13 +1860,13 @@ const styles = StyleSheet.create({
     borderColor: "#2A2A2A",
   },
   completeBtn: {
-    backgroundColor: Colors.blue, // 강조 색상 (프로젝트 테마에 맞게 조정)
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
   },
   completeBtnText: {
-    color: "#FFFFFF",
+    color: Colors.background,
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -1851,7 +1883,7 @@ const styles = StyleSheet.create({
   },
   roomCodeText: {
     fontSize: 13,
-    color: Colors.yellow, // 포인트 컬러 (노란색)
+    color: Colors.green, // 포인트 컬러 (노란색)
     fontWeight: "bold",
     backgroundColor: "#2C2C2E", // 약간 밝은 카드 배경
     paddingHorizontal: 8,
@@ -1862,7 +1894,7 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: Colors.yellow,
+    backgroundColor: Colors.green,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",

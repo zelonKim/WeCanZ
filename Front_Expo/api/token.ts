@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-const TOKEN_KEY = "JONGTAEWON_GATHERING_TOKEN";
+const TOKEN_KEY = "WECANZ_GATHERING_TOKEN";
 
 // 토큰 안전하게 저장
 export const setAccessToken = async (token: string) => {
