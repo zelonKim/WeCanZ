@@ -28,7 +28,7 @@ const ADJECTIVES = [
 ];
 
 const NOUNS = [
-  "메이트",
+  "친구",
   "스위티",
   "베이비",
   "뉴페이스",

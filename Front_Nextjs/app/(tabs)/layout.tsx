@@ -26,7 +26,7 @@ import {
 
 const navItems = [
   {
-    name: "메이트",
+    name: "친구",
     href: "/friend",
     activeIcon: People,
     inactiveIcon: PeopleOutline,

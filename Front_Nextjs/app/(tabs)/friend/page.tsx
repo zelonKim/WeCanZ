@@ -234,7 +234,9 @@ export default function FriendScreen() {
     <div className="flex flex-col min-h-screen  text-white max-w-5xl mx-auto px-4 py-1">
       {/* 헤더 영역 */}
       <div className="flex items-center justify-between py-3 border-b border-zinc-800 mb-4">
-        <h1 className="text-[28px] text-[#bef408] font-bold italic">Z-Mate</h1>
+        <h1 className="text-[28px] text-[#bef408] font-bold italic">
+          Z-Friend
+        </h1>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsAddModalVisible(true)}
@@ -256,12 +258,12 @@ export default function FriendScreen() {
         {/* 받은 친구 요청 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-white mb-3">
-            받은 메이트 요청 ({pendingRequests.length})
+            받은 친구 요청 ({pendingRequests.length})
           </h2>
 
           {pendingRequests.length === 0 ? (
             <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl text-center text-zinc-400 text-base">
-              받은 메이트 요청이 없습니다.
+              받은 친구 요청이 없습니다.
             </div>
           ) : (
             <div className="space-y-3">
@@ -300,7 +302,7 @@ export default function FriendScreen() {
         {/* 친구 목록 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-white mb-3">
-            메이트 목록 ({myFriends.length})
+            친구 목록 ({myFriends.length})
           </h2>
 
           {myFriends.length === 0 ? (
@@ -370,11 +372,9 @@ export default function FriendScreen() {
       {isAddModalVisible && (
         <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-center mb-1">
-              👋 메이트 추가
-            </h3>
+            <h3 className="text-lg font-bold text-center mb-1">👋 친구 추가</h3>
             <p className="text-sm text-zinc-400 text-center mb-5">
-              추가할 메이트의 닉네임을 입력해주세요.
+              추가할 친구의 닉네임을 입력해주세요.
             </p>
 
             <input

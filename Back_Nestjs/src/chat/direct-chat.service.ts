@@ -75,9 +75,9 @@ export class DirectChatService {
         });
       }
 
-      // if (existingRoom.status === DirectChatRoomStatus.PENDING) {
-      //   throw new ConflictException('이미 일대일 대화를 신청하였습니다.');
-      // }
+      if (existingRoom.status === DirectChatRoomStatus.PENDING) {
+        throw new ConflictException('이미 일대일 대화를 신청하였습니다.');
+      }
 
       // 만약 이전 요청이 거절(REJECTED)된 상태라면 다시 신청(PENDING)으로 상태로 업데이트
       if (existingRoom.status === DirectChatRoomStatus.REJECTED) {
