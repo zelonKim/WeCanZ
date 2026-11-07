@@ -123,7 +123,7 @@ export default function DirectChatRoomScreen() {
     },
   });
 
-  // 초기 메시지 내역 조회 (REST API)
+  // 초기 메시지 내역 조회
   const { data: initialMessages = [], isLoading } = useQuery<
     DirectChatMessage[]
   >({
@@ -672,26 +672,60 @@ export default function DirectChatRoomScreen() {
                   <View
                     style={{ flexDirection: "row", alignItems: "flex-end" }}
                   >
+                    {/* 내 메시지일 때 시간 표시 */}
                     {isMyMessage && (
                       <Text style={styles.timeText}>
                         {formatTime(item.createdAt)}
                       </Text>
                     )}
+
+                    {/* 📌 이미지와 텍스트를 감싸는 부모 컨테이너 */}
                     <View
                       style={[
-                        styles.bubble,
-                        isMyMessage ? styles.myBubble : styles.otherBubble,
+                        styles.messageContainer,
+                        isMyMessage
+                          ? styles.myMessageContainer
+                          : styles.otherMessageContainer,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.messageText,
-                          isMyMessage ? styles.myText : styles.otherText,
-                        ]}
-                      >
-                        {item.message}
-                      </Text>
+                      {/* 1. 이미지 표시 (item.imageUrl이 존재할 때) */}
+                      {item.imageUrl && (
+                        <TouchableOpacity
+                          activeOpacity={0.9}
+                          onPress={() => setModalImageUri(item.imageUrl)} // 👈 누르면 크게 보기 모달 오픈
+                        >
+                          <Image
+                            source={{ uri: item.imageUrl }}
+                            style={
+                              !item.message
+                                ? styles.onlyImage
+                                : styles.chatImage
+                            }
+                            resizeMode="cover"
+                          />
+                        </TouchableOpacity>
+                      )}
+
+                      {/* 2. 텍스트 말풍선 (메시지가 있을 때만 표시) */}
+                      {item.message ? (
+                        <View
+                          style={[
+                            styles.bubble,
+                            isMyMessage ? styles.myBubble : styles.otherBubble,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.messageText,
+                              isMyMessage ? styles.myText : styles.otherText,
+                            ]}
+                          >
+                            {item.message}
+                          </Text>
+                        </View>
+                      ) : null}
                     </View>
+
                     {!isMyMessage && (
                       <Text style={styles.timeText}>
                         {formatTime(item.createdAt)}
@@ -774,6 +808,28 @@ export default function DirectChatRoomScreen() {
           )}
         </View>
       </KeyboardAvoidingView>
+      <Modal
+        visible={!!modalImageUri}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalImageUri(null)}
+      >
+        <TouchableOpacity
+          style={styles.imageModalBackground}
+          activeOpacity={1}
+          onPress={() => setModalImageUri(null)}
+        >
+          <View style={styles.imageModalContent}>
+            {modalImageUri && (
+              <Image
+                source={{ uri: modalImageUri }}
+                style={styles.fullScreenImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1087,5 +1143,43 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#FFF",
+  },
+  myMessageContainer: {
+    alignItems: "flex-end", // 내 메시지는 우측 정렬
+  },
+  otherMessageContainer: {
+    alignItems: "flex-start", // 상대방 메시지는 좌측 정렬
+  },
+  chatImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 12,
+    marginBottom: 6, // 텍스트 말풍선과 사이 간격
+  },
+  onlyImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 12,
+  },
+  messageContainer: {
+    maxWidth: "75%",
+  },
+  imageModalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // 모달 내부 콘텐츠 박스
+  imageModalContent: {
+    width: "100%",
+    height: "80%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // 확대되어 보이는 이미지 스타일
+  fullScreenImage: {
+    width: "100%",
+    height: "100%",
   },
 });

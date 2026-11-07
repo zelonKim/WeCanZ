@@ -30,9 +30,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // 💡 구글 네이티브 로그인 초기화 설정
 GoogleSignin.configure({
   webClientId:
-    "277459634612-9psmm9h2mp6r2ngse42qhv64urfg2h8j.apps.googleusercontent.com",
+    "716946851146-fdhf9939k1giu735237ugffrrddv4viu.apps.googleusercontent.com",
   iosClientId:
-    "277459634612-2sq917cvk9iv5he2jpfceahno01aqug4.apps.googleusercontent.com",
+    "716946851146-s7mmdsl09dobipj8ffu1pd5qtbvklg05.apps.googleusercontent.com",
   offlineAccess: true,
 });
 

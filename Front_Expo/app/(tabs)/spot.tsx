@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 280,
   },
   card: {
     borderRadius: 12,
