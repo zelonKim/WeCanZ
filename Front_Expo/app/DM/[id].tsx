@@ -1,9 +1,11 @@
 import { client } from "@/api/client";
 import Colors from "@/constants/Colors";
 import { getSocket } from "@/lib/socket";
+import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 import * as NavigationBar from "expo-navigation-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -45,6 +47,7 @@ interface DirectChatMessage {
   id: string;
   message: string;
   createdAt: string;
+  imageUrl: string;
   roomId: string;
   senderId: string;
   sender?: MessageUser;
@@ -79,6 +82,9 @@ export default function DirectChatRoomScreen() {
   );
   const [reportDetails, setReportDetails] = useState("");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalImageUri, setModalImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -216,43 +222,57 @@ export default function DirectChatRoomScreen() {
   ///////////////////////////////////////////////////////////////////////////
 
   // 메시지 전송
-  const handleSend = () => {
-    console.log("Send Check:", {
-      text: inputText.trim(),
-      myInfoId: myInfo?.id,
-      roomId,
-      socketConnected: socketRef.current?.connected,
-    });
+  const handleSend = async () => {
+    const messageText = inputText.trim();
 
-    if (!inputText.trim() || !myInfo?.id || !roomId || !socketRef.current) {
-      console.warn("DM 전송 조건 미충족");
+    if (
+      (!messageText && !selectedImage) ||
+      !myInfo?.id ||
+      !roomId ||
+      !socketRef.current
+    ) {
       return;
     }
 
-    const messageText = inputText.trim();
-
     setInputText("");
+    const imageToUpload = selectedImage;
+    setSelectedImage(null);
 
-    // 💡 sender 객체도 함께 포함시켜 상태 업데이트
-    const tempMessage: DirectChatMessage = {
-      id: `temp-${Date.now()}`,
-      message: messageText,
-      createdAt: new Date().toISOString(),
-      roomId,
-      senderId: myInfo.id,
-      sender: {
-        id: myInfo.id,
-        nickname: "",
-      },
-    };
+    let imageUrl = null;
 
-    setMessages((prev) => [...prev, tempMessage]);
+    try {
+      if (imageToUpload) {
+        const uploadData = await uploadProfileImage(imageToUpload);
+        if (uploadData?.imageUrl) {
+          imageUrl = uploadData.imageUrl;
+        }
+      }
 
-    socketRef.current.emit("sendDirectMessage", {
-      roomId,
-      senderId: myInfo.id,
-      message: messageText,
-    });
+      const tempMessage: DirectChatMessage = {
+        id: `temp-${Date.now()}`,
+        message: messageText,
+        imageUrl: imageUrl,
+        createdAt: new Date().toISOString(),
+        roomId,
+        senderId: myInfo.id,
+        sender: {
+          id: myInfo.id,
+          nickname: "",
+        },
+      };
+
+      setMessages((prev) => [...prev, tempMessage]);
+
+      socketRef.current.emit("sendDirectMessage", {
+        roomId,
+        senderId: myInfo.id,
+        message: messageText,
+        imageUrl: imageUrl,
+      });
+    } catch (error) {
+      console.error("메시지 전송 또는 이미지 업로드 실패:", error);
+      Alert.alert("오류", "메시지를 전송하지 못했습니다.");
+    }
   };
 
   // 메시지 삭제
@@ -406,6 +426,30 @@ export default function DirectChatRoomScreen() {
   });
 
   const handleCloseMenu = () => setIsMenuOpen(false);
+
+  const handleImagePick = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        "접근 권한 필요",
+        "사진을 선택하려면 갤러리 접근 권한이 필요합니다.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0].uri) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  ////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -678,26 +722,55 @@ export default function DirectChatRoomScreen() {
               </Text>
             </View>
           ) : (
-            <>
-              <TextInput
-                style={styles.input}
-                placeholder="메시지를 입력하세요..."
-                placeholderTextColor="#8E8E93"
-                value={inputText}
-                onChangeText={setInputText}
-                multiline
-              />
-              <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  !inputText.trim() && styles.disabledSendButton,
-                ]}
-                onPress={handleSend}
-                disabled={!inputText.trim()}
-              >
-                <Ionicons name="arrow-up" size={20} color={Colors.card} />
-              </TouchableOpacity>
-            </>
+            <View>
+              {selectedImage && (
+                <View style={styles.imagePreviewContainer}>
+                  <Image
+                    source={{ uri: selectedImage }}
+                    style={styles.previewImage}
+                  />
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => setSelectedImage(null)}
+                  >
+                    <Ionicons name="close" size={16} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={styles.inputRowContainer}>
+                <TouchableOpacity
+                  onPress={handleImagePick}
+                  style={styles.imageButton}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="image-outline" size={22} color="#a3a3a3" />
+                </TouchableOpacity>
+
+                <View style={[styles.inputCapsule]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="메시지를 입력하세요..."
+                    placeholderTextColor="#8E8E93"
+                    value={inputText}
+                    onChangeText={setInputText}
+                    multiline
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.sendButton,
+                      !inputText.trim() &&
+                        !selectedImage &&
+                        styles.disabledSendButton,
+                    ]}
+                    onPress={handleSend}
+                    disabled={!inputText.trim() && !selectedImage}
+                  >
+                    <Ionicons name="arrow-up" size={20} color={Colors.card} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           )}
         </View>
       </KeyboardAvoidingView>
@@ -799,8 +872,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     paddingTop: 12,
     paddingHorizontal: Platform.OS === "ios" ? 20 : 15,
     backgroundColor: "#1E1E1E",
@@ -964,4 +1035,57 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonText: { color: "#000000", fontSize: 16, fontWeight: "700" },
+
+  inputCapsule: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderRadius: 24,
+    paddingHorizontal: 10,
+    paddingVertical: Platform.OS === "ios" ? 4 : 4,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  inputRowContainer: {
+    flexDirection: "row", // 가로로 나란히 배치
+    alignItems: "center", // 세로 기준 가운데 정렬
+    gap: 8, // 버튼과 인풋 캡슐 사이의 간격 (RN 0.71+ 지원, 구버전은 marginRight 사용)
+  },
+  imageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imagePreviewContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  previewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: -6,
+    left: 50,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FFF",
+  },
 });

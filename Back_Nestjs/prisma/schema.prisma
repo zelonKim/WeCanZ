@@ -129,10 +129,10 @@ model GatheringChatRoom {
 
 // 모임 채팅 메시지 모델
 model GatheringChatMessage {
-  id        String   @id @default(uuid())
-  message   String
-  imageUrl  String?
-  
+  id       String  @id @default(uuid())
+  message  String
+  imageUrl String?
+
   createdAt DateTime @default(now())
 
   roomId String
@@ -200,8 +200,10 @@ model DirectChatRoom {
 
 // 일대일 채팅 메시지 모델
 model DirectChatMessage {
-  id        String   @id @default(uuid())
-  message   String
+  id       String  @id @default(uuid())
+  message  String
+  imageUrl String?
+
   createdAt DateTime @default(now())
 
   roomId String

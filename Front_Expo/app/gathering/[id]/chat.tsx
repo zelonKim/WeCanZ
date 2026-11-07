@@ -6,6 +6,7 @@ import {
 } from "@/app/(tabs)/setting";
 import Colors from "@/constants/Colors";
 import { getSocket } from "@/lib/socket";
+import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"; // 💡 탭바 높이 가져오기
@@ -32,11 +33,11 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Socket } from "socket.io-client";
 import { Participant } from ".";
-import { uploadProfileImage } from "@/utils/uploadProfileImage";
 
 interface ChatMessage {
   id: string;
   message: string;
+  imageUrl: string;
   createdAt: string;
   userId: string;
   user?: {
@@ -88,6 +89,7 @@ export default function GatheringChatScreen() {
   );
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [modalImageUri, setModalImageUri] = useState<string | null>(null);
 
   // 메뉴 닫기 함수
   const handleCloseMenu = () => setActiveMenuMessageId(null);
@@ -340,7 +342,7 @@ export default function GatheringChatScreen() {
         }
       }
 
-      // 4. UI에 즉시 보여줄 낙관적 임시 메시지 생성 
+      // 4. UI에 즉시 보여줄 낙관적 임시 메시지 생성
       const tempMessage = {
         id: `temp-${Date.now()}`,
         message: text,
@@ -362,15 +364,13 @@ export default function GatheringChatScreen() {
         gatheringId: id,
         userId: me.id,
         message: text,
-        imageUrl: imageUrl, 
+        imageUrl: imageUrl,
       });
     } catch (error) {
       console.error("메시지 전송 또는 이미지 업로드 실패:", error);
       Alert.alert("오류", "메시지를 전송하지 못했습니다.");
     }
   };
-
-
 
   // 메시지 삭제
   const handleDeletePrompt = (msg: ChatMessage) => {
@@ -773,20 +773,50 @@ export default function GatheringChatScreen() {
                         activeOpacity={0.8}
                         onLongPress={() => handleDeletePrompt(msg)}
                         style={[
-                          styles.bubble,
-                          isMyMessage ? styles.myBubble : styles.otherBubble,
+                          styles.messageContainer,
+                          isMyMessage
+                            ? styles.myMessageContainer
+                            : styles.otherMessageContainer,
                         ]}
                       >
-                        <Text
-                          style={[
-                            styles.messageText,
-                            isMyMessage
-                              ? styles.myMessageText
-                              : styles.otherMessageText,
-                          ]}
-                        >
-                          {msg.message}
-                        </Text>
+                        {msg.imageUrl && (
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            onPress={() => setModalImageUri(msg.imageUrl)}
+                          >
+                            <Image
+                              source={{ uri: msg.imageUrl }}
+                              style={
+                                !msg.message
+                                  ? styles.onlyImage
+                                  : styles.chatImage
+                              }
+                              resizeMode="cover"
+                            />
+                          </TouchableOpacity>
+                        )}
+
+                        {msg.message ? (
+                          <View
+                            style={[
+                              styles.bubble,
+                              isMyMessage
+                                ? styles.myBubble
+                                : styles.otherBubble,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.messageText,
+                                isMyMessage
+                                  ? styles.myMessageText
+                                  : styles.otherMessageText,
+                              ]}
+                            >
+                              {msg.message}
+                            </Text>
+                          </View>
+                        ) : null}
                       </TouchableOpacity>
 
                       {!isMyMessage && (
@@ -847,9 +877,11 @@ export default function GatheringChatScreen() {
               <TouchableOpacity
                 style={[
                   styles.sendButton,
-                  !messageText.trim() && styles.sendButtonDisabled,
+                  !selectedImage &&
+                    !messageText.trim() &&
+                    styles.sendButtonDisabled,
                 ]}
-                disabled={!messageText.trim()}
+                disabled={!selectedImage && !messageText.trim()}
                 onPress={handleSend}
               >
                 <Ionicons
@@ -862,6 +894,29 @@ export default function GatheringChatScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={!!modalImageUri}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalImageUri(null)}
+      >
+        <TouchableOpacity
+          style={styles.imageModalBackground}
+          activeOpacity={1}
+          onPress={() => setModalImageUri(null)} 
+        >
+          <View style={styles.imageModalContent}>
+            {modalImageUri && (
+              <Image
+                source={{ uri: modalImageUri }}
+                style={styles.fullScreenImage}
+                resizeMode="contain" 
+              />
+            )}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -979,6 +1034,7 @@ const styles = StyleSheet.create({
   bubbleRow: {
     flexDirection: "row",
     alignItems: "flex-end",
+    justifyContent: "flex-end",
     gap: 6,
   },
   bubble: {
@@ -1001,6 +1057,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     letterSpacing: -0.2,
+    textAlign: "right",
   },
   myMessageText: {
     color: "#000000",
@@ -1247,5 +1304,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#FFF",
+  },
+  onlyImage: {
+    width: 160, // 적절한 고정 너비 또는 max 성격의 크기
+    height: 160, // 적절한 높이
+    borderRadius: 8,
+  },
+
+  chatImage: {
+    width: 160, // 적절한 고정 너비 또는 max 성격의 크기
+    height: 160, // 적절한 높이
+    borderRadius: 8,
+    marginBottom: 12, // 텍스트가 아래에 있을 경우 간격 확보
+  },
+  // 부모 컨테이너 (내부 요소들이 서로 영향을 주지 않고 정렬되도록 설정)
+  messageContainer: {
+    maxWidth: "75%",
+    marginVertical: 4,
+  },
+  myMessageContainer: {
+    alignSelf: "flex-end",
+    alignItems: "flex-end", // 내 메시지는 우측 정렬
+  },
+  otherMessageContainer: {
+    alignSelf: "flex-start",
+    alignItems: "flex-start", // 상대방 메시지는 좌측 정렬
+  },
+  // 모달 전체 배경 (반투명 검은색)
+  imageModalBackground: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // 모달 내부 콘텐츠 박스
+  imageModalContent: {
+    width: "100%",
+    height: "80%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // 확대되어 보이는 이미지 스타일
+  fullScreenImage: {
+    width: "100%",
+    height: "100%",
   },
 });

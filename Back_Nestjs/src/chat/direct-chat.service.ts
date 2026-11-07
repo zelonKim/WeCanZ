@@ -275,7 +275,12 @@ export class DirectChatService {
   ////////////////////////////////////////////////////////////
 
   // 6. 다이렉트 메시지 전송
-  async createMessage(roomId: string, senderId: string, message: string) {
+  async createMessage(
+    roomId: string,
+    senderId: string,
+    message: string,
+    imageUrl?: string,
+  ) {
     if (!message || message.trim() === '') {
       throw new BadRequestException('메시지 내용을 입력해 주세요.');
     }
@@ -285,6 +290,7 @@ export class DirectChatService {
         roomId,
         senderId,
         message,
+        imageUrl,
       },
       include: {
         sender: {

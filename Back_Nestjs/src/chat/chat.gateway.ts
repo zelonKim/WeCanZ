@@ -256,7 +256,13 @@ export class ChatGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('sendDirectMessage')
   async handleSendDirectMessage(
-    @MessageBody() data: { roomId: string; senderId: string; message: string },
+    @MessageBody()
+    data: {
+      roomId: string;
+      senderId: string;
+      message: string;
+      imageUrl?: string;
+    },
   ) {
     try {
       // 1. 방 정보 조회 및 상대방(수신자) ID 판별
@@ -312,6 +318,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         data.roomId,
         data.senderId,
         data.message,
+        data.imageUrl,
       );
 
       // 채팅방 내부 유저들에게 실시간 메시지 전송
