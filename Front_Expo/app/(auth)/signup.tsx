@@ -84,8 +84,9 @@ export default function SignupScreen() {
   const [isPrivacyAgreed, setIsPrivacyAgreed] = useState(false);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
 
-  // 모달 상태 관리 ('terms' | 'privacy' | null)
-  const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
+  const [modalType, setModalType] = useState<
+    "terms" | "privacy" | "marketing" | null
+  >(null);
 
   const handleRefreshNickname = () => {
     setNickname(generateRandomNickname());
@@ -334,6 +335,34 @@ export default function SignupScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setModalType("privacy")}>
+                  <Text style={styles.viewLinkText}>보기</Text>
+                </TouchableOpacity>
+
+                <TermsModal
+                  visible={modalType !== null}
+                  type={modalType}
+                  onClose={() => setModalType(null)}
+                />
+              </View>
+
+              <View style={styles.checkRowContainer}>
+                <TouchableOpacity
+                  style={styles.checkRow}
+                  onPress={() => setIsMarketingAgreed(!isMarketingAgreed)}
+                >
+                  <Ionicons
+                    name={
+                      isMarketingAgreed ? "checkmark-circle" : "ellipse-outline"
+                    }
+                    size={20}
+                    color={isMarketingAgreed ? Colors.green : "#666"}
+                  />
+                  <Text style={styles.checkText}>
+                    [선택] 마케팅 정보 수신 동의
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setModalType("marketing")}>
                   <Text style={styles.viewLinkText}>보기</Text>
                 </TouchableOpacity>
 

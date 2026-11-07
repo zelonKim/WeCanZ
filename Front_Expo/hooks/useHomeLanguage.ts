@@ -31,6 +31,7 @@ const translations = {
     statusFull: "인원 마감",
     statusInProgress: "진행중",
     statusCompleted: "종료됨",
+    people: "명",
     alerts: {
       titleRequired: "제목을 입력해주세요.",
       descRequired: "설명을 입력해주세요.",
@@ -60,13 +61,13 @@ const translations = {
     locationPlaceholder: "Enter the meetup location.",
     dateLabel: "Date",
     timeLabel: "Time",
-    hourLabel: "Hour",
-    minuteLabel: "Min",
+    hourLabel: "H",
+    minuteLabel: "M",
     maxPeopleLabel: "Max People",
     createBtn: "Create Room",
     emptyText: "No meetups registered yet.\nOpen the first meetup now!",
     roomCodeTitle: "🔡 Enter Room Code",
-    roomCodeSub: "Enter the 4-digit code shared with you.",
+    roomCodeSub: "Enter the 4-digit shared code.",
     cancel: "Cancel",
     enter: "Enter",
     checking: "Checking...",
@@ -74,6 +75,7 @@ const translations = {
     statusFull: "Full",
     statusInProgress: "In Progress",
     statusCompleted: "Completed",
+    people: "p",
     alerts: {
       titleRequired: "Please enter a title.",
       descRequired: "Please enter a description.",
@@ -88,7 +90,6 @@ const translations = {
     },
   },
 };
-
 
 export const useHomeLanguage = () => {
   const deviceLanguage = getLocales()[0]?.languageCode ?? "en";

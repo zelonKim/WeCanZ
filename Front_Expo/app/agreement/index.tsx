@@ -8,6 +8,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -21,11 +22,14 @@ export default function AgreementScreen() {
   const queryClient = useQueryClient();
 
   const [nickname, setNickname] = useState("");
+
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
 
-  // 💡 모달 상태 관리 ('terms' | 'privacy' | null)
-  const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
+  const [modalType, setModalType] = useState<
+    "terms" | "privacy" | "marketing" | null
+  >(null);
 
   const { data: me } = useQuery({
     queryKey: ["me"],
@@ -43,9 +47,10 @@ export default function AgreementScreen() {
 
   // 전체 동의 상태 토글
   const handleAllAgree = () => {
-    const nextState = !(termsAgreed && privacyAgreed);
+    const nextState = !(termsAgreed && privacyAgreed && isMarketingAgreed);
     setTermsAgreed(nextState);
     setPrivacyAgreed(nextState);
+    setIsMarketingAgreed(nextState);
   };
 
   // 회원가입 최종 완료 및 약관 동의 업데이트 API 호출
@@ -54,6 +59,7 @@ export default function AgreementScreen() {
       nickname,
       termsAgreedAt: new Date().toISOString(),
       privacyAgreedAt: new Date().toISOString(),
+      marketingAgreedAt: isMarketingAgreed ? new Date().toISOString() : null,
     });
     return data;
   };
@@ -91,7 +97,13 @@ export default function AgreementScreen() {
       style={[styles.container, { backgroundColor: Colors.background }]}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>거의 다 완료됬어요⚡️</Text>
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          <Text style={styles.title}>거의 다 완료됐어요</Text>
+          <Image
+            source={require("@/assets/images/sticker.png")}
+            style={{ width: 50, height: 50 }}
+          />
+        </View>
         <Text style={styles.subtitle}>
           서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.
         </Text>
@@ -118,10 +130,16 @@ export default function AgreementScreen() {
           >
             <Ionicons
               name={
-                termsAgreed && privacyAgreed ? "checkbox" : "square-outline"
+                termsAgreed && privacyAgreed && isMarketingAgreed
+                  ? "checkbox"
+                  : "square-outline"
               }
               size={20}
-              color={termsAgreed && privacyAgreed ? Colors.red : "#666"}
+              color={
+                termsAgreed && privacyAgreed && isMarketingAgreed
+                  ? Colors.green
+                  : "#666"
+              }
             />
             <Text style={styles.allAgreeText}>전체 동의하기</Text>
           </TouchableOpacity>
@@ -137,7 +155,7 @@ export default function AgreementScreen() {
               <Ionicons
                 name={termsAgreed ? "checkmark-circle" : "ellipse-outline"}
                 size={20}
-                color={termsAgreed ? Colors.red : "#666"}
+                color={termsAgreed ? Colors.green : "#666"}
               />
               <Text style={styles.agreementText}>
                 [필수] 서비스 이용약관 동의
@@ -157,13 +175,35 @@ export default function AgreementScreen() {
               <Ionicons
                 name={privacyAgreed ? "checkmark-circle" : "ellipse-outline"}
                 size={20}
-                color={privacyAgreed ? Colors.red : "#666"}
+                color={privacyAgreed ? Colors.green : "#666"}
               />
               <Text style={styles.agreementText}>
                 [필수] 개인정보 처리방침 동의
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalType("privacy")}>
+              <Text style={styles.viewLinkText}>보기</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.rowContainer}>
+            <TouchableOpacity
+              style={styles.agreementRow}
+              onPress={() => setIsMarketingAgreed(!isMarketingAgreed)}
+            >
+              <Ionicons
+                name={
+                  isMarketingAgreed ? "checkmark-circle" : "ellipse-outline"
+                }
+                size={20}
+                color={isMarketingAgreed ? Colors.green : "#666"}
+              />
+              <Text style={styles.agreementText}>
+                [선택] 마케팅 정보 수신 동의
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setModalType("marketing")}>
               <Text style={styles.viewLinkText}>보기</Text>
             </TouchableOpacity>
           </View>
@@ -206,7 +246,13 @@ export default function AgreementScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
   content: { gap: 24 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#FFF" },
+  title: {
+    fontSize: 24,
+    flexDirection: "row",
+
+    fontWeight: "bold",
+    color: Colors.green,
+  },
   subtitle: { fontSize: 14, color: "#8E8E93", marginTop: -16 },
   inputGroup: { gap: 8 },
   label: { fontSize: 14, fontWeight: "600", color: "#FFF" },

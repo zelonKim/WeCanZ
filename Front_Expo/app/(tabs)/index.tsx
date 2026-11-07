@@ -83,7 +83,7 @@ const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
 export default function HomeScreen() {
-  const { t } = useHomeLanguage();
+  const { t, currentLang } = useHomeLanguage();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -383,7 +383,10 @@ export default function HomeScreen() {
 
                 <View style={styles.peopleBadge}>
                   <Ionicons name="people-outline" size={13} color="#A1A1AA" />
-                  <Text style={styles.cardPeople}>{item.maxPeople}명</Text>
+                  <Text style={styles.cardPeople}>
+                    {item.maxPeople}
+                    {t.people}
+                  </Text>
                 </View>
               </View>
 
@@ -401,7 +404,7 @@ export default function HomeScreen() {
                       color={Colors.green}
                     />
                     <Text style={styles.cardInfoText}>
-                      {formatDateTime(item.dateTime)}
+                      {formatDateTime(item.dateTime, currentLang)}
                     </Text>
                   </View>
 
@@ -777,7 +780,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   emptyContainer: {
-    paddingVertical: 100,
+    paddingVertical: 120,
     alignItems: "center",
   },
   placeholderEmoji: {

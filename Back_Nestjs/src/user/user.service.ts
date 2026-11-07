@@ -47,14 +47,19 @@ export class UserService {
   ////////////////////////////////////
 
   async updateProfile(userId: string, dto: UpdateUserDto) {
-    const { nickname, termsAgreedAt, privacyAgreedAt, ...profileData } = dto;
+    const {
+      nickname,
+      termsAgreedAt,
+      privacyAgreedAt,
+      marketingAgreedAt,
+      ...profileData
+    } = dto;
 
     if (nickname) {
       if (nickname.trim().length < 2) {
         throw new BadRequestException('닉네임은 최소 2글자 이상이어야 합니다.');
       }
 
-      // 닉네임 중복 검사 로직 (기존 그대로 유지)
       if (nickname) {
         const existingUser = await this.prisma.user.findFirst({
           where: {
@@ -73,10 +78,13 @@ export class UserService {
         data: {
           ...(nickname && { nickname }),
           ...profileData,
-          // 문자열로 넘어온 날짜를 Date 객체로 변환하여 저장
+
           ...(termsAgreedAt && { termsAgreedAt: new Date(termsAgreedAt) }),
           ...(privacyAgreedAt && {
             privacyAgreedAt: new Date(privacyAgreedAt),
+          }),
+          ...(marketingAgreedAt && {
+            marketingAgreedAt: new Date(marketingAgreedAt),
           }),
         },
         select: {
@@ -88,6 +96,7 @@ export class UserService {
           noShowCount: true,
           termsAgreedAt: true,
           privacyAgreedAt: true,
+          marketingAgreedAt: true,
         },
       });
     }

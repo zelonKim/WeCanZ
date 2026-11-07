@@ -1,3 +1,4 @@
+import Colors from "@/constants/Colors";
 import React from "react";
 import {
   Modal,
@@ -10,7 +11,7 @@ import {
 
 interface TermsModalProps {
   visible: boolean;
-  type: "terms" | "privacy" | null;
+  type: "terms" | "privacy" | "marketing" | null;
   onClose: () => void;
 }
 
@@ -59,7 +60,7 @@ const PRIVACY_SECTIONS: Section[] = [
   },
   {
     title: "제 5조 (개인정보 관리책임자 및 문의처)",
-    body: "서비스 이용 중 발생하는 모든 개인정보 보호 관련 문의, 불만 처리, 피해구제 등에 관한 사항은 아래의 문의처로 연락해 주시기 바랍니다.\n- 서비스명: 종태원\n- 문의 및 개인정보 보호 담당: 종태원 운영팀\n- 문의 이메일: ksz18601@gmail.com",
+    body: "서비스 이용 중 발생하는 모든 개인정보 보호 관련 문의, 불만 처리, 피해구제 등에 관한 사항은 아래의 문의처로 연락해 주시기 바랍니다.\n- 서비스명: WeCanZ\n- 문의 및 개인정보 보호 담당: WeCanZ 운영팀\n- 문의 이메일: ksz18601@gmail.com",
   },
   {
     title: "제 6조 (계정 삭제 및 데이터 파기 요청)",
@@ -67,7 +68,27 @@ const PRIVACY_SECTIONS: Section[] = [
   },
   {
     title: "제 7조 (아동 및 청소년 보호 정책)",
-    body: "본 서비스는 아동 성적 학대 및 착취(CSAM/CSAE) 콘텐츠를 엄격히 금지합니다. 해당 콘텐츠나 사용자가 발견될 경우 즉시 계정 정지 및 사법 기관 신고가 이루어지며, 서비스 내 신고 기능을 통해 24시간 제보할 수 있습니다.\n- 제보 이메일: ksz18601@gmail.com",
+    body: "본 서비스는 아동 성적 학대 및 착취(CSAM/CSAE) 콘텐츠를 엄격히 금지합니다. 해당 콘텐츠나 사용자가 발견될 경우 즉시 계정 정지 및 사법 기관 신고가 이루어지며, 서비스 내 신고 기능을 통해 24시간 제보할 수 있습니다.\n제보 이메일: ksz18601@gmail.com",
+  },
+];
+
+// 3. 마케팅 수신 동의 데이터
+const MARKETING_SECTIONS: Section[] = [
+  {
+    title: "제 1조 (목적 및 수집 항목)",
+    body: "WeCanZ는 신규 모임 추천, 이벤트 및 혜택 안내, 맞춤형 밋업 추천 서비스 제공을 위해 이용자의 이메일 주소, 앱 푸시 알림 수신 상태 및 서비스 이용 기록을 수집·이용합니다.",
+  },
+  {
+    title: "제 2조 (보유 및 이용 기간)",
+    body: "마케팅 동의일로부터 회원 탈퇴 시 또는 동의 철회 시까지 보관하며, 동의를 철회할 경우 관련 마케팅 목적의 개인정보는 즉시 파기하거나 마케팅 활용 대상에서 제외합니다.",
+  },
+  {
+    title: "제 3조 (동의 거부 권리 및 불이익)",
+    body: "이용자는 마케팅 정보 수신 동의를 거부할 권리가 있으며, 동의를 거부하더라도 WeCanZ의 기본 모임 참여 및 중개 서비스 이용에는 어떠한 제한도 받지 않습니다.",
+  },
+  {
+    title: "제 4조 (수신 동의 철회 방법)",
+    body: "앱 내 [마이페이지] -> [설정] 메뉴 또는 고객센터 이메일(ksz18601@gmail.com)을 통해 언제든지 마케팅 수신 동의를 철회하거나 앱 푸시 알림을 거부할 수 있습니다.",
   },
 ];
 
@@ -76,8 +97,21 @@ export default function TermsModal({
   type,
   onClose,
 }: TermsModalProps) {
-  const title = type === "terms" ? "서비스 이용 약관" : "개인정보 처리 방침";
-  const sections = type === "terms" ? TERMS_SECTIONS : PRIVACY_SECTIONS;
+  // 모달 데이터 분기 헬퍼 함수
+  const getModalContent = () => {
+    switch (type) {
+      case "terms":
+        return { title: "서비스 이용 약관", sections: TERMS_SECTIONS };
+      case "privacy":
+        return { title: "개인정보 처리 방침", sections: PRIVACY_SECTIONS };
+      case "marketing":
+        return { title: "마케팅 정보 수신 동의", sections: MARKETING_SECTIONS };
+      default:
+        return { title: "", sections: [] };
+    }
+  };
+
+  const { title, sections } = getModalContent();
 
   return (
     <Modal
@@ -147,7 +181,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12.5,
     fontWeight: "bold",
-    color: "#FF3B30", // 기존 웹 화면에 가깝게 포인트를 살려준 예쁜 커스텀 컬러
+    color: Colors.green,
     marginBottom: 6,
   },
   sectionBody: {
@@ -157,13 +191,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     marginTop: 16,
-    backgroundColor: "#FF3B30",
+    backgroundColor: Colors.green,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",
   },
   closeButtonText: {
-    color: "#FFFFFF",
+    color: Colors.background,
     fontWeight: "bold",
     fontSize: 14,
   },

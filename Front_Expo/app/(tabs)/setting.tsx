@@ -239,9 +239,10 @@ export default function SettingScreen() {
     mutationFn: deleteAccount,
     onSuccess: async () => {
       Alert.alert("알림", "회원 탈퇴가 완료되었습니다.");
-      await removeAccessToken();
+      await queryClient.cancelQueries();
       queryClient.clear();
-      router.replace("/(auth)/login");
+      await removeAccessToken();
+      router.replace("/login");
     },
     onError: (error: any) => {
       const msg =
@@ -364,9 +365,12 @@ export default function SettingScreen() {
         text: "로그아웃",
         style: "destructive",
         onPress: async () => {
-          await removeAccessToken();
+          await queryClient.cancelQueries();
           queryClient.clear();
-          router.replace("/(auth)/login");
+
+          await removeAccessToken();
+
+          router.replace("/login");
         },
       },
     ]);
