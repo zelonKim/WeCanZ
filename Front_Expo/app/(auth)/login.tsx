@@ -229,7 +229,7 @@ export default function LoginScreen() {
             <Text style={[styles.logoText, { color: Colors.green }]}>
               WeCanZ
             </Text>
-            <Text style={styles.subText}>우리도 주말에 Z세대가 될 수 있다</Text>
+            <Text style={styles.subText}>우리도 주말에 Gen-Z가 될 수 있어요</Text>
           </View>
 
           {/* 2. 이메일 & 비밀번호 입력 폼 */}

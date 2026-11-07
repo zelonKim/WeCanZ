@@ -1,6 +1,7 @@
 import { client } from "@/api/client";
 import { saveTokenToServer } from "@/api/saveTokenToServer";
 import Colors from "@/constants/Colors";
+import { useHomeLanguage } from "@/hooks/useHomeLanguage";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,9 +29,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 Notifications.setNotificationHandler({
   handleNotification: () => ({
-    shouldShowList: true, // 알림 센터(드래그 내려서 보는 곳)에 표시
-    shouldShowAlert: true, // 💡 배너 팝업 표시 여부
-    shouldPlaySound: true, // 💡 소리 재생 여부
+    shouldShowList: true,
+    shouldShowAlert: true,
+    shouldPlaySound: true,
     shouldSetBadge: true,
   }),
 });
@@ -68,13 +69,6 @@ export interface CreateGatheringDto {
   dateTime: string;
 }
 
-const CATEGORIES = [
-  { label: "전체", value: "ALL" },
-  { label: "🇺🇸 미국", value: GatheringCategory.US },
-  { label: "🇬🇧 영국", value: GatheringCategory.UK },
-  { label: "🇰🇷 한국", value: GatheringCategory.KR },
-];
-
 const fetchGatherings = async (): Promise<Gathering[]> => {
   const { data } = await client.get("/gathering");
   return data;
@@ -89,6 +83,7 @@ const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 const MINUTES = [0, 10, 20, 30, 40, 50];
 
 export default function HomeScreen() {
+  const { t } = useHomeLanguage();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -110,6 +105,43 @@ export default function HomeScreen() {
     new Date().getHours(),
   );
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
+
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [isInviteLoading, setIsInviteLoading] = useState(false);
+
+  const CATEGORIES = [
+    { label: t.all, value: "ALL" },
+    { label: t.us, value: GatheringCategory.US },
+    { label: t.uk, value: GatheringCategory.UK },
+    { label: t.kr, value: GatheringCategory.KR },
+  ];
+
+  const STATUS_CONFIG: Record<
+    string,
+    { label: string; badgeStyle: any; textStyle: any }
+  > = {
+    OPEN: {
+      label: t.statusOpen,
+      badgeStyle: styles.statusOpen,
+      textStyle: styles.statusOpenText,
+    },
+    FULL: {
+      label: t.statusFull,
+      badgeStyle: styles.statusFull,
+      textStyle: styles.statusFullText,
+    },
+    IN_PROGRESS: {
+      label: t.statusInProgress,
+      badgeStyle: styles.statusInProgress,
+      textStyle: styles.statusInProgressText,
+    },
+    COMPLETED: {
+      label: t.statusCompleted,
+      badgeStyle: styles.statusInCompleted,
+      textStyle: styles.statusInCompletedText,
+    },
+  };
 
   useEffect(() => {
     registerForPushNotificationsAsync().then((token) => {
@@ -133,14 +165,10 @@ export default function HomeScreen() {
     }
   }, [me]);
 
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [inviteCode, setInviteCode] = useState("");
-  const [isInviteLoading, setIsInviteLoading] = useState(false);
-
   const handleEnterRoom = async () => {
     const cleanCode = inviteCode.trim().toLowerCase();
     if (!cleanCode || cleanCode.length !== 4) {
-      Alert.alert("알림", "4자리 룸코드를 올바르게 입력해 주세요.");
+      Alert.alert("알림", t.alerts.roomCodeLength);
       return;
     }
 
@@ -153,8 +181,7 @@ export default function HomeScreen() {
       setIsInviteModalOpen(false);
       router.push(`/gathering/${gatheringId}`);
     } catch (error: any) {
-      const message =
-        error.response?.data?.message || "밋업을 찾을 수 없습니다.";
+      const message = error.response?.data?.message || t.alerts.roomNotFound;
       Alert.alert("오류", message);
     } finally {
       setIsInviteLoading(false);
@@ -174,12 +201,12 @@ export default function HomeScreen() {
   const createMutation = useMutation({
     mutationFn: createGathering,
     onSuccess: () => {
-      Alert.alert("성공", "밋업이 생성되었습니다! ");
+      Alert.alert("성공", t.alerts.successCreate);
       queryClient.invalidateQueries({ queryKey: ["gatherings"] });
       closeAndResetModal();
     },
     onError: (error: any) => {
-      const msg = error.response?.data?.message || "밋업 생성에 실패했습니다.";
+      const msg = error.response?.data?.message || t.alerts.failCreate;
       Alert.alert("오류", Array.isArray(msg) ? msg[0] : msg);
     },
   });
@@ -209,18 +236,17 @@ export default function HomeScreen() {
   };
 
   const handleCreateGathering = () => {
-    if (!title.trim()) return Alert.alert("경고", "제목을 입력해주세요.");
-    if (!description.trim()) return Alert.alert("경고", "설명을 입력해주세요.");
-    if (!location.trim())
-      return Alert.alert("경고", "모임 장소를 입력해주세요.");
+    if (!title.trim()) return Alert.alert("경고", t.alerts.titleRequired);
+    if (!description.trim()) return Alert.alert("경고", t.alerts.descRequired);
+    if (!location.trim()) return Alert.alert("경고", t.alerts.locationRequired);
     if (!maxPeople || isNaN(Number(maxPeople))) {
-      return Alert.alert("경고", "올바른 정원 숫자를 입력해주세요.");
+      return Alert.alert("경고", t.alerts.invalidPeople);
     }
     if (Number(maxPeople) < 2) {
-      return Alert.alert("경고", "최대 인원은 2명 이상이어야 합니다.");
+      return Alert.alert("경고", t.alerts.minPeople);
     }
     if (Number(maxPeople) > 20) {
-      return Alert.alert("경고", "최대 인원은 20명 이하이어야 합니다.");
+      return Alert.alert("경고", t.alerts.maxPeople);
     }
 
     const [year, month, day] = selectedDateStr.split("-").map(Number);
@@ -247,11 +273,11 @@ export default function HomeScreen() {
   const getCategoryLabel = (cat: GatheringCategory) => {
     switch (cat) {
       case GatheringCategory.US:
-        return "🇺🇸 미국";
+        return t.us;
       case GatheringCategory.UK:
-        return "🇬🇧 영국";
+        return t.uk;
       case GatheringCategory.KR:
-        return "🇰🇷 한국";
+        return t.kr;
       default:
         return cat;
     }
@@ -265,36 +291,10 @@ export default function HomeScreen() {
     return `${year}-${month}-${day}`;
   };
 
-  const STATUS_CONFIG: Record<
-    string,
-    { label: string; badgeStyle: any; textStyle: any }
-  > = {
-    OPEN: {
-      label: "모집중",
-      badgeStyle: styles.statusOpen,
-      textStyle: styles.statusOpenText,
-    },
-    FULL: {
-      label: "인원 마감",
-      badgeStyle: styles.statusFull,
-      textStyle: styles.statusFullText,
-    },
-    IN_PROGRESS: {
-      label: "진행중",
-      badgeStyle: styles.statusInProgress,
-      textStyle: styles.statusInProgressText,
-    },
-    COMPLETED: {
-      label: "종료됨",
-      badgeStyle: styles.statusInCompleted,
-      textStyle: styles.statusInCompletedText,
-    },
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Z-Meetup</Text>
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
 
         <TouchableOpacity
           style={styles.roomSearchButton}
@@ -350,9 +350,7 @@ export default function HomeScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.placeholderEmoji}></Text>
-              <Text style={styles.placeholderText}>
-                아직 등록된 밋업이 없어요.{"\n"}지금 첫 밋업을 열어보세요!
-              </Text>
+              <Text style={styles.placeholderText}>{t.emptyText}</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -457,7 +455,7 @@ export default function HomeScreen() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>New 밋업 만들기</Text>
+                <Text style={styles.modalTitle}>{t.newMeetup}</Text>
                 <TouchableOpacity
                   onPress={closeAndResetModal}
                   style={styles.closeBtn}
@@ -470,18 +468,12 @@ export default function HomeScreen() {
                 style={styles.modalBody}
                 showsVerticalScrollIndicator={false}
               >
-                <Text style={styles.inputLabel}>국가</Text>
+                <Text style={styles.inputLabel}>{t.categoryLabel}</Text>
                 <View style={styles.categorySelectRow}>
                   {[
-                    { label: "🇺🇸 미국", value: GatheringCategory.US },
-                    {
-                      label: "🇬🇧 영국",
-                      value: GatheringCategory.UK,
-                    },
-                    {
-                      label: "🇰🇷 한국",
-                      value: GatheringCategory.KR,
-                    },
+                    { label: t.us, value: GatheringCategory.US },
+                    { label: t.uk, value: GatheringCategory.UK },
+                    { label: t.kr, value: GatheringCategory.KR },
                   ].map((item) => (
                     <TouchableOpacity
                       key={item.value}
@@ -505,37 +497,37 @@ export default function HomeScreen() {
                   ))}
                 </View>
 
-                <Text style={styles.inputLabel}>모임 제목</Text>
+                <Text style={styles.inputLabel}>{t.titleLabel}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="모임 제목을 입력해주세요."
+                  placeholder={t.titlePlaceholder}
                   placeholderTextColor="#666668"
                   multiline
                   value={title}
                   onChangeText={setTitle}
                 />
 
-                <Text style={styles.inputLabel}>모임 설명</Text>
+                <Text style={styles.inputLabel}>{t.descLabel}</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
-                  placeholder="모임에 대한 설명을 입력해주세요."
+                  placeholder={t.descPlaceholder}
                   placeholderTextColor="#666668"
                   multiline
                   value={description}
                   onChangeText={setDescription}
                 />
 
-                <Text style={styles.inputLabel}>모임 장소</Text>
+                <Text style={styles.inputLabel}>{t.locationLabel}</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="모임 장소를 입력해주세요."
+                  placeholder={t.locationPlaceholder}
                   placeholderTextColor="#666668"
                   multiline
                   value={location}
                   onChangeText={setLocation}
                 />
 
-                <Text style={styles.inputLabel}>모임 날짜</Text>
+                <Text style={styles.inputLabel}>{t.dateLabel}</Text>
                 <Calendar
                   current={selectedDateStr}
                   minDate={getTodayString()}
@@ -564,7 +556,7 @@ export default function HomeScreen() {
                   style={styles.inlineCalendar}
                 />
 
-                <Text style={styles.inputLabel}>모임 시간</Text>
+                <Text style={styles.inputLabel}>{t.timeLabel}</Text>
                 <View style={styles.clockDisplayContainer}>
                   <Text style={styles.clockDisplayText}>
                     {String(selectedHour).padStart(2, "0")} :{" "}
@@ -572,7 +564,7 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                <Text style={styles.subInputLabel}>시</Text>
+                <Text style={styles.subInputLabel}>{t.hourLabel}</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -593,13 +585,14 @@ export default function HomeScreen() {
                           selectedHour === h && styles.timeChipTextActive,
                         ]}
                       >
-                        {String(h).padStart(2, "0")}시
+                        {String(h).padStart(2, "0")}
+                        {t.hourLabel}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
 
-                <Text style={styles.subInputLabel}>분</Text>
+                <Text style={styles.subInputLabel}>{t.minuteLabel}</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -620,13 +613,14 @@ export default function HomeScreen() {
                           selectedMinute === m && styles.timeChipTextActive,
                         ]}
                       >
-                        {String(m).padStart(2, "0")}분
+                        {String(m).padStart(2, "0")}
+                        {t.minuteLabel}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
 
-                <Text style={styles.inputLabel}>최대 인원 (명)</Text>
+                <Text style={styles.inputLabel}>{t.maxPeopleLabel}</Text>
                 <TextInput
                   style={styles.input}
                   keyboardType="numeric"
@@ -644,7 +638,7 @@ export default function HomeScreen() {
                 {createMutation.isPending ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.submitButtonText}>방 만들기</Text>
+                  <Text style={styles.submitButtonText}>{t.createBtn}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -668,10 +662,8 @@ export default function HomeScreen() {
         >
           <View style={styles.inviteModalOverlay}>
             <View style={styles.inviteModalContainer}>
-              <Text style={styles.inviteModalTitle}>🔡 룸 코드 입장</Text>
-              <Text style={styles.inviteModalSubTitle}>
-                공유받은 4자리 코드를 입력하세요.
-              </Text>
+              <Text style={styles.inviteModalTitle}>{t.roomCodeTitle}</Text>
+              <Text style={styles.inviteModalSubTitle}>{t.roomCodeSub}</Text>
 
               <TextInput
                 style={styles.codeInput}
@@ -692,7 +684,7 @@ export default function HomeScreen() {
                     setIsInviteModalOpen(false);
                   }}
                 >
-                  <Text style={styles.cancelBtnText}>취소</Text>
+                  <Text style={styles.cancelBtnText}>{t.cancel}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -701,7 +693,7 @@ export default function HomeScreen() {
                   disabled={isInviteLoading}
                 >
                   <Text style={styles.submitBtnText}>
-                    {isInviteLoading ? "확인중..." : "입장하기"}
+                    {isInviteLoading ? t.checking : t.enter}
                   </Text>
                 </TouchableOpacity>
               </View>
