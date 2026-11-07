@@ -281,10 +281,6 @@ export class DirectChatService {
     message: string,
     imageUrl?: string,
   ) {
-    if (!message || message.trim() === '') {
-      throw new BadRequestException('메시지 내용을 입력해 주세요.');
-    }
-
     return await this.prisma.directChatMessage.create({
       data: {
         roomId,
