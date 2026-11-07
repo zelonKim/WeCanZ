@@ -111,9 +111,6 @@ export default function SignupScreen() {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
       }
-      Alert.alert("완료", "회원가입이 완료되었습니다! 😘");
-
-      // 2. 토큰 저장 후 마이페이지(메인)로 이동
       router.replace("/(tabs)");
     },
     onError: (error: any) => {

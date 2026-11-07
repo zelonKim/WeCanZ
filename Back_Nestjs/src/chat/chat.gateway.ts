@@ -161,6 +161,12 @@ export class ChatGateway implements OnGatewayDisconnect {
         priority: 'high',
         channelId: 'default',
         data: { gatheringId, type: 'CHAT' },
+        android: {
+          channelId: 'default',
+          priority: 'high',
+          sound: true,
+          vibrate: true,
+        },
       });
     }
 
@@ -395,6 +401,12 @@ export class ChatGateway implements OnGatewayDisconnect {
           type: 'DM',
           nickname: sender?.nickname ?? '',
           profileImage: sender?.profileImage ?? '',
+        },
+        android: {
+          channelId: 'default',
+          priority: 'high',
+          sound: true,
+          vibrate: true,
         },
       });
 

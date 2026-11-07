@@ -88,7 +88,7 @@ const MARKETING_SECTIONS: Section[] = [
   },
   {
     title: "제 4조 (수신 동의 철회 방법)",
-    body: "앱 내 [마이페이지] -> [설정] 메뉴 또는 고객센터 이메일(ksz18601@gmail.com)을 통해 언제든지 마케팅 수신 동의를 철회하거나 앱 푸시 알림을 거부할 수 있습니다.",
+    body: "고객센터 이메일(ksz18601@gmail.com)을 통해 언제든지 마케팅 수신 동의를 철회하거나 앱 푸시 알림을 거부할 수 있습니다.",
   },
 ];
 
@@ -97,7 +97,6 @@ export default function TermsModal({
   type,
   onClose,
 }: TermsModalProps) {
-  // 모달 데이터 분기 헬퍼 함수
   const getModalContent = () => {
     switch (type) {
       case "terms":

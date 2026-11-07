@@ -28,12 +28,14 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 Notifications.setNotificationHandler({
-  handleNotification: () => ({
-    shouldShowList: true,
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
+  handleNotification:
+    async (): Promise<Notifications.NotificationBehavior> => ({
+      shouldShowBanner: true,
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowList: true,
+    }),
 });
 
 export enum GatheringCategory {
@@ -160,6 +162,9 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
+    if (!me) {
+      router.replace("/login");
+    }
     if (me && (!me.termsAgreedAt || !me.privacyAgreedAt)) {
       router.replace("/login");
     }
