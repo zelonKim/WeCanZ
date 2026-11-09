@@ -1,7 +1,10 @@
-import { client } from "@/api/client";
+import { signupUser } from "@/api/auth/signupUser";
 import { setAccessToken } from "@/api/token";
 import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
+import { useSignupLanguage } from "@/hooks/useSignupLanguage";
+import { AgreementModalTypes } from "@/types/auth/AgreementModalTypes";
+import { generateRandomNickname } from "@/utils/generateRandomNickname";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -20,79 +23,26 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// 랜덤 닉네임 생성 단어 목록
-const ADJECTIVES = [
-  "귀여운",
-  "다정한",
-  "매력적인",
-  "수줍은",
-  "시크한",
-  "상큼한",
-  "풋풋한",
-  "힙한",
-  "자유로운",
-  "러블리한",
-  "즐거운",
-];
-
-const NOUNS = [
-  "메이트",
-  "스위티",
-  "베이비",
-  "뉴페이스",
-  "큐티",
-  "크루",
-  "바이브",
-  "브로",
-  "시스터",
-  "걸",
-  "보이",
-];
-
-// 랜덤 닉네임 생성 함수
-const generateRandomNickname = (): string => {
-  const randomAdj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-  const randomNoun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-  const randomNumber = Math.floor(1000 + Math.random() * 9000);
-  return `${randomAdj}${randomNoun}${randomNumber}`;
-};
-
-//////////////////////////////////////
-
-interface SignupData {
-  email: string;
-  password: string;
-  passwordConfirm: string;
-  nickname: string;
-  isTermsAgreed: boolean;
-  isPrivacyAgreed: boolean;
-  isMarketingAgreed: boolean;
-}
-
 export default function SignupScreen() {
+  const { t, currentLang, nicknames } = useSignupLanguage();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
+  const [nickname, setNickname] = useState(() =>
+    generateRandomNickname(nicknames, currentLang),
+  );
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-
-  // 닉네임 초기값
-  const [nickname, setNickname] = useState(() => generateRandomNickname());
-
-  // 약관 동의 상태
   const [isTermsAgreed, setIsTermsAgreed] = useState(false);
   const [isPrivacyAgreed, setIsPrivacyAgreed] = useState(false);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
-
-  const [modalType, setModalType] = useState<
-    "terms" | "privacy" | "marketing" | null
-  >(null);
+  const [modalType, setModalType] = useState<AgreementModalTypes | null>(null);
 
   const handleRefreshNickname = () => {
-    setNickname(generateRandomNickname());
+    const otherNickname = generateRandomNickname(nicknames, currentLang);
+    setNickname(otherNickname);
   };
 
-  // 전체 동의 토글
   const handleAllAgree = () => {
     const nextState = !(isTermsAgreed && isPrivacyAgreed && isMarketingAgreed);
     setIsTermsAgreed(nextState);
@@ -100,10 +50,7 @@ export default function SignupScreen() {
     setIsMarketingAgreed(nextState);
   };
 
-  const signupUser = async (signupData: SignupData) => {
-    const { data } = await client.post("/auth/signup", signupData);
-    return data;
-  };
+  //////////////////////////////////////////////////////////////////////////
 
   const { mutate: signupMutate, isPending } = useMutation({
     mutationFn: signupUser,
@@ -111,55 +58,52 @@ export default function SignupScreen() {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
       }
-      router.replace("/(tabs)");
+      setTimeout(() => {
+        router.replace("/");
+      }, 0);
     },
     onError: (error: any) => {
       const errorMessage =
-        error.response?.data?.message || "회원가입 중 오류가 발생했습니다.";
-      alert(errorMessage);
+        error.response?.data?.message || t.alerts.defaultSignupError;
+      Alert.alert(t.alerts.error, errorMessage);
     },
   });
 
-  // 회원가입
+  //////////////////////////////////////////////////////////////////////////
+
   const handleSignup = async () => {
     if (email.trim().length < 5) {
-      Alert.alert("알림", "아이디는 최소 5글자 이상이어야 합니다.");
+      Alert.alert(t.alerts.notice, t.alerts.idMinLength);
       return;
     }
 
-    // 2. 비밀번호 검증 (영문, 숫자 포함 8자 이상)
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
-      Alert.alert(
-        "알림",
-        "비밀번호는 영문과 숫자를 포함하여 8자 이상이어야 합니다.",
-      );
+      Alert.alert(t.alerts.notice, t.alerts.passwordRegex);
       return;
     }
 
-    // 3. 비밀번호 확인 검증
     if (password !== passwordConfirm) {
-      Alert.alert("알림", "비밀번호가 일치하지 않습니다.");
+      Alert.alert(t.alerts.notice, t.alerts.passwordMismatch);
       return;
     }
 
-    // 4. 닉네임 길이 검증
     if (nickname.trim().length < 2) {
-      Alert.alert("알림", "닉네임은 최소 2글자 이상이어야 합니다.");
+      Alert.alert(t.alerts.notice, t.alerts.nicknameMinLength);
       return;
     }
 
-    if (nickname.trim().length > 12) {
-      Alert.alert("알림", "닉네임은 최대 12글자 이하이어야 합니다.");
+    if (nickname.trim().length > 30) {
+      Alert.alert(t.alerts.notice, t.alerts.nicknameMaxLength);
       return;
     }
-    // 5. 필수 약관 동의 검증
+
     if (!isTermsAgreed) {
-      Alert.alert("알림", "서비스 이용 약관에 동의해야 합니다.");
+      Alert.alert(t.alerts.notice, t.alerts.termsRequiredAlert);
       return;
     }
     if (!isPrivacyAgreed) {
-      Alert.alert("알림", "개인정보 처리 방침에 동의해야 합니다.");
+      Alert.alert(t.alerts.notice, t.alerts.privacyRequiredAlert);
       return;
     }
 
@@ -174,6 +118,8 @@ export default function SignupScreen() {
     });
   };
 
+  //////////////////////////////////////////////////////////////////////////
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: Colors.background }]}
@@ -186,7 +132,6 @@ export default function SignupScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* 상단 헤더 */}
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => router.back()}
@@ -194,31 +139,27 @@ export default function SignupScreen() {
             >
               <Ionicons name="chevron-back" size={28} color="#FFF" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>회원가입</Text>
+            <Text style={styles.headerTitle}>{t.headerTitle}</Text>
           </View>
 
-          {/* 입력 폼 영역 */}
           <View style={styles.form}>
-            {/* 아이디 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>아이디</Text>
+              <Text style={styles.label}>{t.idLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="최소 5자 이상 입력"
+                placeholder={t.idPlaceholder}
                 placeholderTextColor="#666"
-                // keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
               />
             </View>
 
-            {/* 비밀번호 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>비밀번호</Text>
+              <Text style={styles.label}>{t.passwordLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="영문 + 숫자 8자 이상 입력"
+                placeholder={t.passwordPlaceholder}
                 placeholderTextColor="#666"
                 secureTextEntry
                 value={password}
@@ -227,12 +168,11 @@ export default function SignupScreen() {
               />
             </View>
 
-            {/* 비밀번호 확인 */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>비밀번호 확인</Text>
+              <Text style={styles.label}>{t.passwordConfirmLabel}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="비밀번호를 다시 입력하세요"
+                placeholder={t.passwordConfirmPlaceholder}
                 placeholderTextColor="#666"
                 secureTextEntry
                 value={passwordConfirm}
@@ -241,13 +181,12 @@ export default function SignupScreen() {
               />
             </View>
 
-            {/* 닉네임 (랜덤 기본값 + 생성 버튼) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>닉네임</Text>
+              <Text style={styles.label}>{t.nicknameLabel}</Text>
               <View style={styles.nicknameInputContainer}>
                 <TextInput
                   style={[styles.input, { flex: 1 }]}
-                  placeholder="최소 2자 이상 입력"
+                  placeholder={t.nicknamePlaceholder}
                   placeholderTextColor="#666"
                   value={nickname}
                   onChangeText={setNickname}
@@ -259,15 +198,13 @@ export default function SignupScreen() {
                 >
                   <Ionicons name="refresh" size={16} color={Colors.green} />
                   <Text style={[styles.refreshText, { color: Colors.green }]}>
-                    랜덤 생성
+                    {t.refreshNickname}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* 약관 동의 섹션 */}
             <View style={styles.termsSection}>
-              {/* 전체 동의 */}
               <TouchableOpacity
                 style={styles.allAgreeBtn}
                 onPress={handleAllAgree}
@@ -285,12 +222,11 @@ export default function SignupScreen() {
                       : "#8E8E93"
                   }
                 />
-                <Text style={styles.allAgreeText}>전체 동의하기</Text>
+                <Text style={styles.allAgreeText}>{t.allAgree}</Text>
               </TouchableOpacity>
 
               <View style={styles.divider} />
 
-              {/* 서비스 이용약관 */}
               <View style={styles.checkRowContainer}>
                 <TouchableOpacity
                   style={styles.checkRow}
@@ -303,17 +239,14 @@ export default function SignupScreen() {
                     size={20}
                     color={isTermsAgreed ? Colors.green : "#666"}
                   />
-                  <Text style={styles.checkText}>
-                    [필수] 서비스 이용 약관 동의
-                  </Text>
+                  <Text style={styles.checkText}>{t.termsRequired}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setModalType("terms")}>
-                  <Text style={styles.viewLinkText}>보기</Text>
+                  <Text style={styles.viewLinkText}>{t.viewLink}</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* 개인정보 처리방침  */}
               <View style={styles.checkRowContainer}>
                 <TouchableOpacity
                   style={styles.checkRow}
@@ -326,20 +259,12 @@ export default function SignupScreen() {
                     size={20}
                     color={isPrivacyAgreed ? Colors.green : "#666"}
                   />
-                  <Text style={styles.checkText}>
-                    [필수] 개인정보 처리 방침 동의
-                  </Text>
+                  <Text style={styles.checkText}>{t.privacyRequired}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setModalType("privacy")}>
-                  <Text style={styles.viewLinkText}>보기</Text>
+                  <Text style={styles.viewLinkText}>{t.viewLink}</Text>
                 </TouchableOpacity>
-
-                <TermsModal
-                  visible={modalType !== null}
-                  type={modalType}
-                  onClose={() => setModalType(null)}
-                />
               </View>
 
               <View style={styles.checkRowContainer}>
@@ -354,21 +279,19 @@ export default function SignupScreen() {
                     size={20}
                     color={isMarketingAgreed ? Colors.green : "#666"}
                   />
-                  <Text style={styles.checkText}>
-                    [선택] 마케팅 정보 수신 동의
-                  </Text>
+                  <Text style={styles.checkText}>{t.marketingOptional}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => setModalType("marketing")}>
-                  <Text style={styles.viewLinkText}>보기</Text>
+                  <Text style={styles.viewLinkText}>{t.viewLink}</Text>
                 </TouchableOpacity>
-
-                <TermsModal
-                  visible={modalType !== null}
-                  type={modalType}
-                  onClose={() => setModalType(null)}
-                />
               </View>
+
+              <TermsModal
+                visible={modalType !== null}
+                type={modalType}
+                onClose={() => setModalType(null)}
+              />
             </View>
           </View>
 
@@ -380,7 +303,7 @@ export default function SignupScreen() {
             {isPending ? (
               <ActivityIndicator size="small" color={Colors.background} />
             ) : (
-              <Text style={styles.submitBtnText}>시작하기</Text>
+              <Text style={styles.submitBtnText}>{t.submitBtn}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -388,6 +311,8 @@ export default function SignupScreen() {
     </SafeAreaView>
   );
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -468,14 +393,14 @@ const styles = StyleSheet.create({
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.75)", // 어두운 반투명 배경
+    backgroundColor: "rgba(0, 0, 0, 0.75)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContent: {
     width: "85%",
     maxHeight: "75%",
-    backgroundColor: "#1E1E1E", // 다크 테마 카드 배경색
+    backgroundColor: "#1E1E1E",
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
@@ -484,7 +409,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#FFFFFF", // 타이틀 흰색
+    color: "#FFFFFF",
     marginBottom: 14,
     textAlign: "center",
   },
@@ -493,12 +418,12 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 13,
-    color: "#B0B0B0", // 본문 가독성 좋은 밝은 회색
+    color: "#B0B0B0",
     lineHeight: 20,
   },
   closeButton: {
     marginTop: 16,
-    backgroundColor: Colors.red, // 포인트 컬러 유지
+    backgroundColor: Colors.red,
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: "center",

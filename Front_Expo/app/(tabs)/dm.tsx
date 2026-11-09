@@ -1,206 +1,178 @@
-import { client } from "@/api/client";
+import { acceptDMRoom } from "@/api/DM/acceptDMRoom";
+import { getMyDMRooms } from "@/api/DM/getMyDMRooms";
+import { getPendingDMRequests } from "@/api/DM/getPendingDMRequests";
+import { leaveDMRoom } from "@/api/DM/leaveDMRoom";
+import { rejectDMRoom } from "@/api/DM/rejectDMRoom";
+import { requestDM } from "@/api/DM/requestDM";
+import { getMyInfo } from "@/api/user/getMyInfo";
+import { searchUserByNickname } from "@/api/user/searchUserByNickname";
+import { DMRoomItem } from "@/components/DMRoomItem";
+import { PendingRequestsSection } from "@/components/PendingRequestsSection";
+import { renderAvatar } from "@/components/renderAvatar";
+import { SendDmModal } from "@/components/SendDmModal";
 import Colors from "@/constants/Colors";
+import { useDmLanguage } from "@/hooks/useDmLanguage";
 import { getSocket } from "@/lib/socket";
+import { DirectChatRoom } from "@/types/DM/DirectChatRoom";
+import { handlePressDmRoom } from "@/utils/handlePressDmRoom";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
-  Image,
-  Modal,
   Platform,
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface User {
-  id: string;
-  nickname: string;
-  profileImage?: string;
-}
-
-interface DirectChatRoom {
-  id: string; // roomId
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
-  user1Id: string;
-  user2Id: string;
-  user1?: User;
-  user2?: User;
-  sender?: User; // 백엔드에서 DM 신청한 유저 정보를 sender로 주는 경우 대응
-  targetUser?: User; // 채팅 상대방 유저 정보
-  lastMessage?: {
-    content: string;
-    createdAt: string;
-  };
-  hasUnread?: boolean;
-}
-
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-
-  if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString("ko-KR", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-  if (date.getFullYear() === now.getFullYear()) {
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
-  }
-  return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
-};
-
 export default function DMScreen() {
-  const router = useRouter();
+  const { t } = useDmLanguage();
   const queryClient = useQueryClient();
 
-  // 💡 DM 요청 모달 및 닉네임 상태 추가
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [targetNickname, setTargetNickname] = useState("");
 
-  // 1. 들어온 DM 요청 목록 조회
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setTargetNickname("");
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+
+  const { data: myInfo } = useQuery<{ id: string }>({
+    queryKey: ["me"],
+    queryFn: getMyInfo,
+  });
+
+  /////////////////////////////////////////////////////////////////////////
+
   const {
     data: pendingRequests = [],
-    isLoading: isPendingLoading,
+    isPending: isDmRequestsPending,
     refetch: refetchPending,
   } = useQuery<DirectChatRoom[]>({
     queryKey: ["dm-requests-pending"],
-    queryFn: async () => {
-      const { data } = await client.get("/direct-chat/requests/pending");
-      return data;
-    },
+    queryFn: getPendingDMRequests,
   });
 
-  // 2. 수락된 DM 목록 조회
+  /////////////////////////////////////////////////////////////////////////
+
   const {
     data: myDMRooms = [],
-    isLoading: isRoomsLoading,
-    refetch: refetchRooms,
+    isPending: isMyDmRoomsPending,
+    refetch: refetchDMRooms,
   } = useQuery<DirectChatRoom[]>({
     queryKey: ["dm-rooms"],
-    queryFn: async () => {
-      const { data } = await client.get("/direct-chat/rooms");
-      return data;
-    },
+    queryFn: getMyDMRooms,
   });
 
-  // 3. DM 요청 수락
-  const acceptMutation = useMutation({
-    mutationFn: (roomId: string) =>
-      client.patch(`/direct-chat/${roomId}/accept`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const isRefreshing = isDmRequestsPending || isMyDmRoomsPending;
+
+  const onRefresh = () => {
+    refetchPending();
+    refetchDMRooms();
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      refetchPending();
+      refetchDMRooms();
+    }, [refetchDMRooms, refetchPending]),
+  );
+
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: acceptDmMutation } = useMutation({
+    mutationFn: acceptDMRoom,
     onSuccess: () => {
-      Alert.alert("성공", "DM 요청을 수락했습니다.");
+      Alert.alert(t.alerts.success, t.alerts.acceptSuccess);
       queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
       queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
     },
     onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "수락에 실패했습니다.",
-      );
+      Alert.alert(t.alerts.error, t.alerts.acceptFail);
     },
   });
 
-  // 4. DM 요청 거절
-  const rejectMutation = useMutation({
-    mutationFn: (roomId: string) =>
-      client.patch(`/direct-chat/${roomId}/reject`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: rejectDmMutation } = useMutation({
+    mutationFn: rejectDMRoom,
     onSuccess: () => {
-      Alert.alert("알림", "DM 요청을 거절했습니다.");
+      Alert.alert(t.alerts.notice, t.alerts.rejectSuccess);
       queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
     },
     onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "거절에 실패했습니다.",
-      );
+      Alert.alert(t.alerts.error, t.alerts.rejectFail);
     },
   });
 
-  // 💡 5. DM 요청 보내기 Mutation
-  const requestDmMutation = useMutation({
-    mutationFn: (targetUserId: string) =>
-      client.post(`/direct-chat/request/${encodeURIComponent(targetUserId)}`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: requestDmMutation } = useMutation({
+    mutationFn: requestDM,
     onSuccess: () => {
-      Alert.alert("성공", "DM 요청을 보냈습니다.");
+      Alert.alert(t.alerts.success, t.alerts.requestSent);
       setIsModalVisible(false);
       setTargetNickname("");
       queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
     },
     onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "DM 요청에 실패했습니다.",
-      );
+      Alert.alert(t.alerts.error, t.alerts.requestFail);
     },
   });
 
-  // 💡 닉네임 검색 후 DM 요청 처리
+  /////////////////////////////////////////////////////////////////////////
+
   const handleSendDmRequest = async () => {
     if (!targetNickname.trim()) {
-      Alert.alert("알림", "상대방 닉네임을 입력해주세요.");
+      Alert.alert(t.alerts.notice, t.alerts.emptyNickname);
       return;
     }
-
     try {
-      const res = await client.get(
-        `/user/search/${encodeURIComponent(targetNickname)}`,
-      );
-      requestDmMutation.mutate(res.data.id);
+      const userData = await searchUserByNickname(targetNickname.trim());
+      requestDmMutation(userData.id);
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        "존재하지 않거나 검색할 수 없는 유저입니다.";
-      Alert.alert("알림", errorMessage);
+      const errorMessage = t.alerts.searchFail;
+      Alert.alert(t.alerts.notice, errorMessage);
     }
   };
 
-  const isRefreshing = isPendingLoading || isRoomsLoading;
+  /////////////////////////////////////////////////////////////////////////
 
-  const onRefresh = () => {
-    refetchPending();
-    refetchRooms();
-  };
-
-  const renderAvatar = (profileImage?: string) => {
-    if (profileImage) {
-      return <Image source={{ uri: profileImage }} style={styles.avatar} />;
-    }
-    return (
-      <View style={styles.avatarPlaceholder}>
-        <Ionicons name="person" size={22} color={Colors.text || "#333"} />
-      </View>
-    );
-  };
-
-  // 내 정보 조회
-  const { data: myInfo } = useQuery<{ id: string }>({
-    queryKey: ["me"],
-    queryFn: async () => {
-      const { data } = await client.get("/user/me");
-      return data;
+  const { mutate: leaveRoomMutation } = useMutation({
+    mutationFn: leaveDMRoom,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
+    },
+    onError: (err: any) => {
+      Alert.alert(t.alerts.error, t.alerts.leaveFail);
     },
   });
 
-  // 화면 포커스 시 자동으로 최신 목록 불러오기
-  useFocusEffect(
-    useCallback(() => {
-      refetchRooms();
-      refetchPending();
-    }, [refetchRooms, refetchPending]),
-  );
+  /////////////////////////////////////////////////////////////////////////
 
-  // 소켓 연결 및 실시간 DM 목록 업데이트 수신
+  const handleLeaveRoom = (roomId: any) => {
+    Alert.alert(t.alerts.leaveAlertTitle, t.alerts.leaveAlertMsg, [
+      { text: t.cancel, style: "cancel" },
+      {
+        text: t.alerts.leaveAction,
+        style: "destructive",
+        onPress: () => leaveRoomMutation(roomId),
+      },
+    ]);
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+
   useEffect(() => {
     if (!myInfo?.id) return;
 
@@ -220,7 +192,7 @@ export default function DMScreen() {
       lastMessage: any;
       senderId: string;
     }) => {
-      console.log("⚡ [Socket] dmListUpdated 수신됨:", payload);
+      console.log("[Socket] dmListUpdated:", payload);
 
       queryClient.setQueryData<DirectChatRoom[]>(["dm-rooms"], (oldRooms) => {
         if (!oldRooms) return [];
@@ -252,34 +224,12 @@ export default function DMScreen() {
     };
   }, [myInfo?.id, queryClient]);
 
-  const leaveRoomMutation = useMutation({
-    mutationFn: (roomId) => client.delete(`/direct-chat/rooms/${roomId}/leave`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "방 나가기에 실패했습니다.",
-      );
-    },
-  });
-
-  const handleLeaveRoom = (roomId: any) => {
-    Alert.alert("나가기", "정말 메시지방을 삭제하고 나가시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "나가기",
-        style: "destructive",
-        onPress: () => leaveRoomMutation.mutate(roomId),
-      },
-    ]);
-  };
+  /////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>DM</Text>
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
         <TouchableOpacity
           style={styles.iconBtn}
           onPress={() => setIsModalVisible(true)}
@@ -288,7 +238,7 @@ export default function DMScreen() {
           <Ionicons
             name="chatbubble-ellipses-outline"
             size={24}
-            color={Colors.green || "#FFD600"}
+            color={Colors.green}
           />
         </TouchableOpacity>
       </View>
@@ -302,188 +252,51 @@ export default function DMScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                받은 DM 요청 ({pendingRequests.length})
-              </Text>
-            </View>
-
-            {pendingRequests.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>받은 DM 요청이 없습니다.</Text>
-              </View>
-            ) : (
-              pendingRequests.map((req) => {
-                const requester = req.sender || req.user1;
-
-                return (
-                  <View key={req.id} style={styles.card}>
-                    <View style={styles.userInfo}>
-                      {renderAvatar(requester?.profileImage)}
-                      <Text style={styles.nickname}>
-                        {requester?.nickname || "알 수 없는 유저"}
-                      </Text>
-                    </View>
-
-                    <View style={styles.actionGroup}>
-                      <TouchableOpacity
-                        style={styles.btnAccept}
-                        onPress={() => acceptMutation.mutate(req.id)}
-                      >
-                        <Text style={styles.btnAcceptText}>수락</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.btnReject}
-                        onPress={() => rejectMutation.mutate(req.id)}
-                      >
-                        <Text style={styles.btnRejectText}>거절</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                );
-              })
-            )}
-
+            <PendingRequestsSection
+              pendingRequests={pendingRequests}
+              t={t}
+              renderAvatar={renderAvatar}
+              onAccept={(id) => acceptDmMutation(id)}
+              onReject={(id) => rejectDmMutation(id)}
+              styles={styles}
+            />
             <View style={[styles.sectionHeader, { marginTop: 24 }]}>
               <Text style={styles.sectionTitle}>
-                대화 중인 DM ({myDMRooms.length})
+                {t.roomsHeader(myDMRooms.length)}
               </Text>
             </View>
           </View>
         }
-        renderItem={({ item }) => {
-          const partner = item.targetUser;
-          return (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.6}
-              onLongPress={() => handleLeaveRoom(item.id)}
-              onPress={() => {
-                queryClient.setQueryData<DirectChatRoom[]>(
-                  ["dm-rooms"],
-                  (oldRooms) =>
-                    oldRooms?.map((r) =>
-                      r.id === item.id ? { ...r, hasUnread: false } : r,
-                    ),
-                );
-                router.push({
-                  pathname: "/DM/[id]",
-                  params: {
-                    id: item.id,
-                    name: partner?.nickname,
-                    profileImage: partner?.profileImage,
-                  },
-                });
-              }}
-            >
-              <View style={styles.userInfo}>
-                <View style={styles.avatarContainer}>
-                  {renderAvatar(partner?.profileImage)}
-                  {item.hasUnread && (
-                    <View style={styles.badgeContainer}>
-                      <Text style={styles.badgeText}>N</Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={styles.textContainer}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 6,
-                    }}
-                  >
-                    <Text style={styles.nickname}>{partner?.nickname}</Text>
-                    {item.hasUnread && <View style={styles.dotBadge} />}
-                  </View>
-
-                  {item.lastMessage && (
-                    <Text
-                      style={[
-                        styles.lastMessage,
-                        item.hasUnread && styles.unreadMessageText,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.lastMessage.content ||
-                        (item.lastMessage as any).message}
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-              {item.lastMessage?.createdAt && (
-                <Text style={styles.timeText}>
-                  {formatTime(item.lastMessage.createdAt)}
-                </Text>
-              )}
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => (
+          <DMRoomItem
+            item={item}
+            styles={styles}
+            renderAvatar={renderAvatar}
+            onPressItem={() => handlePressDmRoom(item)}
+            onLongPressItem={handleLeaveRoom}
+          />
+        )}
         ListEmptyComponent={
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>
-              참여 중인 DM 대화방이 없습니다.
-            </Text>
+            <Text style={styles.emptyText}>{t.emptyRooms}</Text>
           </View>
         }
       />
 
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <SendDmModal
         visible={isModalVisible}
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
-          style={{ flex: 1 }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>✉️ DM 요청</Text>
-              <Text style={styles.modalSubtitle}>
-                DM을 요청할 유저의 닉네임을 입력해주세요.
-              </Text>
-
-              <TextInput
-                style={styles.modalInput}
-                placeholder="닉네임 입력"
-                placeholderTextColor="#888"
-                value={targetNickname}
-                multiline
-                onChangeText={setTargetNickname}
-                autoCapitalize="none"
-              />
-
-              <View style={styles.modalButtonRow}>
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.cancelBtn]}
-                  onPress={() => {
-                    setIsModalVisible(false);
-                    setTargetNickname("");
-                  }}
-                >
-                  <Text style={styles.cancelBtnText}>취소</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.submitBtn]}
-                  onPress={handleSendDmRequest}
-                >
-                  <Text style={styles.submitBtnText}>요청 보내기</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={handleCloseModal}
+        targetNickname={targetNickname}
+        setTargetNickname={setTargetNickname}
+        onSubmit={handleSendDmRequest}
+        t={t}
+        styles={styles}
+      />
     </SafeAreaView>
   );
 }
+
+/////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: {
@@ -548,19 +361,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.text || "#212529",
   },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  },
-  avatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Colors.border || "#E9ECEF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+
   nickname: {
     fontSize: 15,
     fontWeight: "600",
@@ -697,7 +498,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   submitBtn: {
-    backgroundColor: Colors.green || "#FFD600",
+    backgroundColor: Colors.green,
   },
   submitBtnText: {
     color: Colors.card || "#FFFFFF",

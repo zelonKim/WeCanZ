@@ -9,10 +9,10 @@ export async function registerForPushNotificationsAsync() {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
-      importance: Notifications.AndroidImportance.MAX, // 최고 중요도 (상단 배너 팝업)
+      importance: Notifications.AndroidImportance.MAX, 
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#FF236C",
-      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC, // 잠금화면에 내용 표시
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC, 
     });
   }
 

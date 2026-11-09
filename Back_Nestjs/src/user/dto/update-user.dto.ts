@@ -24,5 +24,5 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  marketingAgreedAt?: string;
+  marketingAgreedAt?: string | null;
 }

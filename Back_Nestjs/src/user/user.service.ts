@@ -55,51 +55,51 @@ export class UserService {
       ...profileData
     } = dto;
 
-    if (nickname) {
+    if (nickname !== undefined) {
       if (nickname.trim().length < 2) {
         throw new BadRequestException('닉네임은 최소 2글자 이상이어야 합니다.');
       }
 
-      if (nickname) {
-        const existingUser = await this.prisma.user.findFirst({
-          where: {
-            nickname,
-            NOT: { id: userId },
-          },
-        });
-
-        if (existingUser) {
-          throw new ConflictException('이미 사용 중인 닉네임입니다.');
-        }
-      }
-
-      return await this.prisma.user.update({
-        where: { id: userId },
-        data: {
-          ...(nickname && { nickname }),
-          ...profileData,
-
-          ...(termsAgreedAt && { termsAgreedAt: new Date(termsAgreedAt) }),
-          ...(privacyAgreedAt && {
-            privacyAgreedAt: new Date(privacyAgreedAt),
-          }),
-          ...(marketingAgreedAt && {
-            marketingAgreedAt: new Date(marketingAgreedAt),
-          }),
-        },
-        select: {
-          email: true,
-          nickname: true,
-          profileImage: true,
-          bio: true,
-          yesShowCount: true,
-          noShowCount: true,
-          termsAgreedAt: true,
-          privacyAgreedAt: true,
-          marketingAgreedAt: true,
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          nickname,
+          NOT: { id: userId },
         },
       });
+
+      if (existingUser) {
+        throw new ConflictException('이미 사용 중인 닉네임입니다.');
+      }
     }
+
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(nickname !== undefined && { nickname }),
+        ...profileData,
+
+        ...(termsAgreedAt && { termsAgreedAt: new Date(termsAgreedAt) }),
+        ...(privacyAgreedAt && {
+          privacyAgreedAt: new Date(privacyAgreedAt),
+        }),
+        ...(marketingAgreedAt !== undefined && {
+          marketingAgreedAt: marketingAgreedAt
+            ? new Date(marketingAgreedAt)
+            : null,
+        }),
+      },
+      select: {
+        email: true,
+        nickname: true,
+        profileImage: true,
+        bio: true,
+        yesShowCount: true,
+        noShowCount: true,
+        termsAgreedAt: true,
+        privacyAgreedAt: true,
+        marketingAgreedAt: true,
+      },
+    });
   }
   ////////////////////////////////////
 

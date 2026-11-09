@@ -2,7 +2,6 @@ import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL = process.env.EXPO_PUBLIC_API_URL;
 
-// 전역 단일 소켓 인스턴스
 let socket: Socket | null = null;
 
 export const getSocket = () => {

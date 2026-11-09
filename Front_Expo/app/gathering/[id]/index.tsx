@@ -5,6 +5,7 @@ import {
   ReportReason,
 } from "@/app/(tabs)/setting";
 import Colors from "@/constants/Colors";
+import { GatheringCategory } from "@/types/gathering/GatheringCategory";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +29,7 @@ import {
 import { Calendar, DateData } from "react-native-calendars";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { GatheringCategory } from "../../(tabs)";
+
 export interface UserProfile {
   id: string;
   nickname?: string;
@@ -146,7 +147,7 @@ export default function GatheringDetailScreen() {
 
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [category, setCategory] = useState<string>(GatheringCategory.DRINK);
+  const [category, setCategory] = useState<string>(GatheringCategory.US);
   const [maxPeople, setMaxPeople] = useState<number | string>("");
   const [location, setLocation] = useState<string>("");
   const [selectedDateStr, setSelectedDateStr] = useState<string>(

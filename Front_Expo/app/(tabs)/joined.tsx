@@ -1,5 +1,10 @@
 import { client } from "@/api/client";
+import { getMyInfo } from "@/api/user/getMyInfo";
+import { JoinStatusBadge } from "@/components/JoinStatusBadge";
 import Colors from "@/constants/Colors";
+import { useFlashLanguage } from "@/hooks/useFlashLanguage";
+import { MyGathering } from "@/types/gathering/MyGathering";
+import { MyInfo } from "@/types/user/MyInfo";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -16,93 +21,40 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export interface Gathering {
-  id: string;
-  title: string;
-  description?: string;
-  location?: string;
-  dateTime?: string;
-  hostId: string;
-  status: "OPEN" | "FULL" | "IN_PROGRESS" | "CANCELED" | "COMPLETED";
-  participants?: {
-    userId: string;
-    status: "PENDING" | "APPROVED" | "BANNED" | "YES_SHOW" | "NO_SHOW";
-  }[];
-}
-
-export default function FlashScreen() {
+export default function JoinedScreen() {
+  const t = useFlashLanguage();
   const router = useRouter();
 
-  const { data: me } = useQuery({
+  const { data: me } = useQuery<MyInfo>({
     queryKey: ["me"],
-    queryFn: async () => {
-      const { data } = await client.get("/user/me");
-      return data;
-    },
+    queryFn: getMyInfo,
   });
 
   const {
     data: myGatherings = [],
-    isLoading,
+    isPending,
     isRefetching,
     refetch,
-  } = useQuery<Gathering[]>({
+  } = useQuery<MyGathering[]>({
     queryKey: ["my-gatherings"],
     queryFn: async () => {
       const { data } = await client.get("/gathering/my");
       return data;
     },
     enabled: !!me?.id,
-
     select: (data) =>
       data.filter((gathering) =>
         ["OPEN", "FULL", "IN_PROGRESS"].includes(gathering.status),
       ),
   });
 
-  const handlePressGathering = (gatheringId: string) => {
-    router.push(`/gathering/${gatheringId}`);
-  };
-
-  const renderStatusBadge = (gathering: Gathering) => {
-    if (String(gathering.hostId) === String(me?.id)) {
-      return (
-        <View style={[styles.badge, styles.badgeHost]}>
-          <Text style={styles.badgeTextHost}>👑 방장</Text>
-        </View>
-      );
-    }
-
-    const myParticipant = gathering.participants?.find(
-      (p) => String(p.userId) === String(me?.id),
-    );
-
-    if (myParticipant?.status === "APPROVED") {
-      return (
-        <View style={[styles.badge, styles.badgeApproved]}>
-          <Text style={styles.badgeTextApproved}>✅ 참여중</Text>
-        </View>
-      );
-    }
-
-    if (myParticipant?.status === "PENDING") {
-      return (
-        <View style={[styles.badge, styles.badgePending]}>
-          <Text style={styles.badgeTextPending}>⏳ 승인 대기중</Text>
-        </View>
-      );
-    }
-
-    return null;
-  };
+  /////////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      {/* 1. 모던 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Joined Meetup</Text>
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
 
-        {/* 히스토리 페이지 이동 버튼 */}
         <TouchableOpacity
           style={styles.historyButton}
           onPress={() => router.push("/flash/done")}
@@ -112,8 +64,7 @@ export default function FlashScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 2. 목록 콘텐츠 */}
-      {isLoading ? (
+      {isPending ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={Colors.green} />
         </View>
@@ -129,25 +80,17 @@ export default function FlashScreen() {
               tintColor={Colors.green}
             />
           }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}></Text>
-              <Text style={styles.emptyText}>
-                현재 참여 중인 밋업이 없어요.{"\n"}새로운 밋업에 참여해보세요!
-              </Text>
-            </View>
-          }
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.85}
-              onPress={() => handlePressGathering(item.id)}
+              onPress={() => router.push(`/gathering/${item.id}`)}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle} numberOfLines={1}>
                   {item.title}
                 </Text>
-                {renderStatusBadge(item)}
+                {me && JoinStatusBadge(item, me, t)}
               </View>
 
               {item.description ? (
@@ -173,11 +116,19 @@ export default function FlashScreen() {
               )}
             </TouchableOpacity>
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyEmoji}></Text>
+              <Text style={styles.emptyText}>{t.emptyMessage}</Text>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
   );
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: {
@@ -191,7 +142,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* 헤더 */
   header: {
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -214,21 +164,17 @@ const styles = StyleSheet.create({
   historyButton: {
     flexDirection: "row",
     alignItems: "center",
-    // backgroundColor: "#18181B",
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 20,
     gap: 6,
     borderWidth: 1,
-    // borderColor: "rgba(255, 255, 255, 0.08)",
   },
   historyButtonText: {
     color: Colors.green,
     fontSize: 13,
     fontWeight: "700",
   },
-
-  /* 리스트 */
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 8,
@@ -251,8 +197,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 22,
   },
-
-  /* 모던 카드 디자인 */
   card: {
     backgroundColor: "#18181B",
     borderRadius: 20,
@@ -281,8 +225,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 14,
   },
-
-  /* 메타 정보 풋터 */
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -303,8 +245,6 @@ const styles = StyleSheet.create({
     color: "#D4D4D8",
     fontWeight: "500",
   },
-
-  /* 모던 뱃지 스타일링 */
   badge: {
     paddingHorizontal: 10,
     paddingVertical: 4,

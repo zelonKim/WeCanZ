@@ -1,13 +1,19 @@
-import { client } from "@/api/client";
-import { deleteTokenFromServer } from "@/api/deleteTokenFromServer";
-import { saveTokenToServer } from "@/api/saveTokenToServer";
 import { removeAccessToken } from "@/api/token";
+import { createReport } from "@/api/user/createReport";
+import { deleteAccount } from "@/api/user/deleteAccount";
+import { deleteTokenFromServer } from "@/api/user/deleteTokenFromServer";
+import { getMyInfo } from "@/api/user/getMyInfo";
+import { saveTokenToServer } from "@/api/user/saveTokenToServer";
+import { searchUserByNickname } from "@/api/user/searchUserByNickname";
+import { updateProfile } from "@/api/user/updateProfile";
 import Colors from "@/constants/Colors";
+import { useSettingLanguage } from "@/hooks/useSettingLanguage";
+import { ReportReason } from "@/types/user/ReportReason";
+import { handleImagePick } from "@/utils/handleImagePick";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as ImagePicker from "expo-image-picker";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -28,125 +34,19 @@ import {
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-
-// 신고 사유 Enum (백엔드 ReportReason Enum 매핑)
-export enum ReportReason {
-  SPAM = "SPAM",
-  INAPPROPRIATE = "INAPPROPRIATE",
-  ABUSE = "ABUSE",
-  IMPERSONATION = "IMPERSONATION",
-  OTHER = "OTHER",
-}
-
-export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
-  [ReportReason.SPAM]: "불법 광고 및 도배",
-  [ReportReason.INAPPROPRIATE]: "부적절한 콘텐츠",
-  [ReportReason.ABUSE]: "욕설 및 혐오 발언",
-  [ReportReason.IMPERSONATION]: "사칭 및 허위 정보",
-  [ReportReason.OTHER]: "기타",
-};
-
-// API 요청 함수
-const fetchMyInfo = async () => {
-  const { data } = await client.get("/user/me");
-  return data;
-};
-
-const updateProfile = async (updateDto: {
-  nickname?: string;
-  bio?: string;
-  profileImage?: string;
-  isMarketingAgreed?: boolean;
-}) => {
-  const { data } = await client.patch("/user/profile", updateDto);
-  return data;
-};
-
-const deleteAccount = async () => {
-  try {
-    const { data } = await client.delete("/user/account");
-    return data;
-  } catch (error: any) {
-    console.log(
-      "=== 회원탈퇴 에러 상세 ===",
-      error.response?.status,
-      error.response?.data,
-    );
-  }
-};
-
-// 닉네임으로 유저 ID 조회 API
-const searchUserByNickname = async (nickname: string) => {
-  const { data } = await client.get(
-    `/user/search/${encodeURIComponent(nickname)}`,
-  );
-  return data;
-};
-
-// 신고 API 요청 함수
-export const createReport = async (reportDto: {
-  reportedUserId: string;
-  reason: ReportReason;
-  details: string;
-}) => {
-  const { data } = await client.post("/reports", reportDto);
-  return data;
-};
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingScreen() {
+  const t = useSettingLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
 
-  // 프로필 조회 모달 상태
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchNickname, setSearchNickname] = useState("");
-
-  const handleSearchUser = async () => {
-    if (!searchNickname.trim()) {
-      Alert.alert("알림", "유저 닉네임을 입력해주세요.");
-      return;
-    }
-
-    try {
-      const { data } = await client.get(
-        `/user/search/${encodeURIComponent(searchNickname.trim())}`,
-      );
-
-      if (data && data.id) {
-        setIsModalVisible(false);
-        setSearchNickname("");
-        // 유저 ID를 이용해 프로필 페이지로 이동
-        router.push(`/profile/${data.id}`);
-      }
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || "존재하지 않는 유저입니다.";
-      Alert.alert("오류", message);
-    }
-  };
-
-  // 내 정보 조회
-  const {
-    data: user,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["myInfo"],
-    queryFn: fetchMyInfo,
-  });
-
-  // 프로필 수정 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nickname, setNickname] = useState("");
   const [bio, setBio] = useState("");
   const [profileImage, setProfileImage] = useState("");
-
-  // 신고 모달 상태 (ID 대신 닉네임 입력)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [targetNickname, setTargetNickname] = useState("");
   const [selectedReason, setSelectedReason] = useState<ReportReason>(
@@ -154,142 +54,61 @@ export default function SettingScreen() {
   );
   const [reportDetails, setReportDetails] = useState("");
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-
-  // 마케팅 동의 즉각 반영용 로컬 상태
+  const [isPushEnabled, setIsPushEnabled] = useState(true);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
 
-  const [isPushEnabled, setIsPushEnabled] = useState(true);
+  ////////////////////////////////////////////////////////////////////////
 
-  const handleTogglePush = async (value: boolean) => {
-    setIsPushEnabled(value);
+  const {
+    data: me,
+    isPending: myInfoPending,
+    isError: myInfoError,
+  } = useQuery({
+    queryKey: ["myInfo"],
+    queryFn: getMyInfo,
+  });
 
-    if (value) {
-      // 💡 1. ON으로 켤 때: 시스템 권한이 거부되어 있다면 설정 앱으로 안내
-      const { status } = await Notifications.getPermissionsAsync();
-
-      if (status !== "granted") {
-        Alert.alert(
-          "알림 권한 필요",
-          "알림을 받으시려면 기기 설정에서 알림 권한을 허용해 주세요.",
-          [
-            { text: "취소", style: "cancel" },
-            { text: "설정으로 이동", onPress: () => Linking.openSettings() },
-          ],
-        );
-        setIsPushEnabled(false);
-        return;
-      }
-
-      const token = await registerForPushNotificationsAsync();
-      if (token) await saveTokenToServer(token);
-    } else {
-      await deleteTokenFromServer();
-    }
-  };
-
-  // 서버 데이터 로드시 로컬 상태 동기화
   useEffect(() => {
-    if (user) {
-      setNickname(user.nickname || "");
-      setBio(user.bio || "");
-      setProfileImage(user.profileImage || "");
-      setIsMarketingAgreed(!!user.marketingAgreedAt);
+    if (me) {
+      setNickname(me.nickname || "");
+      setBio(me.bio || "");
+      setProfileImage(me.profileImage || "");
+      setIsMarketingAgreed(!!me.marketingAgreedAt);
     }
-  }, [user]);
+  }, [me]);
 
-  // 프로필 수정 Mutation
-  const profileMutation = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (data, variables) => {
-      if (variables.isMarketingAgreed === undefined) {
-        Alert.alert("완료", "프로필이 성공적으로 수정되었습니다. ⚡");
+  ////////////////////////////////////////////////////////////////////////
+
+  const { mutate: updateProfileMutation, isPending: updateProfilePending } =
+    useMutation({
+      mutationFn: updateProfile,
+      onSuccess: () => {
+        Alert.alert(t.alertSuccess, t.profileUpdated);
         setIsModalOpen(false);
-      }
-      queryClient.invalidateQueries({ queryKey: ["myInfo"] });
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message;
-      const displayMessage = Array.isArray(message) ? message[0] : message;
-      Alert.alert("알림", displayMessage || "처리 중 오류가 발생했습니다.");
-    },
-  });
-
-  // 신고 Mutation
-  const reportMutation = useMutation({
-    mutationFn: createReport,
-    onSuccess: () => {
-      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
-      setIsReportModalOpen(false);
-      setTargetNickname("");
-      setSelectedReason(ReportReason.SPAM);
-      setReportDetails("");
-    },
-    onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
-      Alert.alert("오류", msg);
-    },
-    onSettled: () => {
-      setIsSubmittingReport(false);
-    },
-  });
-
-  // 회원 탈퇴 Mutation
-  const deleteAccountMutation = useMutation({
-    mutationFn: deleteAccount,
-    onSuccess: async () => {
-      Alert.alert("알림", "회원 탈퇴가 완료되었습니다.");
-      await queryClient.cancelQueries();
-      queryClient.clear();
-      await removeAccessToken();
-      router.replace("/login");
-    },
-    onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다.";
-      Alert.alert("오류", msg);
-    },
-  });
-
-  // 갤러리 이미지 선택 핸들러
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "권한 필요",
-        "사진을 선택하려면 갤러리 접근 권한이 필요합니다.",
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+        queryClient.invalidateQueries({ queryKey: ["myInfo"] });
+      },
+      onError: (error: any) => {
+        const message = error.response?.data?.message;
+        const displayMessage = Array.isArray(message) ? message[0] : message;
+        Alert.alert(
+          t.alertNotice,
+          displayMessage || "처리 중 오류가 발생했습니다.",
+        );
+      },
     });
 
-    if (!result.canceled && result.assets[0].uri) {
-      setProfileImage(result.assets[0].uri);
-    }
-  };
+  ////////////////////////////////////////////////////////////////////////
 
-  // 프로필 저장
   const handleSaveProfile = async () => {
     const trimmedNickname = nickname.trim();
 
     if (!trimmedNickname) {
-      Alert.alert("경고", "닉네임을 입력해 주세요.");
+      Alert.alert(t.alertWarning, "닉네임을 입력해 주세요.");
       return;
     }
 
-    if (trimmedNickname.length < 2) {
-      Alert.alert("경고", "닉네임을 2자 이상으로 입력해주세요.");
-      return;
-    }
-
-    if (trimmedNickname.length > 12) {
-      Alert.alert("경고", "닉네임을 12자 이하로 입력해주세요.");
+    if (trimmedNickname.length < 2 || trimmedNickname.length > 30) {
+      Alert.alert(t.alertWarning, t.nicknameAlert);
       return;
     }
 
@@ -303,100 +122,195 @@ export default function SettingScreen() {
       ) {
         const data = await uploadProfileImage(profileImage);
         if (data?.imageUrl) {
-          finalImageUrl = data.imageUrl; // R2에서 받아온 공개 URL로 교체
+          finalImageUrl = data.imageUrl;
         }
       }
 
-      // 💡 R2 업로드가 끝난 최종 URL을 담아 기존 mutation 실행
-      profileMutation.mutate({
+      updateProfileMutation({
         nickname,
         bio,
         profileImage: finalImageUrl,
       });
     } catch (error) {
-      console.error("이미지 업로드 실패:", error);
-      Alert.alert("오류", "프로필 이미지 업로드 중 문제가 발생했습니다.");
+      console.error(error);
+      Alert.alert(t.alertError, t.uploadImageError);
     }
   };
 
-  // 신고 제출 (닉네임 조회 후 ID 추출 처리)
-  const handleSubmitReport = async () => {
-    if (!targetNickname.trim()) {
-      Alert.alert("경고", "신고할 유저의 닉네임을 입력해주세요.");
-      return;
-    }
-    if (!reportDetails.trim()) {
-      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
-      return;
-    }
+  ////////////////////////////////////////////////////////////////////////
 
-    setIsSubmittingReport(true);
-
-    try {
-      // 1. 닉네임으로 유저 정보 조회
-      const searchedUser = await searchUserByNickname(targetNickname.trim());
-
-      if (!searchedUser || !searchedUser.id) {
-        Alert.alert("오류", "해당 닉네임을 가진 유저를 찾을 수 없습니다.");
-        setIsSubmittingReport(false);
-        return;
-      }
-
-      // 2. 조회된 유저 ID로 신고 API 호출
-      reportMutation.mutate({
-        reportedUserId: searchedUser.id,
-        reason: selectedReason,
-        details: reportDetails.trim(),
-      });
-    } catch (error: any) {
+  const { mutate: deleteAccountMutation } = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: async () => {
+      Alert.alert(t.alertNotice, "회원 탈퇴가 완료되었습니다.");
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await removeAccessToken();
+      router.replace("/login");
+    },
+    onError: (error: any) => {
       const msg =
-        error.response?.data?.message ||
-        "존재하지 않는 유저이거나 조회 실패했습니다.";
-      Alert.alert("조회 실패", msg);
-      setIsSubmittingReport(false);
-    }
+        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다.";
+      Alert.alert(t.alertError, msg);
+    },
+  });
+
+  ////////////////////////////////////////////////////////////////////////
+
+  const handleDeleteAccount = () => {
+    Alert.alert(t.deleteAccountTitle, t.deleteAccountConfirm, [
+      { text: t.cancel, style: "cancel" },
+      {
+        text: t.deleteAccountAction,
+        style: "destructive",
+        onPress: () => deleteAccountMutation(),
+      },
+    ]);
   };
 
-  // 로그아웃
+  ////////////////////////////////////////////////////////////////////////
+
   const handleLogout = () => {
-    Alert.alert("로그아웃", "정말 로그아웃 하시겠습니까?", [
-      { text: "취소", style: "cancel" },
+    Alert.alert(t.logoutTitle, t.logoutConfirm, [
+      { text: t.cancel, style: "cancel" },
       {
-        text: "로그아웃",
+        text: t.logoutAction,
         style: "destructive",
         onPress: async () => {
           await queryClient.cancelQueries();
           queryClient.clear();
-
           await removeAccessToken();
-
           router.replace("/login");
         },
       },
     ]);
   };
 
-  // 회원 탈퇴
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      "회원 탈퇴",
-      "정말로 탈퇴하시겠습니까?\n계정 정보와 모든 데이터가 삭제되며 복구할 수 없습니다.",
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "탈퇴하기",
-          style: "destructive",
-          onPress: () => deleteAccountMutation.mutate(),
-        },
-      ],
-    );
+  ////////////////////////////////////////////////////////////////////////
+
+  const { mutate: createReportMutation } = useMutation({
+    mutationFn: createReport,
+    onSuccess: () => {
+      Alert.alert(t.alertSuccess, t.reportSuccess);
+      setIsReportModalOpen(false);
+      setTargetNickname("");
+      setSelectedReason(ReportReason.SPAM);
+      setReportDetails("");
+    },
+    onError: (error: any) => {
+      const msg =
+        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
+      Alert.alert(t.alertError, msg);
+    },
+    onSettled: () => {
+      setIsSubmittingReport(false);
+    },
+  });
+
+  ////////////////////////////////////////////////////////////////////////
+
+  const handleSubmitReport = async () => {
+    if (!targetNickname.trim()) {
+      Alert.alert(t.alertWarning, t.reportTargetPlaceholder);
+      return;
+    }
+    if (!reportDetails.trim()) {
+      Alert.alert(t.alertWarning, t.reportDetailsPlaceholder);
+      return;
+    }
+
+    setIsSubmittingReport(true);
+
+    try {
+      const searchedUser = await searchUserByNickname(targetNickname.trim());
+
+      if (!searchedUser || !searchedUser.id) {
+        Alert.alert(t.alertError, t.userNotFound);
+        setIsSubmittingReport(false);
+        return;
+      }
+
+      createReportMutation({
+        reportedUserId: searchedUser.id,
+        reason: selectedReason,
+        details: reportDetails.trim(),
+      });
+    } catch (error: any) {
+      const msg = error.response?.data?.message || t.userNotFound;
+      Alert.alert(t.alertError, msg);
+      setIsSubmittingReport(false);
+    }
   };
 
-  const openTerms = (url: string) => {
-    WebBrowser.openBrowserAsync(url);
+  ////////////////////////////////////////////////////////////////////////
+
+  const handleSearchProfile = async () => {
+    if (!searchNickname.trim()) {
+      Alert.alert(t.alertNotice, t.enterNicknameAlert);
+      return;
+    }
+
+    try {
+      const searchedUser = await searchUserByNickname(searchNickname.trim());
+      if (searchedUser && searchedUser.id) {
+        setIsModalVisible(false);
+        setSearchNickname("");
+        router.push(`/profile/${searchedUser.id}`);
+      }
+    } catch (error: any) {
+      const message = t.userNotFound;
+      Alert.alert(t.alertError, message);
+    }
   };
 
-  if (isLoading) {
+  ////////////////////////////////////////////////////////////////////////
+
+  const handleTogglePushNoti = async (value: boolean) => {
+    setIsPushEnabled(value);
+
+    if (value) {
+      const { status } = await Notifications.getPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(t.permTitle, t.permDesc, [
+          { text: t.cancel, style: "cancel" },
+          { text: t.settingsButton, onPress: () => Linking.openSettings() },
+        ]);
+        setIsPushEnabled(false);
+        return;
+      }
+
+      const token = await registerForPushNotificationsAsync();
+      if (token) await saveTokenToServer(token);
+    } else {
+      await deleteTokenFromServer();
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////
+
+  const handleToggleMarketing = async (value: boolean) => {
+    setIsMarketingAgreed(value);
+
+    try {
+      if (value) {
+        await updateProfile({
+          marketingAgreedAt: new Date().toISOString(),
+        });
+      } else {
+        await updateProfile({
+          marketingAgreedAt: null,
+        });
+      }
+    } catch (error) {
+      setIsMarketingAgreed(!value);
+      Alert.alert(t.alertNotice, "마케팅 수신 동의 상태 변경에 실패했습니다.");
+    }
+  };
+
+  ////////////////////////////////////////////////////////////////////////
+
+  if (myInfoPending) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={Colors.green} />
@@ -404,23 +318,22 @@ export default function SettingScreen() {
     );
   }
 
-  if (isError || !user) {
+  if (myInfoError || !me) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <Text style={{ color: Colors.tabIconDefault }}>
-          유저 정보를 불러올 수 없습니다.
-        </Text>
+        <Text style={{ color: Colors.tabIconDefault }}>{t.userNotFound}</Text>
       </SafeAreaView>
     );
   }
+
+  ////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerTitle}>{t.headerTitle}</Text>
 
-          {/* 💡 우측 프로필 보기 아이콘 버튼 */}
           <TouchableOpacity
             onPress={() => setIsModalVisible(true)}
             style={styles.profileSearchBtn}
@@ -429,14 +342,10 @@ export default function SettingScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 프로필 카드 */}
         <View style={styles.profileCard}>
           <View style={styles.profileHeader}>
-            {user.profileImage ? (
-              <Image
-                source={{ uri: user.profileImage }}
-                style={styles.avatar}
-              />
+            {me.profileImage ? (
+              <Image source={{ uri: me.profileImage }} style={styles.avatar} />
             ) : (
               <View
                 style={[
@@ -453,38 +362,34 @@ export default function SettingScreen() {
               onPress={() => setIsModalOpen(true)}
             >
               <Ionicons name="pencil" size={14} color={Colors.text} />
-              <Text style={styles.editButtonText}>편집</Text>
+              <Text style={styles.editButtonText}>{t.editButton}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{user.nickname}</Text>
-            <Text style={styles.userBio}>
-              {user.bio || "아직 작성된 자기소개가 없습니다."}
-            </Text>
+            <Text style={styles.userName}>{me.nickname}</Text>
+            <Text style={styles.userBio}>{me.bio || t.emptyBio}</Text>
           </View>
 
-          {/* 신뢰도/매너 배지 */}
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>예스쇼</Text>
+              <Text style={styles.statLabel}>{t.yesShow}</Text>
               <Text style={[styles.statValue, { color: Colors.green }]}>
-                {user.yesShowCount ?? 0}회
+                {me.yesShowCount ?? 0}
               </Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statLabel}>노쇼</Text>
+              <Text style={styles.statLabel}>{t.noShow}</Text>
               <Text style={[styles.statValue, { color: Colors.red }]}>
-                {user.noShowCount ?? 0}회
+                {me.noShowCount ?? 0}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* 설정 메뉴 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>앱 설정</Text>
+          <Text style={styles.sectionTitle}>{t.sectionApp}</Text>
 
           <View style={styles.cardGroup}>
             <View style={styles.menuRow}>
@@ -494,11 +399,11 @@ export default function SettingScreen() {
                   size={18}
                   color={Colors.tabIconDefault}
                 />
-                <Text style={styles.menuLabel}>메시지 알림</Text>
+                <Text style={styles.menuLabel}>{t.menuNotification}</Text>
               </View>
               <Switch
                 value={isPushEnabled}
-                onValueChange={handleTogglePush}
+                onValueChange={handleTogglePushNoti}
                 trackColor={{
                   false: "#E0E0E0",
                   true: Colors.green || "#4CAF50",
@@ -508,10 +413,11 @@ export default function SettingScreen() {
               />
             </View>
 
-            {/* 이용약관 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://www.wecanbegenz.com/terms")}
+              onPress={() =>
+                WebBrowser.openBrowserAsync("https://www.wecanbegenz.com/terms")
+              }
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -519,7 +425,7 @@ export default function SettingScreen() {
                   size={18}
                   color={Colors.tabIconDefault}
                 />
-                <Text style={styles.menuLabel}>서비스 이용약관</Text>
+                <Text style={styles.menuLabel}>{t.menuTerms}</Text>
               </View>
               <Ionicons
                 name="chevron-forward"
@@ -528,10 +434,13 @@ export default function SettingScreen() {
               />
             </TouchableOpacity>
 
-            {/* 개인정보 처리방침 */}
             <TouchableOpacity
               style={styles.menuRow}
-              onPress={() => openTerms("https://www.wecanbegenz.com/privacy")}
+              onPress={() =>
+                WebBrowser.openBrowserAsync(
+                  "https://www.wecanbegenz.com/privacy",
+                )
+              }
             >
               <View style={styles.menuLabelGroup}>
                 <Ionicons
@@ -539,7 +448,7 @@ export default function SettingScreen() {
                   size={18}
                   color={Colors.tabIconDefault}
                 />
-                <Text style={styles.menuLabel}>개인정보 처리방침</Text>
+                <Text style={styles.menuLabel}>{t.menuPrivacy}</Text>
               </View>
               <Ionicons
                 name="chevron-forward"
@@ -548,7 +457,50 @@ export default function SettingScreen() {
               />
             </TouchableOpacity>
 
-            {/* 신고하기 버튼 */}
+            <TouchableOpacity
+              style={styles.menuRow}
+              onPress={() =>
+                WebBrowser.openBrowserAsync(
+                  "https://www.wecanbegenz.com/marketing",
+                )
+              }
+            >
+              <View style={styles.menuLabelGroup}>
+                <Ionicons
+                  name="cart-outline"
+                  size={18}
+                  color={Colors.tabIconDefault}
+                />
+                <Text style={styles.menuLabel}>{t.menuMarketing}</Text>
+              </View>
+              <Ionicons
+                name="chevron-forward"
+                size={18}
+                color={Colors.tabIconDefault}
+              />
+            </TouchableOpacity>
+
+            <View style={styles.menuRow}>
+              <View style={styles.menuLabelGroup}>
+                <Ionicons
+                  name="file-tray-full-outline"
+                  size={18}
+                  color={Colors.tabIconDefault}
+                />
+                <Text style={styles.menuLabel}>{t.menuMarketingAgree}</Text>
+              </View>
+              <Switch
+                value={isMarketingAgreed}
+                onValueChange={handleToggleMarketing}
+                trackColor={{
+                  false: "#E0E0E0",
+                  true: Colors.green,
+                }}
+                thumbColor={Platform.OS === "android" ? "#FFFFFF" : undefined}
+                ios_backgroundColor="#E0E0E0"
+              />
+            </View>
+
             <TouchableOpacity
               style={[styles.menuRow, { borderBottomWidth: 0 }]}
               onPress={() => setIsReportModalOpen(true)}
@@ -560,7 +512,7 @@ export default function SettingScreen() {
                   color={Colors.red}
                 />
                 <Text style={[styles.menuLabel, { color: Colors.red }]}>
-                  신고하기
+                  {t.menuReport}
                 </Text>
               </View>
               <Ionicons
@@ -572,9 +524,8 @@ export default function SettingScreen() {
           </View>
         </View>
 
-        {/* 계정 관리 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>계정 관리</Text>
+          <Text style={styles.sectionTitle}>{t.sectionAccount}</Text>
           <View style={styles.cardGroup}>
             <TouchableOpacity style={styles.menuRow} onPress={handleLogout}>
               <View style={styles.menuLabelGroup}>
@@ -583,7 +534,7 @@ export default function SettingScreen() {
                   size={18}
                   color={Colors.text}
                 />
-                <Text style={styles.menuLabel}>로그아웃</Text>
+                <Text style={styles.menuLabel}>{t.menuLogout}</Text>
               </View>
               <Ionicons
                 name="chevron-forward"
@@ -603,7 +554,7 @@ export default function SettingScreen() {
                   color={Colors.red}
                 />
                 <Text style={[styles.menuLabel, { color: Colors.red }]}>
-                  회원 탈퇴
+                  {t.menuDeleteAccount}
                 </Text>
               </View>
               <Ionicons
@@ -616,7 +567,6 @@ export default function SettingScreen() {
         </View>
       </ScrollView>
 
-      {/* 프로필 수정 모달 */}
       <Modal
         visible={isModalOpen}
         animationType="slide"
@@ -626,12 +576,11 @@ export default function SettingScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : -40}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>프로필 수정</Text>
+                <Text style={styles.modalTitle}>{t.editModalTitle}</Text>
                 <TouchableOpacity onPress={() => setIsModalOpen(false)}>
                   <Ionicons name="close" size={22} color={Colors.text} />
                 </TouchableOpacity>
@@ -639,67 +588,47 @@ export default function SettingScreen() {
 
               <View style={styles.modalBody}>
                 <View style={styles.imagePickerContainer}>
-                  <View style={{ position: "relative" }}>
-                    <TouchableOpacity
-                      onPress={pickImage}
-                      style={styles.avatarPicker}
-                    >
-                      {profileImage ? (
-                        <Image
-                          source={{ uri: profileImage }}
-                          style={styles.avatar}
-                        />
-                      ) : (
-                        <View
-                          style={[
-                            styles.avatar,
-                            { justifyContent: "center", alignItems: "center" },
-                          ]}
-                        >
-                          <Ionicons
-                            name="person"
-                            size={40}
-                            color={Colors.text}
-                          />
-                        </View>
-                      )}
-
-                      {/* 카메라 뱃지 - 기존과 동일 */}
-                      <View style={styles.cameraBadge}>
-                        <Ionicons name="camera" size={14} color="#000" />
-                      </View>
-                    </TouchableOpacity>
-
-                    {profileImage && (
-                      <TouchableOpacity
-                        onPress={() => setProfileImage("")} // 이미지 비우기
-                        style={styles.deleteBadge}
+                  <TouchableOpacity
+                    onPress={() => handleImagePick(setProfileImage, t)}
+                    style={styles.avatarPicker}
+                  >
+                    {profileImage ? (
+                      <Image
+                        source={{ uri: profileImage }}
+                        style={styles.avatar}
+                      />
+                    ) : (
+                      <View
+                        style={[
+                          styles.avatar,
+                          { justifyContent: "center", alignItems: "center" },
+                        ]}
                       >
-                        <Ionicons name="close" size={16} color="#FFF" />
-                      </TouchableOpacity>
+                        <Ionicons name="person" size={40} color={Colors.text} />
+                      </View>
                     )}
-                  </View>
-
-                  <Text style={styles.imagePickerHint}>
-                    이미지를 터치하여 갤러리에서 선택하세요
-                  </Text>
+                    <View style={styles.cameraBadge}>
+                      <Ionicons name="camera" size={14} color="#000" />
+                    </View>
+                  </TouchableOpacity>
+                  <Text style={styles.imagePickerHint}>{t.imageHint}</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>닉네임</Text>
+                <Text style={styles.inputLabel}>{t.nicknameLabel}</Text>
                 <TextInput
                   style={styles.input}
                   value={nickname}
                   onChangeText={setNickname}
-                  placeholder="닉네임을 입력하세요"
+                  placeholder={t.nicknamePlaceholder}
                   placeholderTextColor={Colors.tabIconDefault}
                 />
 
-                <Text style={styles.inputLabel}>자기소개</Text>
+                <Text style={styles.inputLabel}>{t.bioLabel}</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={bio}
                   onChangeText={setBio}
-                  placeholder="자기소개를 입력하세요"
+                  placeholder={t.bioPlaceholder}
                   placeholderTextColor={Colors.tabIconDefault}
                   multiline
                 />
@@ -708,12 +637,12 @@ export default function SettingScreen() {
               <TouchableOpacity
                 style={styles.saveButton}
                 onPress={handleSaveProfile}
-                disabled={profileMutation.isPending}
+                disabled={updateProfilePending}
               >
-                {profileMutation.isPending ? (
+                {updateProfilePending ? (
                   <ActivityIndicator color="#000" />
                 ) : (
-                  <Text style={styles.saveButtonText}>저장하기</Text>
+                  <Text style={styles.saveButtonText}>{t.saveButton}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -721,38 +650,33 @@ export default function SettingScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 신고하기 모달 */}
       <Modal
         visible={isReportModalOpen}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setIsReportModalOpen(false)}
       >
-        <KeyboardAvoidingView
-          behavior={"padding"}
-          style={{ flex: 1 }}
-          keyboardVerticalOffset={Platform.OS === "ios" ? -10 : -50}
-        >
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>🚨 유저 신고하기</Text>
+                <Text style={styles.modalTitle}>{t.reportModalTitle}</Text>
                 <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
                   <Ionicons name="close" size={22} color={Colors.text} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.modalBody}>
-                <Text style={styles.inputLabel}>신고할 유저 닉네임</Text>
+                <Text style={styles.inputLabel}>{t.reportTargetLabel}</Text>
                 <TextInput
                   style={styles.input}
                   value={targetNickname}
                   onChangeText={setTargetNickname}
-                  placeholder="상대방 닉네임을 입력해주세요"
+                  placeholder={t.reportTargetPlaceholder}
                   placeholderTextColor={Colors.tabIconDefault}
                 />
 
-                <Text style={styles.inputLabel}>신고 사유 선택</Text>
+                <Text style={styles.inputLabel}>{t.reportReasonLabel}</Text>
                 <View style={styles.chipContainer}>
                   {Object.values(ReportReason).map((reason) => {
                     const isSelected = selectedReason === reason;
@@ -768,19 +692,19 @@ export default function SettingScreen() {
                             isSelected && styles.chipTextSelected,
                           ]}
                         >
-                          {REPORT_REASON_LABELS[reason]}
+                          {t.reportReasonLabels[reason]}
                         </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
 
-                <Text style={styles.inputLabel}>상세 내용</Text>
+                <Text style={styles.inputLabel}>{t.reportDetailsLabel}</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={reportDetails}
                   onChangeText={setReportDetails}
-                  placeholder="신고 사유에 대한 상세 내용을 적어주세요."
+                  placeholder={t.reportDetailsPlaceholder}
                   placeholderTextColor={Colors.tabIconDefault}
                   multiline
                 />
@@ -795,7 +719,7 @@ export default function SettingScreen() {
                   <ActivityIndicator color="#FFF" />
                 ) : (
                   <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
-                    신고 접수하기
+                    {t.reportSubmitButton}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -804,31 +728,23 @@ export default function SettingScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* 💡 닉네임 검색 모달 */}
       <Modal
         visible={isModalVisible}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={"padding"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
-        >
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <View style={styles.modalBackground}>
             <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>🔍 유저 프로필 찾기</Text>
-              <Text style={styles.modalSubtitle}>
-                찾고 싶은 유저의 닉네임을 입력하세요.
-              </Text>
+              <Text style={styles.modalTitle}>{t.searchModalTitle}</Text>
+              <Text style={styles.modalSubtitle}>{t.searchModalSubtitle}</Text>
 
               <TextInput
                 style={styles.input}
-                placeholder="닉네임 입력"
+                placeholder={t.searchInputPlaceholder}
                 placeholderTextColor="#666"
                 value={searchNickname}
-                multiline
                 onChangeText={setSearchNickname}
                 autoCapitalize="none"
               />
@@ -838,19 +754,14 @@ export default function SettingScreen() {
                   style={[styles.modalBtn, styles.cancelBtn]}
                   onPress={() => setIsModalVisible(false)}
                 >
-                  <Text style={styles.cancelBtnText}>취소</Text>
+                  <Text style={styles.cancelBtnText}>{t.cancelButton}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[styles.modalBtn, styles.confirmBtn]}
-                  onPress={handleSearchUser}
-                  disabled={isLoading}
+                  onPress={handleSearchProfile}
                 >
-                  {isLoading ? (
-                    <ActivityIndicator color="#000" size="small" />
-                  ) : (
-                    <Text style={styles.confirmBtnText}>검색</Text>
-                  )}
+                  <Text style={styles.confirmBtnText}>{t.searchButton}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -860,6 +771,8 @@ export default function SettingScreen() {
     </SafeAreaView>
   );
 }
+
+//////////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: {
@@ -910,7 +823,7 @@ const styles = StyleSheet.create({
   },
   cancelBtn: { backgroundColor: "#2C2C2E" },
   cancelBtnText: { color: "#FFF", fontWeight: "600" },
-  confirmBtn: { backgroundColor: Colors.green || "#FFD700" },
+  confirmBtn: { backgroundColor: Colors.green },
   confirmBtnText: { color: "#000", fontWeight: "bold" },
 
   center: { justifyContent: "center", alignItems: "center" },
@@ -922,7 +835,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border || "#E9ECEF",
+    borderBottomColor: Colors.border,
     marginBottom: 12,
   },
   headerTitle: {
@@ -1012,23 +925,18 @@ const styles = StyleSheet.create({
   },
   menuLabelGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
   menuLabel: { fontSize: 15, color: Colors.text, fontWeight: "500" },
-
-  /* 모달 공통 및 칩 스타일 */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.75)",
     justifyContent: "flex-end",
   },
-
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
-
   modalBody: { gap: 12, marginBottom: 20 },
-
   imagePickerContainer: { alignItems: "center", marginBottom: 12 },
   avatarPicker: { position: "relative" },
   modalAvatar: {
@@ -1051,7 +959,6 @@ const styles = StyleSheet.create({
     color: Colors.tabIconDefault,
     marginTop: 8,
   },
-
   inputLabel: { fontSize: 12, fontWeight: "600", color: Colors.tabIconDefault },
   input: {
     backgroundColor: "#2C2C2E",
@@ -1097,14 +1004,14 @@ const styles = StyleSheet.create({
   },
   deleteBadge: {
     position: "absolute",
-    top: -5, // 오른쪽 상단 구석
+    top: -5,
     right: -5,
-    backgroundColor: "rgba(0,0,0,0.6)", // 반투명 검은색 배경
-    width: 24, // 터치 영역을 위해 아이콘보다 넉넉하게
+    backgroundColor: "rgba(0,0,0,0.6)",
+    width: 24,
     height: 24,
-    borderRadius: 13, // 동그랗게
+    borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 20, // 다른 요소보다 위에 표시
+    zIndex: 20,
   },
 });

@@ -4,9 +4,13 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface AppleLoginButtonProps {
   onPress: () => void;
+  text: string;
 }
 
-export function CustomAppleLoginButton({ onPress }: AppleLoginButtonProps) {
+export function CustomAppleLoginButton({
+  onPress,
+  text,
+}: AppleLoginButtonProps) {
   return (
     <TouchableOpacity
       style={styles.appleButton}
@@ -20,7 +24,7 @@ export function CustomAppleLoginButton({ onPress }: AppleLoginButtonProps) {
           color="#FFFFFF"
           style={styles.logo}
         />
-        <Text style={styles.appleButtonText}>Apple로 로그인</Text>
+        <Text style={styles.appleButtonText}>{text}</Text>
       </View>
     </TouchableOpacity>
   );

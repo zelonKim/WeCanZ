@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Gathering } from "../(tabs)/flash";
+import { Gathering } from "../(tabs)/joined";
 
 type TabType = "COMPLETED" | "CANCELED";
 

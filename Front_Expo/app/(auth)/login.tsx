@@ -1,8 +1,10 @@
-import { client } from "@/api/client";
+import { loginUser } from "@/api/auth/loginUser";
+import { socialLoginUser } from "@/api/auth/socialLoginUser";
 import { setAccessToken } from "@/api/token";
 import { CustomAppleLoginButton } from "@/components/CustomAppleLoginButton";
 import { CustomGoogleLoginButton } from "@/components/CustomGoogleLoginButton";
 import Colors from "@/constants/Colors";
+import { useLoginLanguage } from "@/hooks/useLoginLanguage";
 import { Ionicons } from "@expo/vector-icons";
 import {
   GoogleSignin,
@@ -27,7 +29,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// 💡 구글 네이티브 로그인 초기화 설정
 GoogleSignin.configure({
   webClientId:
     "716946851146-fdhf9939k1giu735237ugffrrddv4viu.apps.googleusercontent.com",
@@ -36,39 +37,26 @@ GoogleSignin.configure({
   offlineAccess: true,
 });
 
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface SocialLoginData {
-  idToken: string;
-  provider: "google" | "apple";
-}
-
 export default function LoginScreen() {
+  const { t } = useLoginLanguage();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // 1. 이메일 로그인 Mutation
-  const loginUser = async (loginData: LoginData) => {
-    const { data } = await client.post("/auth/login", loginData);
-    return data;
-  };
-
-  const { mutate: loginMutate, isPending } = useMutation({
+  const { mutate: loginMutate, isPending: loginPending } = useMutation({
     mutationFn: loginUser,
     onSuccess: async (data) => {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
       }
-      router.replace("/(tabs)");
+      setTimeout(() => {
+        router.replace("/");
+      }, 0);
     },
     onError: (error: any) => {
       const errorData = error.response?.data;
-      let errorMessage = "오류가 발생했습니다.";
+      let errorMessage = t.alerts.defaultErrorMsg;
 
       if (errorData) {
         if (typeof errorData.message === "string") {
@@ -84,17 +72,27 @@ export default function LoginScreen() {
         errorMessage = error.message;
       }
 
-      Alert.alert("오류", errorMessage);
+      Alert.alert(t.alerts.error, errorMessage);
     },
   });
 
-  const socialLoginUser = async ({ idToken, provider }: SocialLoginData) => {
-    const { data } = await client.post("/auth/social-login", {
-      token: idToken,
-      provider: provider,
-    });
-    return data;
+  ///////////////////////////////////////////////////////////////////////////
+
+  const handleEmailLogin = () => {
+    if (!email.trim()) {
+      Alert.alert(t.alerts.warning, t.alerts.idRequired);
+      return;
+    }
+
+    if (!password.trim()) {
+      Alert.alert(t.alerts.warning, t.alerts.pwRequired);
+      return;
+    }
+
+    loginMutate({ email, password });
   };
+
+  ///////////////////////////////////////////////////////////////////////////
 
   const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation(
     {
@@ -103,69 +101,65 @@ export default function LoginScreen() {
         if (data.accessToken) {
           await setAccessToken(data.accessToken);
         }
-        if (data.isNewUser) {
-          // 신규 가입자라면 약관 동의 및 추가 정보 입력 페이지로 이동
-          router.replace("/agreement");
-        } else {
-          // 기존 유저는 바로 메인으로
-          router.replace("/(tabs)");
-        }
+        setTimeout(() => {
+          if (data.isNewUser) {
+            router.replace("/agreement");
+          } else {
+            router.replace("/");
+          }
+        }, 0);
       },
       onError: (error: any) => {
-        // 백엔드에서 반환하는 전체 에러 응답 객체를 통째로 찍어봅니다.
-        console.log("=== 백엔드 소셜 로그인 에러 상세 ===", {
+        console.log("=== Backend Social Login Error ===", {
           status: error.response?.status,
           data: error.response?.data,
           message: error.message,
         });
 
-        const errorMessage =
-          error.response?.data?.message ||
-          "소셜 로그인 중 오류가 발생했습니다.";
-        Alert.alert("오류", errorMessage);
+        const errorMessage = t.alerts.socialLoginErrorMsg;
+        Alert.alert(t.alerts.error, errorMessage);
       },
     },
   );
 
-  // 3. 네이티브 구글 로그인 핸들러
+  ///////////////////////////////////////////////////////////////////////////
+
   const handleGoogleLogin = async () => {
     try {
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
 
-      // 최신 라이브러리 버전 응답 구조 대응
       const idToken = response.data?.idToken || (response as any).idToken;
 
       if (idToken) {
         socialLoginMutate({ idToken, provider: "google" });
       } else {
-        Alert.alert("오류", "구글 인증 토큰을 가져오지 못했습니다.");
+        Alert.alert(t.alerts.error, t.alerts.googleTokenErrorMsg);
       }
     } catch (error: any) {
-      console.log("=== 구글 로그인 네이티브 에러 상세 ===", {
+      console.log("=== Google Login Error ===", {
         code: error.code,
         message: error.message,
         fullError: JSON.stringify(error, null, 2),
       });
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // 사용자가 로그인을 취소함
       } else if (error.code === statusCodes.IN_PROGRESS) {
-        // 로그인 진행 중
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert("오류", "Google Play Services를 사용할 수 없습니다.");
+        Alert.alert(t.alerts.error, t.alerts.playServicesErrorMsg);
       } else {
         Alert.alert(
-          "오류",
-          error.message || "구글 로그인 중 문제가 발생했습니다.",
+          t.alerts.error,
+          error.message || t.alerts.googleLoginErrorMsg,
         );
       }
     }
   };
 
-  // 4. 네이티브 애플 로그인 핸들러
+  ///////////////////////////////////////////////////////////////////////////
+
   const handleAppleLogin = async () => {
     if (Platform.OS !== "ios") {
-      Alert.alert("안내", "Apple 로그인은 iOS기기에서만 지원됩니다.");
+      Alert.alert(t.alerts.appleUnsupported, t.alerts.appleUnsupportedMsg);
       return;
     }
     try {
@@ -182,31 +176,17 @@ export default function LoginScreen() {
           provider: "apple",
         });
       } else {
-        Alert.alert("오류", "애플 인증 토큰을 가져오지 못했습니다.");
+        Alert.alert(t.alerts.appleTokenError, t.alerts.appleTokenErrorMsg);
       }
     } catch (e: any) {
       if (e.code === "ERR_REQUEST_CANCELED") {
-        // 사용자가 취소함
       } else {
-        Alert.alert("오류", "애플 로그인 중 문제가 발생했습니다.");
+        Alert.alert(t.alerts.error, t.alerts.appleLoginErrorMsg);
       }
     }
   };
 
-  // 이메일 로그인 제출 핸들러
-  const handleEmailLogin = () => {
-    if (!email.trim()) {
-      Alert.alert("경고", "아이디를 입력해 주세요.");
-      return;
-    }
-
-    if (!password.trim()) {
-      Alert.alert("경고", "비밀번호를 입력해 주세요.");
-      return;
-    }
-
-    loginMutate({ email, password });
-  };
+  ///////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView
@@ -220,7 +200,6 @@ export default function LoginScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          {/* 1. 상단 로고 & 타이틀 */}
           <View style={styles.brandSection}>
             <Image
               source={require("@/assets/images/sticker.png")}
@@ -229,10 +208,10 @@ export default function LoginScreen() {
             <Text style={[styles.logoText, { color: Colors.green }]}>
               WeCanZ
             </Text>
-            <Text style={styles.subText}>우리도 주말에 Gen-Z가 될 수 있어요</Text>
+
+            <Text style={styles.subText}>{t.subText}</Text>
           </View>
 
-          {/* 2. 이메일 & 비밀번호 입력 폼 */}
           <View style={styles.formSection}>
             <View style={styles.inputGroup}>
               <Ionicons
@@ -243,7 +222,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="아이디"
+                placeholder={t.idPlaceholder}
                 placeholderTextColor="#666"
                 autoCapitalize="none"
                 value={email}
@@ -251,7 +230,6 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* 비밀번호 입력창 */}
             <View style={styles.inputGroup}>
               <Ionicons
                 name="lock-closed-outline"
@@ -261,7 +239,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="비밀번호"
+                placeholder={t.passwordPlaceholder}
                 placeholderTextColor="#666"
                 secureTextEntry
                 autoCapitalize="none"
@@ -270,47 +248,50 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* 로그인 버튼 */}
             <TouchableOpacity
               style={[styles.loginBtn, { backgroundColor: Colors.green }]}
               onPress={handleEmailLogin}
-              disabled={isPending || isSocialPending}
+              disabled={loginPending || isSocialPending}
             >
-              {isPending ? (
+              {loginPending ? (
                 <ActivityIndicator size="small" color="#000" />
               ) : (
-                <Text style={styles.loginBtnText}>로그인</Text>
+                <Text style={styles.loginBtnText}>{t.loginBtn}</Text>
               )}
             </TouchableOpacity>
 
-            {/* 회원가입 이동 박스/링크 */}
             <View style={styles.signupBox}>
-              <Text style={styles.signupPrompt}>아직 계정이 없으신가요?</Text>
+              <Text style={styles.signupPrompt}>{t.signupPrompt}</Text>
+
               <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
                 <Text style={[styles.signupLinkText, { color: Colors.green }]}>
-                  회원가입
+                  {t.signupLink}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* 3. 구분을 위한 구분선 */}
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
-            <Text style={styles.dividerText}>간편 로그인</Text>
+            <Text style={styles.dividerText}>{t.dividerText}</Text>
+
             <View style={styles.divider} />
           </View>
 
-          {/* 4. 하단 간편 소셜 로그인 */}
           {isSocialPending ? (
             <ActivityIndicator color={Colors.text} size="large" />
           ) : (
             <View style={styles.socialButtonRow}>
-              {/* 구글 로그인 */}
-              <CustomGoogleLoginButton onPress={handleGoogleLogin} />
+              <CustomGoogleLoginButton
+                onPress={handleGoogleLogin}
+                text={t.googleLoginBtn}
+              />
 
               {Platform.OS === "ios" && (
-                <CustomAppleLoginButton onPress={handleAppleLogin} />
+                <CustomAppleLoginButton
+                  onPress={handleAppleLogin}
+                  text={t.appleLoginBtn}
+                />
               )}
             </View>
           )}
@@ -319,6 +300,8 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
+
+///////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -346,7 +329,6 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   formSection: { gap: 12 },
-
   inputGroup: {
     width: "100%",
     flexDirection: "row",
@@ -356,11 +338,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 16,
   },
-
   icon: {
     marginRight: 10,
   },
-
   input: {
     flex: 1,
     height: "100%",
@@ -391,9 +371,7 @@ const styles = StyleSheet.create({
   signupLinkText: {
     fontSize: Platform.OS === "ios" ? 14 : 13,
     fontWeight: Platform.OS === "ios" ? "600" : "400",
-    // textDecorationLine: "underline",
   },
-
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -406,7 +384,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
-
   socialButtonRow: {
     flexDirection: "column",
     justifyContent: "center",

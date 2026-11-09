@@ -1,5 +1,6 @@
 import { client } from "@/api/client";
 import Colors from "@/constants/Colors";
+import { useCommercialLanguage } from "@/hooks/useCommercialLanguage";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -52,6 +53,9 @@ export default function CommercialScreen() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
 
+  // 다국어 텍스트 객체 가져오기
+  const t = useCommercialLanguage();
+
   const {
     data: ads = [],
     isLoading,
@@ -63,7 +67,6 @@ export default function CommercialScreen() {
     queryFn: fetchActiveAds,
   });
 
-  // 클릭 수 증가 뮤테이션
   const { mutate: recordClick } = useMutation({
     mutationFn: postAdClick,
     onError: (error) => {
@@ -71,7 +74,6 @@ export default function CommercialScreen() {
     },
   });
 
-  // 광고 카드 클릭 핸들러
   const handleAdClick = async (ad: AdItem) => {
     recordClick(ad.id);
 
@@ -79,7 +81,9 @@ export default function CommercialScreen() {
       try {
         const canOpen = await Linking.canOpenURL(ad.linkUrl);
         if (canOpen) {
-          await Linking.openURL(ad.linkUrl);
+          await Linking.URL(ad.linkUrl);
+        } else {
+          Alert.alert("Error", t.linkError);
         }
       } catch (error) {
         console.error("링크 이동 중 오류 발생:", error);
@@ -98,7 +102,7 @@ export default function CommercialScreen() {
   if (isError) {
     return (
       <View style={styles.center}>
-        <Text style={styles.emptyText}>광고를 불러오는 데 실패했습니다.</Text>
+        <Text style={styles.emptyText}>{t.loadError}</Text>
       </View>
     );
   }
@@ -107,9 +111,8 @@ export default function CommercialScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       {/* 상단 커스텀 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Z-Spot</Text>
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
 
-        {/* 우측 아이콘 버튼 */}
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => setModalVisible(true)}
@@ -145,7 +148,7 @@ export default function CommercialScreen() {
 
             <View style={styles.cardContent}>
               <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>광고</Text>
+                <Text style={styles.badgeText}>{t.adBadge}</Text>
               </View>
 
               <Text style={styles.title}>{item.title}</Text>
@@ -154,11 +157,11 @@ export default function CommercialScreen() {
               </Text>
 
               <View style={styles.infoRow}>
-                <Text style={styles.storeName}> {item.store.name}</Text>
+                <Text style={styles.storeName}>{item.store.name}</Text>
 
                 <Text style={styles.infoText}>📍 {item.store.address}</Text>
                 <Text style={styles.infoText}>
-                  ⏰ 영업시간: {item.store.openTime} ~ {item.store.closeTime}
+                  {t.hoursLabel} {item.store.openTime} ~ {item.store.closeTime}
                 </Text>
               </View>
             </View>
@@ -166,9 +169,7 @@ export default function CommercialScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>
-              현재 진행 중인 제휴 광고가 없습니다.
-            </Text>
+            <Text style={styles.emptyText}>{t.emptyText}</Text>
           </View>
         }
       />
@@ -182,10 +183,8 @@ export default function CommercialScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>📢 광고 및 제휴 신청 안내</Text>
-            <Text style={styles.modalText}>
-              Z-Spot에 제휴 광고를 원하시는 분께서는 아래 채널로 문의해 주세요.
-            </Text>
+            <Text style={styles.modalTitle}>{t.modalTitle}</Text>
+            <Text style={styles.modalText}>{t.modalDescription}</Text>
             <View
               style={{
                 flexDirection: "column",
@@ -194,14 +193,14 @@ export default function CommercialScreen() {
               }}
             >
               <Text style={styles.modalSubText}>
-                • 이메일: ksz18601@gmail.com
+                {t.modalEmailLabel} ksz18601@gmail.com
               </Text>
             </View>
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.modalCloseButtonText}>확인</Text>
+              <Text style={styles.modalCloseButtonText}>{t.modalClose}</Text>
             </TouchableOpacity>
           </View>
         </View>

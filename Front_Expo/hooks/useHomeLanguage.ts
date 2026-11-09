@@ -32,7 +32,9 @@ const translations = {
     statusInProgress: "진행중",
     statusCompleted: "종료됨",
     people: "명",
+    error: "오류",
     alerts: {
+      title: "경고",
       titleRequired: "제목을 입력해주세요.",
       descRequired: "설명을 입력해주세요.",
       locationRequired: "모임 장소를 입력해주세요.",
@@ -76,7 +78,9 @@ const translations = {
     statusInProgress: "In Progress",
     statusCompleted: "Completed",
     people: "p",
+    error: "Error",
     alerts: {
+      title: "warning",
       titleRequired: "Please enter a title.",
       descRequired: "Please enter a description.",
       locationRequired: "Please enter a location.",

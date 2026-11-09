@@ -3,9 +3,13 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface GoogleLoginButtonProps {
   onPress: () => void;
+  text: string;
 }
 
-export function CustomGoogleLoginButton({ onPress }: GoogleLoginButtonProps) {
+export function CustomGoogleLoginButton({
+  onPress,
+  text,
+}: GoogleLoginButtonProps) {
   return (
     <TouchableOpacity
       style={styles.googleButton}
@@ -13,12 +17,11 @@ export function CustomGoogleLoginButton({ onPress }: GoogleLoginButtonProps) {
       activeOpacity={0.8}
     >
       <View style={styles.contentContainer}>
-        {/* 공식 4색 Google G 로고 사용 */}
         <Image
           source={require("@/assets/images/google_logo.png")}
           style={styles.logo}
         />
-        <Text style={styles.googleButtonText}>Google로 로그인</Text>
+        <Text style={styles.googleButtonText}>{text}</Text>
       </View>
     </TouchableOpacity>
   );

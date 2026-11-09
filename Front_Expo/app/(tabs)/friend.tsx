@@ -1,5 +1,24 @@
 import { client } from "@/api/client";
+import { requestDM } from "@/api/DM/requestDM";
+import { acceptFriendRequest } from "@/api/friend/acceptFriendRequest";
+import { getMyFriends } from "@/api/friend/getMyFriends";
+import { getPendingFriendRequests } from "@/api/friend/getPendingFriendRequests";
+import { rejectFriendRequest } from "@/api/friend/rejectFriendRequest";
+import { requestFriendship } from "@/api/friend/requestFriendship";
+import { getBlockedUsers } from "@/api/user/getBlockedUsers";
+import { searchUserByNickname } from "@/api/user/searchUserByNickname";
+import { unblockUser } from "@/api/user/unblockUser";
+import { AddFriendModal } from "@/components/AddFriendModal";
+import { BlockManagementModal } from "@/components/BlockManagementModal";
+import { FriendItemRow } from "@/components/FriendItemRow";
+import { PendingRequestsSection } from "@/components/PendingRequestsSection";
+import { renderAvatar } from "@/components/renderAvatar";
 import Colors from "@/constants/Colors";
+import { useFriendLanguage } from "@/hooks/useFriendLanguage";
+import { FriendItem } from "@/types/friend/FriendItem";
+import { FriendshipRequest } from "@/types/friend/FriendshipRequest";
+import { BlockedUserItem } from "@/types/user/BlockedUserItem";
+import { User } from "@/types/user/User";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -7,155 +26,130 @@ import React, { useState } from "react";
 import {
   Alert,
   FlatList,
-  Image,
-  Modal,
-  Platform,
   RefreshControl,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface User {
-  id: string;
-  nickname: string;
-  profileImage?: string;
-}
-
-interface FriendshipRequest {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "BLOCKED";
-  sender: User;
-}
-
-interface FriendItem {
-  id: string;
-  friendUser: User;
-  status: "PENDING" | "ACCEPTED" | "REJECTED" | "BLOCKED";
-}
-
-// 차단된 유저 항목 타입
-interface BlockedUserItem {
-  id: string;
-  receiver?: User;
-  nickname?: string;
-  profileImage?: string;
-}
-
 export default function FriendScreen() {
+  const { t } = useFriendLanguage();
   const queryClient = useQueryClient();
   const router = useRouter();
+
   const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [friendNickname, setFriendNickname] = useState("");
   const [blockNickname, setBlockNickname] = useState("");
 
-  // 1. 받은 친구 요청 목록 조회
   const {
     data: pendingRequests = [],
     isLoading: isPendingLoading,
     refetch: refetchPending,
   } = useQuery<FriendshipRequest[]>({
     queryKey: ["friend-requests-pending"],
-    queryFn: async () => {
-      const { data } = await client.get("/friendship/requests/pending");
-      return data;
-    },
+    queryFn: getPendingFriendRequests,
   });
 
-  // 2. 내 친구 목록 조회
+  /////////////////////////////////////////////////////////////////////////
+
   const {
     data: myFriends = [],
     isLoading: isFriendsLoading,
     refetch: refetchFriends,
   } = useQuery<FriendItem[]>({
     queryKey: ["my-friends"],
-    queryFn: async () => {
-      const { data } = await client.get("/friendship");
-      return data.filter((item: FriendItem) => item.status === "ACCEPTED");
-    },
+    queryFn: getMyFriends,
   });
 
-  // 💡 3. 내가 차단한 유저 목록 조회 (모달 오픈 시 실행)
+  /////////////////////////////////////////////////////////////////////////
+
   const {
     data: blockedUsers = [],
     isLoading: isBlockedLoading,
     refetch: refetchBlocked,
   } = useQuery<BlockedUserItem[]>({
     queryKey: ["blocked-users"],
-    queryFn: async () => {
-      const { data } = await client.get("/friendship/blocked");
-      return data;
-    },
+    queryFn: getBlockedUsers,
     enabled: isBlockModalVisible,
   });
 
-  // 4. 친구 요청 수락
-  const acceptMutation = useMutation({
-    mutationFn: (friendshipId: string) =>
-      client.patch(`/friendship/${friendshipId}/accept`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const isRefreshing = isPendingLoading || isFriendsLoading;
+
+  const onRefresh = () => {
+    refetchPending();
+    refetchFriends();
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: acceptFriendMutation } = useMutation({
+    mutationFn: acceptFriendRequest,
     onSuccess: () => {
-      Alert.alert("성공", "친구 요청을 수락했습니다.");
+      Alert.alert(t.alerts.success, t.alerts.acceptSuccess);
       queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
       queryClient.invalidateQueries({ queryKey: ["my-friends"] });
     },
     onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "수락에 실패했습니다.",
-      );
+      Alert.alert(t.alerts.error, t.alerts.acceptFail);
     },
   });
 
-  // 5. 친구 요청 거절
-  const rejectMutation = useMutation({
-    mutationFn: (friendshipId: string) =>
-      client.patch(`/friendship/${friendshipId}/reject`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: rejectFriendMutation } = useMutation({
+    mutationFn: rejectFriendRequest,
     onSuccess: () => {
-      Alert.alert("알림", "친구 요청을 거절했습니다.");
+      Alert.alert(t.alerts.notice, t.alerts.rejectSuccess);
       queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
     },
     onError: (err: any) => {
       Alert.alert(
-        "오류",
-        err.response?.data?.message || "거절에 실패했습니다.",
+        t.alerts.error,
+        err.response?.data?.message || t.alerts.rejectFail,
       );
     },
   });
 
-  // 6. 친구 신청
-  const handleSendFriendRequest = async () => {
-    if (!friendNickname.trim()) {
-      Alert.alert("알림", "친구의 닉네임을 입력해주세요");
-      return;
-    }
+  /////////////////////////////////////////////////////////////////////////
 
-    try {
-      const res = await client.get(
-        `/user/search/${encodeURIComponent(friendNickname)}`,
-      );
-      await client.post(`/friendship/request/${res.data.id}`);
-
+  const { mutate: sendRequestMutation } = useMutation({
+    mutationFn: requestFriendship,
+    onSuccess: () => {
       setIsAddModalVisible(false);
       setFriendNickname("");
-      Alert.alert("알림", "친구 요청을 보냈습니다.");
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        "오류로 인해 친구 요청에 실패했습니다.";
+      Alert.alert(t.alerts.notice, t.alerts.requestSent);
+      queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
+    },
+    onError: (error: any) => {
+      const errorMessage = t.alerts.searchFail;
+      Alert.alert(t.alerts.notice, errorMessage);
+    },
+  });
 
-      Alert.alert("알림", errorMessage);
+  /////////////////////////////////////////////////////////////////////////
+
+  const handleSendFriendRequest = async () => {
+    if (!friendNickname.trim()) {
+      Alert.alert(t.alerts.notice, t.alerts.emptyNickname);
+      return;
+    }
+    try {
+      const userData = await searchUserByNickname(friendNickname.trim());
+      sendRequestMutation(userData.id);
+    } catch (error: any) {
+      const errorMessage = t.alerts.searchFail;
+      Alert.alert(t.alerts.notice, errorMessage);
     }
   };
 
-  // 7. DM 요청 Mutation
-  const requestDmMutation = useMutation({
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: requestDmMutation } = useMutation({
     mutationFn: async ({
       targetUserId,
       friend,
@@ -163,10 +157,8 @@ export default function FriendScreen() {
       targetUserId: string;
       friend: User;
     }) => {
-      const response = await client.post(
-        `/direct-chat/request/${targetUserId}`,
-      );
-      return { roomData: response.data, friend };
+      const roomData = await requestDM(targetUserId);
+      return { roomData, friend };
     },
     onSuccess: ({ roomData, friend }) => {
       const chatRoomId = roomData.id;
@@ -181,87 +173,69 @@ export default function FriendScreen() {
     },
     onError: (err: any) => {
       Alert.alert(
-        "오류",
-        err.response?.data?.message || "DM 이동에 실패했습니다.",
+        t.alerts.error,
+        err.response?.data?.message || t.alerts.dmFail,
       );
     },
   });
 
-  // 8. 차단 해제 Mutation
-  const unblockMutation = useMutation({
-    mutationFn: (targetUserId: string) =>
-      client.patch(`/friendship/unblock/${targetUserId}`),
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: unblockMutation } = useMutation({
+    mutationFn: unblockUser,
     onSuccess: () => {
-      Alert.alert("성공", "차단이 해제되었습니다.");
+      Alert.alert(t.alerts.success, t.alerts.unblockSuccess);
       queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
       queryClient.invalidateQueries({ queryKey: ["my-friends"] });
     },
     onError: (err: any) => {
-      Alert.alert("오류", err.response?.data?.message || "차단 해제 실패");
+      Alert.alert(
+        t.alerts.error,
+        err.response?.data?.message || t.alerts.unblockFail,
+      );
     },
   });
 
-  // 9. 유저 차단 Mutation
-  const blockUserMutation = useMutation({
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: blockUserMutation } = useMutation({
     mutationFn: (targetUserId: string) =>
       client.patch(`/friendship/block/${targetUserId}`),
     onSuccess: () => {
-      Alert.alert("성공", "유저를 차단했습니다.");
+      Alert.alert(t.alerts.success, t.alerts.blockSuccess);
       setBlockNickname("");
       queryClient.invalidateQueries({ queryKey: ["my-friends"] });
       queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
     },
     onError: (err: any) => {
       Alert.alert(
-        "오류",
-        err.response?.data?.message || "유저 차단에 실패했습니다.",
+        t.alerts.error,
+        err.response?.data?.message || t.alerts.blockFail,
       );
     },
   });
 
-  // 💡 10. 닉네임으로 검색해서 직접 차단하기
+  /////////////////////////////////////////////////////////////////////////
+
   const handleBlockByNickname = async () => {
     if (!blockNickname.trim()) {
-      Alert.alert("알림", "차단할 유저의 닉네임을 입력해주세요.");
+      Alert.alert(t.alerts.notice, t.alerts.emptyBlockNickname);
       return;
     }
-
     try {
-      const res = await client.get(
-        `/user/search/${encodeURIComponent(blockNickname)}`,
-      );
-      blockUserMutation.mutate(res.data.id);
+      const userData = await searchUserByNickname(blockNickname.trim());
+      blockUserMutation(userData.id);
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        "존재하지 않거나 검색할 수 없는 유저입니다.";
-      Alert.alert("알림", errorMessage);
+      Alert.alert(t.alerts.notice, t.alerts.searchFail);
     }
   };
 
-  const isRefreshing = isPendingLoading || isFriendsLoading;
-
-  const onRefresh = () => {
-    refetchPending();
-    refetchFriends();
-  };
-
-  const renderAvatar = (profileImage?: string) => {
-    if (profileImage) {
-      return <Image source={{ uri: profileImage }} style={styles.avatar} />;
-    }
-    return (
-      <View style={styles.avatarPlaceholder}>
-        <Ionicons name="person" size={22} color={Colors.text || "#333"} />
-      </View>
-    );
-  };
+  ////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 헤더 영역 */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Z-Friend</Text>
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <TouchableOpacity
             style={styles.iconBtn}
@@ -288,7 +262,6 @@ export default function FriendScreen() {
         </View>
       </View>
 
-      {/* 메인 친구 목록 FlatList */}
       <FlatList
         data={myFriends}
         keyExtractor={(item) => item.id}
@@ -298,283 +271,74 @@ export default function FriendScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                받은 친구 요청 ({pendingRequests.length})
-              </Text>
-            </View>
-
-            {pendingRequests.length === 0 ? (
-              <View style={styles.emptyCard}>
-                <Text style={styles.emptyText}>받은 친구 요청이 없습니다.</Text>
-              </View>
-            ) : (
-              pendingRequests.map((req) => (
-                <View key={req.id} style={styles.card}>
-                  <View style={styles.userInfo}>
-                    {renderAvatar(req.sender?.profileImage)}
-                    <Text style={styles.nickname} numberOfLines={2}>
-                      {req.sender?.nickname || "알 수 없는 유저"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.actionGroup}>
-                    <TouchableOpacity
-                      style={styles.btnAccept}
-                      onPress={() => acceptMutation.mutate(req.id)}
-                    >
-                      <Text style={styles.btnAcceptText}>수락</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.btnReject}
-                      onPress={() => rejectMutation.mutate(req.id)}
-                    >
-                      <Text style={styles.btnRejectText}>거절</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            )}
-
+            <PendingRequestsSection
+              pendingRequests={pendingRequests}
+              t={t}
+              renderAvatar={renderAvatar}
+              onAccept={(id) => acceptFriendMutation(id)}
+              onReject={(id) => rejectFriendMutation(id)}
+              styles={styles}
+            />
             <View style={[styles.sectionHeader, { marginTop: 24 }]}>
               <Text style={styles.sectionTitle}>
-                친구 목록 ({myFriends.length})
+                {t.roomsHeader(myFriends.length)}
               </Text>
             </View>
           </View>
         }
-        renderItem={({ item }) => {
-          const friend = item.friendUser || (item as any);
-          const targetUserId = friend.id || item.id;
-
-          return (
-            <View style={styles.card}>
-              <View style={styles.userInfo}>
-                {renderAvatar(friend.profileImage)}
-                <Text style={styles.nickname}>{friend.nickname}</Text>
-              </View>
-
-              <View style={styles.actionIconGroup}>
-                <TouchableOpacity
-                  style={styles.dmActionBtn}
-                  onPress={() =>
-                    requestDmMutation.mutate({ targetUserId, friend })
-                  }
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons
-                    name="chatbubbles-outline"
-                    size={22}
-                    color={Colors.card}
-                  />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.blockActionBtn}
-                  onPress={() =>
-                    Alert.alert(
-                      "유저 차단",
-                      `${friend.nickname}님을 차단하시겠습니까?`,
-                      [
-                        { text: "취소", style: "cancel" },
-                        {
-                          text: "차단",
-                          style: "destructive",
-                          onPress: () => blockUserMutation.mutate(targetUserId),
-                        },
-                      ],
-                    )
-                  }
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons
-                    name="person-remove-outline"
-                    size={22}
-                    color={Colors.text}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        }}
+        renderItem={({ item }) => (
+          <FriendItemRow
+            item={item}
+            styles={styles}
+            Colors={Colors}
+            t={t}
+            renderAvatar={renderAvatar}
+            onRequestDm={(targetUserId, friend) =>
+              requestDmMutation({ targetUserId, friend })
+            }
+            onBlockUser={(targetUserId) => unblockMutation(targetUserId)}
+          />
+        )}
         ListEmptyComponent={
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>아직 등록된 친구가 없습니다.</Text>
+            <Text style={styles.emptyText}>{t.emptyFriends}</Text>
           </View>
         }
       />
 
-      {/* 친구 추가 모달 */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <AddFriendModal
         visible={isAddModalVisible}
-        onRequestClose={() => setIsAddModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
-          style={{ flex: 1 }}
-        >
-          <View style={styles.addModalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.addModalTitle}>👋 친구 추가</Text>
-              <Text style={styles.modalSubtitle}>
-                추가할 친구의 닉네임을 입력해주세요.
-              </Text>
+        onClose={() => {
+          setIsAddModalVisible(false);
+          setFriendNickname("");
+        }}
+        friendNickname={friendNickname}
+        setFriendNickname={setFriendNickname}
+        onSubmit={handleSendFriendRequest}
+        t={t}
+        styles={styles}
+      />
 
-              <TextInput
-                style={styles.modalInput}
-                placeholder="닉네임 입력"
-                placeholderTextColor="#888"
-                value={friendNickname}
-                multiline
-                onChangeText={setFriendNickname}
-                autoCapitalize="none"
-              />
-
-              <View style={styles.modalButtonRow}>
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.cancelBtn]}
-                  onPress={() => {
-                    setIsAddModalVisible(false);
-                    setFriendNickname("");
-                  }}
-                >
-                  <Text style={styles.cancelBtnText}>취소</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.submitBtn]}
-                  onPress={handleSendFriendRequest}
-                >
-                  <Text style={styles.submitBtnText}>요청 보내기</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      <Modal
+      <BlockManagementModal
         visible={isBlockModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsBlockModalVisible(false)}
-      >
-        <KeyboardAvoidingView
-          behavior="padding"
-          keyboardVerticalOffset={Platform.OS === "ios" ? -200 : -150}
-          style={{ flex: 1 }}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setIsBlockModalVisible(false)}
-          >
-            <TouchableOpacity
-              activeOpacity={1}
-              style={styles.modalContentCard}
-              onPress={(e) => e.stopPropagation()}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>🚫 차단 관리</Text>
-                <TouchableOpacity onPress={() => setIsBlockModalVisible(false)}>
-                  <Ionicons
-                    name="close"
-                    size={24}
-                    color={Colors.text || "#212529"}
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.directBlockContainer}>
-                <TextInput
-                  style={styles.directBlockInput}
-                  placeholder="닉네임 입력"
-                  placeholderTextColor="#888"
-                  value={blockNickname}
-                  multiline
-                  onChangeText={setBlockNickname}
-                  autoCapitalize="none"
-                />
-                <TouchableOpacity
-                  style={styles.directBlockBtn}
-                  onPress={handleBlockByNickname}
-                >
-                  <Text style={styles.directBlockBtnText}>차단 하기</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.divider} />
-
-              <Text style={styles.subListTitle}>
-                차단된 친구 목록 ({blockedUsers.length})
-              </Text>
-
-              {/* 2. 차단 유저 목록 및 차단 해제 FlatList */}
-              <FlatList
-                data={blockedUsers}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.modalListContent}
-                style={{ maxHeight: 350 }}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={isBlockedLoading}
-                    onRefresh={refetchBlocked}
-                  />
-                }
-                renderItem={({ item }) => {
-                  const user = item.receiver || (item as any);
-                  const targetUserId = user.id || item.id;
-
-                  return (
-                    <View style={styles.card}>
-                      <View style={styles.userInfo}>
-                        {renderAvatar(user.profileImage)}
-                        <Text style={styles.nickname}>
-                          {user.nickname || "알 수 없음"}
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={styles.btnUnblock}
-                        onPress={() =>
-                          Alert.alert(
-                            "차단 해제",
-                            `${user.nickname || "알 수 없음"}님을 차단 해제 하시겠습니까?`,
-                            [
-                              { text: "취소", style: "cancel" },
-                              {
-                                text: "해제",
-                                onPress: () =>
-                                  unblockMutation.mutate(targetUserId),
-                              },
-                            ],
-                          )
-                        }
-                      >
-                        <Text style={styles.btnUnblockText}>차단 해제</Text>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                }}
-                ListEmptyComponent={
-                  <View style={styles.emptyCard}>
-                    <Text style={styles.emptyText}>
-                      차단한 유저가 없습니다.
-                    </Text>
-                  </View>
-                }
-              />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setIsBlockModalVisible(false)}
+        blockNickname={blockNickname}
+        setBlockNickname={setBlockNickname}
+        onBlockSubmit={handleBlockByNickname}
+        blockedUsers={blockedUsers}
+        isBlockedLoading={isBlockedLoading}
+        onRefreshBlocked={refetchBlocked}
+        onUnblock={(targetUserId) => unblockMutation(targetUserId)}
+        renderAvatar={renderAvatar}
+        Colors={Colors}
+        t={t}
+        styles={styles}
+      />
     </SafeAreaView>
   );
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: {
@@ -589,7 +353,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border || "#E9ECEF",
+    borderBottomColor: Colors.border,
   },
   headerTitle: {
     fontSize: 24,
@@ -611,7 +375,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: Colors.text || "#212529",
+    color: Colors.text,
   },
   card: {
     flexDirection: "row",
@@ -642,14 +406,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.border || "#E9ECEF",
+    backgroundColor: Colors.border,
     justifyContent: "center",
     alignItems: "center",
   },
   nickname: {
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.text || "#212529",
+    color: Colors.text,
   },
   actionGroup: {
     flexDirection: "row",
@@ -692,7 +456,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: Colors.card || "#FFFFFF",
+    backgroundColor: Colors.card,
     borderRadius: 12,
   },
   emptyText: {
@@ -700,7 +464,6 @@ const styles = StyleSheet.create({
     color: "#8E8E93",
   },
 
-  // 💡 반투명 모달용 스타일
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -726,19 +489,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border || "#E9ECEF",
+    borderBottomColor: Colors.border,
     marginBottom: 16,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: Colors.text || "#212529",
+    color: Colors.text,
   },
   modalListContent: {
     paddingVertical: 4,
   },
 
-  // 💡 닉네임 즉시 차단 입력 폼 스타일
   directBlockContainer: {
     flexDirection: "row",
     gap: 8,
@@ -747,7 +509,7 @@ const styles = StyleSheet.create({
   directBlockInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: Colors.border || "#E9ECEF",
+    borderColor: Colors.border,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -757,7 +519,7 @@ const styles = StyleSheet.create({
     height: 42,
   },
   directBlockBtn: {
-    backgroundColor: Colors.red || "#FF3B30",
+    backgroundColor: Colors.red,
     paddingHorizontal: 16,
     justifyContent: "center",
     alignItems: "center",
