@@ -167,7 +167,7 @@ export default function PrivacyPage() {
 
         {/* 푸터 영역 */}
         <div className="mt-8 pt-4 border-t border-[#2C2C2E] text-center text-[13px] text-[#8E8E93]">
-          시행 일자: 2026년 9월 4일
+          시행 일자: 2026년 11월 1일
         </div>
       </div>
     </div>
