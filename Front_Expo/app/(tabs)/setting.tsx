@@ -8,6 +8,7 @@ import { searchUserByNickname } from "@/api/user/searchUserByNickname";
 import { updateProfile } from "@/api/user/updateProfile";
 import Colors from "@/constants/Colors";
 import { useSettingLanguage } from "@/hooks/useSettingLanguage";
+import { MyInfo } from "@/types/user/MyInfo";
 import { ReportReason } from "@/types/user/ReportReason";
 import { handleImagePick } from "@/utils/handleImagePick";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
@@ -63,7 +64,7 @@ export default function SettingScreen() {
     data: me,
     isPending: myInfoPending,
     isError: myInfoError,
-  } = useQuery({
+  } = useQuery<MyInfo>({
     queryKey: ["myInfo"],
     queryFn: getMyInfo,
   });
@@ -406,7 +407,7 @@ export default function SettingScreen() {
                 onValueChange={handleTogglePushNoti}
                 trackColor={{
                   false: "#E0E0E0",
-                  true: Colors.green || "#4CAF50",
+                  true: Colors.green ,
                 }}
                 thumbColor={Platform.OS === "android" ? "#FFFFFF" : undefined}
                 ios_backgroundColor="#E0E0E0"
@@ -649,6 +650,8 @@ export default function SettingScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+
 
       <Modal
         visible={isReportModalOpen}

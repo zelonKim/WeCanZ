@@ -27,7 +27,7 @@ export const useSettingLanguage = () => {
 
     sectionApp: isKorean ? "앱 설정" : "App Settings",
     menuNotification: isKorean ? "메시지 알림" : "Message Notifications",
-    menuMarketingAgree: isKorean ? "마케팅 동의" : "Marketing Agreement",
+    menuMarketingAgree: isKorean ? "마케팅 수신 동의" : "Marketing Agreement",
     menuTerms: isKorean ? "서비스 이용약관" : "Terms of Service",
     menuPrivacy: isKorean ? "개인정보 처리방침" : "Privacy Policy",
     menuReport: isKorean ? "신고하기" : "Report User",
@@ -57,7 +57,7 @@ export const useSettingLanguage = () => {
       ? "신고 사유에 대한 상세 내용을 적어주세요."
       : "Please enter detailed reasons for the report.",
     reportSubmitButton: isKorean ? "신고 접수하기" : "Submit Report",
-    menuMarketing: isKorean ? "마케팅 정보 수신 동의" : "Marketing Information",
+    menuMarketing: isKorean ? "마케팅 정보" : "Marketing Information",
     searchModalTitle: isKorean
       ? "🔍 유저 프로필 찾기"
       : "🔍 Search User Profile",
