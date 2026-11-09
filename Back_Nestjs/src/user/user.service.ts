@@ -34,6 +34,7 @@ export class UserService {
         noShowCount: true,
         termsAgreedAt: true,
         privacyAgreedAt: true,
+        marketingAgreedAt: true,
       },
     });
 
