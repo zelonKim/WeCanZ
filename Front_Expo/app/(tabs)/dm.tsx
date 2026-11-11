@@ -1,22 +1,23 @@
-import { acceptDMRoom } from "@/api/DM/acceptDMRoom";
 import { getMyDMRooms } from "@/api/DM/getMyDMRooms";
 import { getPendingDMRequests } from "@/api/DM/getPendingDMRequests";
-import { leaveDMRoom } from "@/api/DM/leaveDMRoom";
-import { rejectDMRoom } from "@/api/DM/rejectDMRoom";
-import { requestDM } from "@/api/DM/requestDM";
 import { getMyInfo } from "@/api/user/getMyInfo";
 import { searchUserByNickname } from "@/api/user/searchUserByNickname";
-import { DMRoomItem } from "@/components/DMRoomItem";
+import { DMRoomItem } from "@/components/DmRoomItem";
 import { PendingRequestsSection } from "@/components/PendingRequestsSection";
 import { renderAvatar } from "@/components/renderAvatar";
 import { SendDmModal } from "@/components/SendDmModal";
 import Colors from "@/constants/Colors";
-import { useDmLanguage } from "@/hooks/useDmLanguage";
+import { useAcceptDmMutation } from "@/hooks/DM/useAcceptDmMutation";
+import { useLeaveDmMutation } from "@/hooks/DM/useLeaveDmMutation";
+import { useRejectDmMutation } from "@/hooks/DM/useRejectDmMutation";
+import { useRequestDmMutation } from "@/hooks/DM/useRequestDmMutation";
+import { useDmLanguage } from "@/hooks/Languages/useDmLanguage";
 import { getSocket } from "@/lib/socket";
 import { DirectChatRoom } from "@/types/DM/DirectChatRoom";
+import { MyInfo } from "@/types/user/MyInfo";
 import { handlePressDmRoom } from "@/utils/handlePressDmRoom";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -32,7 +33,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DMScreen() {
-  const { t } = useDmLanguage();
+  const { t, currentLang } = useDmLanguage();
   const queryClient = useQueryClient();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -45,7 +46,7 @@ export default function DMScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { data: myInfo } = useQuery<{ id: string }>({
+  const { data: myInfo } = useQuery<MyInfo>({
     queryKey: ["me"],
     queryFn: getMyInfo,
   });
@@ -90,47 +91,17 @@ export default function DMScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: acceptDmMutation } = useMutation({
-    mutationFn: acceptDMRoom,
-    onSuccess: () => {
-      Alert.alert(t.alerts.success, t.alerts.acceptSuccess);
-      queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
-      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(t.alerts.error, t.alerts.acceptFail);
-    },
-  });
+  const { mutate: acceptDmMutate } = useAcceptDmMutation(t);
+
+  const { mutate: rejectDmMutate } = useRejectDmMutation(t);
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: rejectDmMutation } = useMutation({
-    mutationFn: rejectDMRoom,
-    onSuccess: () => {
-      Alert.alert(t.alerts.notice, t.alerts.rejectSuccess);
-      queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(t.alerts.error, t.alerts.rejectFail);
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
-
-  const { mutate: requestDmMutation } = useMutation({
-    mutationFn: requestDM,
-    onSuccess: () => {
-      Alert.alert(t.alerts.success, t.alerts.requestSent);
+  const { mutate: requestDmMutate, isPending: isRequesting } =
+    useRequestDmMutation(t, () => {
       setIsModalVisible(false);
       setTargetNickname("");
-      queryClient.invalidateQueries({ queryKey: ["dm-requests-pending"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(t.alerts.error, t.alerts.requestFail);
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
+    });
 
   const handleSendDmRequest = async () => {
     if (!targetNickname.trim()) {
@@ -139,7 +110,7 @@ export default function DMScreen() {
     }
     try {
       const userData = await searchUserByNickname(targetNickname.trim());
-      requestDmMutation(userData.id);
+      requestDmMutate(userData.id);
     } catch (error: any) {
       const errorMessage = t.alerts.searchFail;
       Alert.alert(t.alerts.notice, errorMessage);
@@ -148,17 +119,8 @@ export default function DMScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: leaveRoomMutation } = useMutation({
-    mutationFn: leaveDMRoom,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dm-rooms"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(t.alerts.error, t.alerts.leaveFail);
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
+  const { mutate: leaveRoomMutate, isPending: isLeaving } =
+    useLeaveDmMutation(t);
 
   const handleLeaveRoom = (roomId: any) => {
     Alert.alert(t.alerts.leaveAlertTitle, t.alerts.leaveAlertMsg, [
@@ -166,7 +128,7 @@ export default function DMScreen() {
       {
         text: t.alerts.leaveAction,
         style: "destructive",
-        onPress: () => leaveRoomMutation(roomId),
+        onPress: () => leaveRoomMutate(roomId),
       },
     ]);
   };
@@ -256,8 +218,8 @@ export default function DMScreen() {
               pendingRequests={pendingRequests}
               t={t}
               renderAvatar={renderAvatar}
-              onAccept={(id) => acceptDmMutation(id)}
-              onReject={(id) => rejectDmMutation(id)}
+              onAccept={acceptDmMutate}
+              onReject={rejectDmMutate}
               styles={styles}
             />
             <View style={[styles.sectionHeader, { marginTop: 24 }]}>
@@ -274,6 +236,7 @@ export default function DMScreen() {
             renderAvatar={renderAvatar}
             onPressItem={() => handlePressDmRoom(item)}
             onLongPressItem={handleLeaveRoom}
+            lang={currentLang}
           />
         )}
         ListEmptyComponent={

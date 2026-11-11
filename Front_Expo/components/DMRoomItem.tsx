@@ -1,5 +1,5 @@
-import { DMRoomItemProps } from "@/types/DM/ DMRoomItemProps";
-import { formatTime } from "@/utils/formatTime";
+import { DMRoomItemProps } from "@/types/DM/DMRoomItemProps";
+import { formatDate } from "@/utils/formatDate";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
@@ -9,6 +9,7 @@ export const DMRoomItem = ({
   renderAvatar,
   onPressItem,
   onLongPressItem,
+  lang,
 }: DMRoomItemProps) => {
   const partner = item.targetUser;
 
@@ -51,7 +52,7 @@ export const DMRoomItem = ({
 
       {item.lastMessage?.createdAt && (
         <Text style={styles.timeText}>
-          {formatTime(item.lastMessage.createdAt)}
+          {formatDate(item.lastMessage.createdAt, lang)}
         </Text>
       )}
     </TouchableOpacity>

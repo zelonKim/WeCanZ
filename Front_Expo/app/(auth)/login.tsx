@@ -1,19 +1,16 @@
-import { loginUser } from "@/api/auth/loginUser";
-import { socialLoginUser } from "@/api/auth/socialLoginUser";
-import { setAccessToken } from "@/api/token";
 import { CustomAppleLoginButton } from "@/components/CustomAppleLoginButton";
 import { CustomGoogleLoginButton } from "@/components/CustomGoogleLoginButton";
 import Colors from "@/constants/Colors";
-import { useLoginLanguage } from "@/hooks/useLoginLanguage";
+import { useEmailLoginMutation } from "@/hooks/auth/useEmailLoginMutation";
+import { useSocialLoginMutation } from "@/hooks/auth/useSocialLoginMutation";
+import { useLoginLanguage } from "@/hooks/Languages/useLoginLanguage";
+import { LoginDto } from "@/types/auth/LoginDto";
+import { configureGoogleSignIn } from "@/utils/googleSigninConfig";
+import { handleAppleLogin } from "@/utils/handleAppleLogin";
+import { handleGoogleLogin } from "@/utils/handleGoogleLogin";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  GoogleSignin,
-  statusCodes,
-} from "@react-native-google-signin/google-signin";
-import { useMutation } from "@tanstack/react-query";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -29,14 +26,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-GoogleSignin.configure({
-  webClientId:
-    "716946851146-fdhf9939k1giu735237ugffrrddv4viu.apps.googleusercontent.com",
-  iosClientId:
-    "716946851146-s7mmdsl09dobipj8ffu1pd5qtbvklg05.apps.googleusercontent.com",
-  offlineAccess: true,
-});
-
 export default function LoginScreen() {
   const { t } = useLoginLanguage();
   const router = useRouter();
@@ -44,39 +33,14 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const { mutate: loginMutate, isPending: loginPending } = useMutation({
-    mutationFn: loginUser,
-    onSuccess: async (data) => {
-      if (data.accessToken) {
-        await setAccessToken(data.accessToken);
-      }
-      setTimeout(() => {
-        router.replace("/");
-      }, 0);
-    },
-    onError: (error: any) => {
-      const errorData = error.response?.data;
-      let errorMessage = t.alerts.defaultErrorMsg;
-
-      if (errorData) {
-        if (typeof errorData.message === "string") {
-          errorMessage = errorData.message;
-        } else if (Array.isArray(errorData.message)) {
-          errorMessage = errorData.message.join("\n");
-        } else if (typeof errorData === "string") {
-          errorMessage = errorData;
-        } else {
-          errorMessage = JSON.stringify(errorData, null, 2);
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      Alert.alert(t.alerts.error, errorMessage);
-    },
-  });
+  useEffect(() => {
+    configureGoogleSignIn();
+  }, []);
 
   ///////////////////////////////////////////////////////////////////////////
+
+  const { mutate: loginMutate, isPending: loginPending } =
+    useEmailLoginMutation(t);
 
   const handleEmailLogin = () => {
     if (!email.trim()) {
@@ -89,102 +53,15 @@ export default function LoginScreen() {
       return;
     }
 
-    loginMutate({ email, password });
+    const loginPayload: LoginDto = { email, password };
+
+    loginMutate(loginPayload);
   };
 
   ///////////////////////////////////////////////////////////////////////////
 
-  const { mutate: socialLoginMutate, isPending: isSocialPending } = useMutation(
-    {
-      mutationFn: socialLoginUser,
-      onSuccess: async (data) => {
-        if (data.accessToken) {
-          await setAccessToken(data.accessToken);
-        }
-        setTimeout(() => {
-          if (data.isNewUser) {
-            router.replace("/agreement");
-          } else {
-            router.replace("/");
-          }
-        }, 0);
-      },
-      onError: (error: any) => {
-        console.log("=== Backend Social Login Error ===", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
-        });
-
-        const errorMessage = t.alerts.socialLoginErrorMsg;
-        Alert.alert(t.alerts.error, errorMessage);
-      },
-    },
-  );
-
-  ///////////////////////////////////////////////////////////////////////////
-
-  const handleGoogleLogin = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-
-      const idToken = response.data?.idToken || (response as any).idToken;
-
-      if (idToken) {
-        socialLoginMutate({ idToken, provider: "google" });
-      } else {
-        Alert.alert(t.alerts.error, t.alerts.googleTokenErrorMsg);
-      }
-    } catch (error: any) {
-      console.log("=== Google Login Error ===", {
-        code: error.code,
-        message: error.message,
-        fullError: JSON.stringify(error, null, 2),
-      });
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert(t.alerts.error, t.alerts.playServicesErrorMsg);
-      } else {
-        Alert.alert(
-          t.alerts.error,
-          error.message || t.alerts.googleLoginErrorMsg,
-        );
-      }
-    }
-  };
-
-  ///////////////////////////////////////////////////////////////////////////
-
-  const handleAppleLogin = async () => {
-    if (Platform.OS !== "ios") {
-      Alert.alert(t.alerts.appleUnsupported, t.alerts.appleUnsupportedMsg);
-      return;
-    }
-    try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      if (credential.identityToken) {
-        socialLoginMutate({
-          idToken: credential.identityToken,
-          provider: "apple",
-        });
-      } else {
-        Alert.alert(t.alerts.appleTokenError, t.alerts.appleTokenErrorMsg);
-      }
-    } catch (e: any) {
-      if (e.code === "ERR_REQUEST_CANCELED") {
-      } else {
-        Alert.alert(t.alerts.error, t.alerts.appleLoginErrorMsg);
-      }
-    }
-  };
+  const { mutate: socialLoginMutate, isPending: isSocialPending } =
+    useSocialLoginMutation(t);
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -283,13 +160,13 @@ export default function LoginScreen() {
           ) : (
             <View style={styles.socialButtonRow}>
               <CustomGoogleLoginButton
-                onPress={handleGoogleLogin}
+                onPress={() => handleGoogleLogin({ t, socialLoginMutate })}
                 text={t.googleLoginBtn}
               />
 
               {Platform.OS === "ios" && (
                 <CustomAppleLoginButton
-                  onPress={handleAppleLogin}
+                  onPress={() => handleAppleLogin({ t, socialLoginMutate })}
                   text={t.appleLoginBtn}
                 />
               )}

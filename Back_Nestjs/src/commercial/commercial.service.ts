@@ -122,7 +122,6 @@ export class CommercialService {
     });
   }
 
-  // 클릭 수 카운트 증가
   async incrementClickCount(id: string) {
     return await this.prisma.ad.update({
       where: { id },

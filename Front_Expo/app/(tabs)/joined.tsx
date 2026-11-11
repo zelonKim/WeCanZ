@@ -1,8 +1,8 @@
-import { client } from "@/api/client";
+import { getMyGatherings } from "@/api/gathering/getMyGatherings";
 import { getMyInfo } from "@/api/user/getMyInfo";
 import { JoinStatusBadge } from "@/components/JoinStatusBadge";
 import Colors from "@/constants/Colors";
-import { useFlashLanguage } from "@/hooks/useFlashLanguage";
+import { useFlashLanguage } from "@/hooks/Languages/useFlashLanguage";
 import { MyGathering } from "@/types/gathering/MyGathering";
 import { MyInfo } from "@/types/user/MyInfo";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,10 +37,7 @@ export default function JoinedScreen() {
     refetch,
   } = useQuery<MyGathering[]>({
     queryKey: ["my-gatherings"],
-    queryFn: async () => {
-      const { data } = await client.get("/gathering/my");
-      return data;
-    },
+    queryFn: getMyGatherings,
     enabled: !!me?.id,
     select: (data) =>
       data.filter((gathering) =>
@@ -57,7 +54,7 @@ export default function JoinedScreen() {
 
         <TouchableOpacity
           style={styles.historyButton}
-          onPress={() => router.push("/flash/done")}
+          onPress={() => router.push("/joined/done")}
           activeOpacity={0.7}
         >
           <Ionicons name="time-outline" size={25} color={Colors.green} />

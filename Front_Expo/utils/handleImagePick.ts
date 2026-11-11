@@ -1,16 +1,15 @@
+import { useSettingLanguage } from "@/hooks/Languages/useSettingLanguage";
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
 
 export const handleImagePick = async (
-  setProfileImage: (uri: string) => void,
-  t: any,
+  setSelectedImage: (uri: string) => void,
 ) => {
+  const t = useSettingLanguage();
+
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== "granted") {
-    Alert.alert(
-      t.alertNotice,
-     t.alertImageGranted,
-    );
+    Alert.alert(t.alertNotice, t.alertImageGranted);
     return;
   }
 
@@ -22,6 +21,6 @@ export const handleImagePick = async (
   });
 
   if (!result.canceled && result.assets[0].uri) {
-    setProfileImage(result.assets[0].uri);
+    setSelectedImage(result.assets[0].uri);
   }
 };

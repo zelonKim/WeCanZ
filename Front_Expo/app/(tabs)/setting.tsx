@@ -1,4 +1,3 @@
-import { removeAccessToken } from "@/api/token";
 import { createReport } from "@/api/user/createReport";
 import { deleteAccount } from "@/api/user/deleteAccount";
 import { deleteTokenFromServer } from "@/api/user/deleteTokenFromServer";
@@ -6,15 +5,21 @@ import { getMyInfo } from "@/api/user/getMyInfo";
 import { saveTokenToServer } from "@/api/user/saveTokenToServer";
 import { searchUserByNickname } from "@/api/user/searchUserByNickname";
 import { updateProfile } from "@/api/user/updateProfile";
+import { EditProfileModal } from "@/components/EditProfileModal";
+import { ReportModal } from "@/components/ReportModal";
+import { SearchUserModal } from "@/components/SearchUserModal";
 import Colors from "@/constants/Colors";
-import { useSettingLanguage } from "@/hooks/useSettingLanguage";
+import { useSettingLanguage } from "@/hooks/Languages/useSettingLanguage";
+import { useUpdateProfileMutation } from "@/hooks/user/useUpdateProfileMutation";
 import { MyInfo } from "@/types/user/MyInfo";
 import { ReportReason } from "@/types/user/ReportReason";
+import { UpdateProfileDto } from "@/types/user/UpdateProfileDto";
+import { deactivateAuth } from "@/utils/deactivateAuth";
 import { handleImagePick } from "@/utils/handleImagePick";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -24,23 +29,19 @@ import {
   Alert,
   Image,
   Linking,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingScreen() {
   const t = useSettingLanguage();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [searchNickname, setSearchNickname] = useState("");
@@ -80,31 +81,16 @@ export default function SettingScreen() {
 
   ////////////////////////////////////////////////////////////////////////
 
-  const { mutate: updateProfileMutation, isPending: updateProfilePending } =
-    useMutation({
-      mutationFn: updateProfile,
-      onSuccess: () => {
-        Alert.alert(t.alertSuccess, t.profileUpdated);
-        setIsModalOpen(false);
-        queryClient.invalidateQueries({ queryKey: ["myInfo"] });
-      },
-      onError: (error: any) => {
-        const message = error.response?.data?.message;
-        const displayMessage = Array.isArray(message) ? message[0] : message;
-        Alert.alert(
-          t.alertNotice,
-          displayMessage || "처리 중 오류가 발생했습니다.",
-        );
-      },
+  const { mutate: updateProfileMutate, isPending: updateProfilePending } =
+    useUpdateProfileMutation(t, () => {
+      setIsModalOpen(false);
     });
-
-  ////////////////////////////////////////////////////////////////////////
 
   const handleSaveProfile = async () => {
     const trimmedNickname = nickname.trim();
 
     if (!trimmedNickname) {
-      Alert.alert(t.alertWarning, "닉네임을 입력해 주세요.");
+      Alert.alert(t.alertWarning, t.absentNickname);
       return;
     }
 
@@ -127,11 +113,13 @@ export default function SettingScreen() {
         }
       }
 
-      updateProfileMutation({
+      const updateProfilePayload: UpdateProfileDto = {
         nickname,
         bio,
         profileImage: finalImageUrl,
-      });
+      };
+
+      updateProfileMutate(updateProfilePayload);
     } catch (error) {
       console.error(error);
       Alert.alert(t.alertError, t.uploadImageError);
@@ -140,23 +128,17 @@ export default function SettingScreen() {
 
   ////////////////////////////////////////////////////////////////////////
 
-  const { mutate: deleteAccountMutation } = useMutation({
+  const { mutate: deleteAccountMutate } = useMutation({
     mutationFn: deleteAccount,
     onSuccess: async () => {
-      Alert.alert(t.alertNotice, "회원 탈퇴가 완료되었습니다.");
-      await queryClient.cancelQueries();
-      queryClient.clear();
-      await removeAccessToken();
-      router.replace("/login");
+      Alert.alert(t.alertNotice, t.deleteAccount);
+      deactivateAuth();
     },
     onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "탈퇴 처리 중 오류가 발생했습니다.";
-      Alert.alert(t.alertError, msg);
+      Alert.alert(t.alertError, t.deleteAccountError);
     },
   });
 
-  ////////////////////////////////////////////////////////////////////////
 
   const handleDeleteAccount = () => {
     Alert.alert(t.deleteAccountTitle, t.deleteAccountConfirm, [
@@ -164,7 +146,7 @@ export default function SettingScreen() {
       {
         text: t.deleteAccountAction,
         style: "destructive",
-        onPress: () => deleteAccountMutation(),
+        onPress: () => deleteAccountMutate(),
       },
     ]);
   };
@@ -177,12 +159,7 @@ export default function SettingScreen() {
       {
         text: t.logoutAction,
         style: "destructive",
-        onPress: async () => {
-          await queryClient.cancelQueries();
-          queryClient.clear();
-          await removeAccessToken();
-          router.replace("/login");
-        },
+        onPress: () => deactivateAuth(),
       },
     ]);
   };
@@ -199,9 +176,7 @@ export default function SettingScreen() {
       setReportDetails("");
     },
     onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
-      Alert.alert(t.alertError, msg);
+      Alert.alert(t.alertError, t.createReportError);
     },
     onSettled: () => {
       setIsSubmittingReport(false);
@@ -237,8 +212,7 @@ export default function SettingScreen() {
         details: reportDetails.trim(),
       });
     } catch (error: any) {
-      const msg = error.response?.data?.message || t.userNotFound;
-      Alert.alert(t.alertError, msg);
+      Alert.alert(t.alertError, t.userNotFound);
       setIsSubmittingReport(false);
     }
   };
@@ -259,8 +233,7 @@ export default function SettingScreen() {
         router.push(`/profile/${searchedUser.id}`);
       }
     } catch (error: any) {
-      const message = t.userNotFound;
-      Alert.alert(t.alertError, message);
+      Alert.alert(t.alertError, t.userNotFound);
     }
   };
 
@@ -305,7 +278,7 @@ export default function SettingScreen() {
       }
     } catch (error) {
       setIsMarketingAgreed(!value);
-      Alert.alert(t.alertNotice, "마케팅 수신 동의 상태 변경에 실패했습니다.");
+      Alert.alert(t.alertNotice, t.marketingAgreeError);
     }
   };
 
@@ -407,7 +380,7 @@ export default function SettingScreen() {
                 onValueChange={handleTogglePushNoti}
                 trackColor={{
                   false: "#E0E0E0",
-                  true: Colors.green ,
+                  true: Colors.green,
                 }}
                 thumbColor={Platform.OS === "android" ? "#FFFFFF" : undefined}
                 ios_backgroundColor="#E0E0E0"
@@ -568,209 +541,44 @@ export default function SettingScreen() {
         </View>
       </ScrollView>
 
-      <Modal
+      <EditProfileModal
         visible={isModalOpen}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsModalOpen(false)}
-      >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ flex: 1 }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t.editModalTitle}</Text>
-                <TouchableOpacity onPress={() => setIsModalOpen(false)}>
-                  <Ionicons name="close" size={22} color={Colors.text} />
-                </TouchableOpacity>
-              </View>
+        onClose={() => setIsModalOpen(false)}
+        profileImage={profileImage}
+        onImagePick={() => handleImagePick(setProfileImage)}
+        nickname={nickname}
+        onChangeNickname={setNickname}
+        bio={bio}
+        onChangeBio={setBio}
+        onSave={handleSaveProfile}
+        isPending={updateProfilePending}
+        t={t}
+        styles={styles}
+        Colors={Colors}
+      />
 
-              <View style={styles.modalBody}>
-                <View style={styles.imagePickerContainer}>
-                  <TouchableOpacity
-                    onPress={() => handleImagePick(setProfileImage, t)}
-                    style={styles.avatarPicker}
-                  >
-                    {profileImage ? (
-                      <Image
-                        source={{ uri: profileImage }}
-                        style={styles.avatar}
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.avatar,
-                          { justifyContent: "center", alignItems: "center" },
-                        ]}
-                      >
-                        <Ionicons name="person" size={40} color={Colors.text} />
-                      </View>
-                    )}
-                    <View style={styles.cameraBadge}>
-                      <Ionicons name="camera" size={14} color="#000" />
-                    </View>
-                  </TouchableOpacity>
-                  <Text style={styles.imagePickerHint}>{t.imageHint}</Text>
-                </View>
-
-                <Text style={styles.inputLabel}>{t.nicknameLabel}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={nickname}
-                  onChangeText={setNickname}
-                  placeholder={t.nicknamePlaceholder}
-                  placeholderTextColor={Colors.tabIconDefault}
-                />
-
-                <Text style={styles.inputLabel}>{t.bioLabel}</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={bio}
-                  onChangeText={setBio}
-                  placeholder={t.bioPlaceholder}
-                  placeholderTextColor={Colors.tabIconDefault}
-                  multiline
-                />
-              </View>
-
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSaveProfile}
-                disabled={updateProfilePending}
-              >
-                {updateProfilePending ? (
-                  <ActivityIndicator color="#000" />
-                ) : (
-                  <Text style={styles.saveButtonText}>{t.saveButton}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-
-
-      <Modal
+      <ReportModal
         visible={isReportModalOpen}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsReportModalOpen(false)}
-      >
-        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{t.reportModalTitle}</Text>
-                <TouchableOpacity onPress={() => setIsReportModalOpen(false)}>
-                  <Ionicons name="close" size={22} color={Colors.text} />
-                </TouchableOpacity>
-              </View>
+        onClose={() => setIsReportModalOpen(false)}
+        targetNickname={targetNickname}
+        onChangeTargetNickname={setTargetNickname}
+        selectedReason={selectedReason}
+        onSelectReason={setSelectedReason}
+        reportDetails={reportDetails}
+        onChangeReportDetails={setReportDetails}
+        onSubmit={handleSubmitReport}
+        isSubmitting={isSubmittingReport}
+      />
 
-              <View style={styles.modalBody}>
-                <Text style={styles.inputLabel}>{t.reportTargetLabel}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={targetNickname}
-                  onChangeText={setTargetNickname}
-                  placeholder={t.reportTargetPlaceholder}
-                  placeholderTextColor={Colors.tabIconDefault}
-                />
-
-                <Text style={styles.inputLabel}>{t.reportReasonLabel}</Text>
-                <View style={styles.chipContainer}>
-                  {Object.values(ReportReason).map((reason) => {
-                    const isSelected = selectedReason === reason;
-                    return (
-                      <TouchableOpacity
-                        key={reason}
-                        style={[styles.chip, isSelected && styles.chipSelected]}
-                        onPress={() => setSelectedReason(reason)}
-                      >
-                        <Text
-                          style={[
-                            styles.chipText,
-                            isSelected && styles.chipTextSelected,
-                          ]}
-                        >
-                          {t.reportReasonLabels[reason]}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <Text style={styles.inputLabel}>{t.reportDetailsLabel}</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={reportDetails}
-                  onChangeText={setReportDetails}
-                  placeholder={t.reportDetailsPlaceholder}
-                  placeholderTextColor={Colors.tabIconDefault}
-                  multiline
-                />
-              </View>
-
-              <TouchableOpacity
-                style={[styles.saveButton, { backgroundColor: Colors.red }]}
-                onPress={handleSubmitReport}
-                disabled={isSubmittingReport}
-              >
-                {isSubmittingReport ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={[styles.saveButtonText, { color: "#FFFFFF" }]}>
-                    {t.reportSubmitButton}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      <Modal
+      <SearchUserModal
         visible={isModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>{t.searchModalTitle}</Text>
-              <Text style={styles.modalSubtitle}>{t.searchModalSubtitle}</Text>
-
-              <TextInput
-                style={styles.input}
-                placeholder={t.searchInputPlaceholder}
-                placeholderTextColor="#666"
-                value={searchNickname}
-                onChangeText={setSearchNickname}
-                autoCapitalize="none"
-              />
-
-              <View style={styles.modalBtnRow}>
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.cancelBtn]}
-                  onPress={() => setIsModalVisible(false)}
-                >
-                  <Text style={styles.cancelBtnText}>{t.cancelButton}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.confirmBtn]}
-                  onPress={handleSearchProfile}
-                >
-                  <Text style={styles.confirmBtnText}>{t.searchButton}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
+        onClose={() => setIsModalVisible(false)}
+        searchNickname={searchNickname}
+        onChangeSearchNickname={setSearchNickname}
+        onSearch={handleSearchProfile}
+        t={t}
+        styles={styles}
+      />
     </SafeAreaView>
   );
 }

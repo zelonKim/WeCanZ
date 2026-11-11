@@ -1,4 +1,6 @@
-export const CALENDAR_THEME = (Colors: any) => ({
+import Colors from "./Colors";
+
+export const CALENDAR_THEME = () => ({
   backgroundColor: "#18181B",
   calendarBackground: "#18181B",
   textSectionTitleColor: "#71717A",

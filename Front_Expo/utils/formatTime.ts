@@ -1,16 +1,17 @@
-export const formatTime = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
+export const formatTime = (dateStr: string, lang: string = "en") => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
 
-  if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString("ko-KR", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+  const rawHours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  if (lang === "en") {
+    const ampm = rawHours >= 12 ? "PM" : "AM";
+    const hours = rawHours % 12 || 12;
+    return `${hours}:${minutes} ${ampm}`;
+  } else {
+    const ampm = rawHours >= 12 ? "오후" : "오전";
+    const hours = rawHours % 12 || 12;
+    return `${ampm} ${hours}:${minutes}`;
   }
-  if (date.getFullYear() === now.getFullYear()) {
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
-  }
-  return `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
 };

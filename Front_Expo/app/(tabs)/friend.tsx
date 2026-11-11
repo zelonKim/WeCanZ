@@ -1,27 +1,25 @@
-import { client } from "@/api/client";
-import { requestDM } from "@/api/DM/requestDM";
-import { acceptFriendRequest } from "@/api/friend/acceptFriendRequest";
 import { getMyFriends } from "@/api/friend/getMyFriends";
 import { getPendingFriendRequests } from "@/api/friend/getPendingFriendRequests";
-import { rejectFriendRequest } from "@/api/friend/rejectFriendRequest";
-import { requestFriendship } from "@/api/friend/requestFriendship";
 import { getBlockedUsers } from "@/api/user/getBlockedUsers";
 import { searchUserByNickname } from "@/api/user/searchUserByNickname";
-import { unblockUser } from "@/api/user/unblockUser";
 import { AddFriendModal } from "@/components/AddFriendModal";
 import { BlockManagementModal } from "@/components/BlockManagementModal";
 import { FriendItemRow } from "@/components/FriendItemRow";
 import { PendingRequestsSection } from "@/components/PendingRequestsSection";
 import { renderAvatar } from "@/components/renderAvatar";
 import Colors from "@/constants/Colors";
-import { useFriendLanguage } from "@/hooks/useFriendLanguage";
+import { useAcceptFriendMutation } from "@/hooks/friend/useAcceptFriendMutation";
+import { useBlockUserMutation } from "@/hooks/friend/useBlockUserMutation";
+import { useRejectFriendMutation } from "@/hooks/friend/useRejectFriendMutation";
+import { useRequestFriendDmMutation } from "@/hooks/friend/useRequestFriendDmMutation";
+import { useRequestFriendMutation } from "@/hooks/friend/useRequestFriendMutation";
+import { useUnblockUserMutation } from "@/hooks/friend/useUnblockUserMutation";
+import { useFriendLanguage } from "@/hooks/Languages/useFriendLanguage";
 import { FriendItem } from "@/types/friend/FriendItem";
 import { FriendshipRequest } from "@/types/friend/FriendshipRequest";
 import { BlockedUserItem } from "@/types/user/BlockedUserItem";
-import { User } from "@/types/user/User";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
   Alert,
@@ -36,8 +34,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function FriendScreen() {
   const { t } = useFriendLanguage();
-  const queryClient = useQueryClient();
-  const router = useRouter();
 
   const [isBlockModalVisible, setIsBlockModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -46,7 +42,7 @@ export default function FriendScreen() {
 
   const {
     data: pendingRequests = [],
-    isLoading: isPendingLoading,
+    isPending: isWatingPending,
     refetch: refetchPending,
   } = useQuery<FriendshipRequest[]>({
     queryKey: ["friend-requests-pending"],
@@ -57,7 +53,7 @@ export default function FriendScreen() {
 
   const {
     data: myFriends = [],
-    isLoading: isFriendsLoading,
+    isPending: isFriendsPending,
     refetch: refetchFriends,
   } = useQuery<FriendItem[]>({
     queryKey: ["my-friends"],
@@ -68,7 +64,7 @@ export default function FriendScreen() {
 
   const {
     data: blockedUsers = [],
-    isLoading: isBlockedLoading,
+    isPending: isBlockedPending,
     refetch: refetchBlocked,
   } = useQuery<BlockedUserItem[]>({
     queryKey: ["blocked-users"],
@@ -78,7 +74,7 @@ export default function FriendScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const isRefreshing = isPendingLoading || isFriendsLoading;
+  const isRefreshing = isWatingPending || isFriendsPending;
 
   const onRefresh = () => {
     refetchPending();
@@ -87,51 +83,11 @@ export default function FriendScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: acceptFriendMutation } = useMutation({
-    mutationFn: acceptFriendRequest,
-    onSuccess: () => {
-      Alert.alert(t.alerts.success, t.alerts.acceptSuccess);
-      queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
-      queryClient.invalidateQueries({ queryKey: ["my-friends"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(t.alerts.error, t.alerts.acceptFail);
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
-
-  const { mutate: rejectFriendMutation } = useMutation({
-    mutationFn: rejectFriendRequest,
-    onSuccess: () => {
-      Alert.alert(t.alerts.notice, t.alerts.rejectSuccess);
-      queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        t.alerts.error,
-        err.response?.data?.message || t.alerts.rejectFail,
-      );
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
-
-  const { mutate: sendRequestMutation } = useMutation({
-    mutationFn: requestFriendship,
-    onSuccess: () => {
+  const { mutate: requestFriendMutate, isPending: isRequesting } =
+    useRequestFriendMutation(t, () => {
       setIsAddModalVisible(false);
       setFriendNickname("");
-      Alert.alert(t.alerts.notice, t.alerts.requestSent);
-      queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
-    },
-    onError: (error: any) => {
-      const errorMessage = t.alerts.searchFail;
-      Alert.alert(t.alerts.notice, errorMessage);
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
+    });
 
   const handleSendFriendRequest = async () => {
     if (!friendNickname.trim()) {
@@ -140,7 +96,7 @@ export default function FriendScreen() {
     }
     try {
       const userData = await searchUserByNickname(friendNickname.trim());
-      sendRequestMutation(userData.id);
+      requestFriendMutate(userData.id);
     } catch (error: any) {
       const errorMessage = t.alerts.searchFail;
       Alert.alert(t.alerts.notice, errorMessage);
@@ -149,73 +105,9 @@ export default function FriendScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: requestDmMutation } = useMutation({
-    mutationFn: async ({
-      targetUserId,
-      friend,
-    }: {
-      targetUserId: string;
-      friend: User;
-    }) => {
-      const roomData = await requestDM(targetUserId);
-      return { roomData, friend };
-    },
-    onSuccess: ({ roomData, friend }) => {
-      const chatRoomId = roomData.id;
-      router.push({
-        pathname: "/DM/[id]",
-        params: {
-          id: chatRoomId,
-          name: friend.nickname,
-          profileImage: friend.profileImage || "",
-        },
-      });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        t.alerts.error,
-        err.response?.data?.message || t.alerts.dmFail,
-      );
-    },
+  const { mutate: blockUserMutate } = useBlockUserMutation(t, () => {
+    setBlockNickname("");
   });
-
-  /////////////////////////////////////////////////////////////////////////
-
-  const { mutate: unblockMutation } = useMutation({
-    mutationFn: unblockUser,
-    onSuccess: () => {
-      Alert.alert(t.alerts.success, t.alerts.unblockSuccess);
-      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
-      queryClient.invalidateQueries({ queryKey: ["my-friends"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        t.alerts.error,
-        err.response?.data?.message || t.alerts.unblockFail,
-      );
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
-
-  const { mutate: blockUserMutation } = useMutation({
-    mutationFn: (targetUserId: string) =>
-      client.patch(`/friendship/block/${targetUserId}`),
-    onSuccess: () => {
-      Alert.alert(t.alerts.success, t.alerts.blockSuccess);
-      setBlockNickname("");
-      queryClient.invalidateQueries({ queryKey: ["my-friends"] });
-      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        t.alerts.error,
-        err.response?.data?.message || t.alerts.blockFail,
-      );
-    },
-  });
-
-  /////////////////////////////////////////////////////////////////////////
 
   const handleBlockByNickname = async () => {
     if (!blockNickname.trim()) {
@@ -224,11 +116,21 @@ export default function FriendScreen() {
     }
     try {
       const userData = await searchUserByNickname(blockNickname.trim());
-      blockUserMutation(userData.id);
+      blockUserMutate(userData.id);
     } catch (error: any) {
       Alert.alert(t.alerts.notice, t.alerts.searchFail);
     }
   };
+
+  /////////////////////////////////////////////////////////////////////////
+
+  const { mutate: acceptFriendMutate } = useAcceptFriendMutation(t);
+
+  const { mutate: rejectFriendMutate } = useRejectFriendMutation(t);
+
+  const { mutate: requestFriendDmMutate } = useRequestFriendDmMutation(t);
+
+  const { mutate: unblockMutate } = useUnblockUserMutation(t);
 
   ////////////////////////////////////////////////////////////////////////
 
@@ -275,8 +177,8 @@ export default function FriendScreen() {
               pendingRequests={pendingRequests}
               t={t}
               renderAvatar={renderAvatar}
-              onAccept={(id) => acceptFriendMutation(id)}
-              onReject={(id) => rejectFriendMutation(id)}
+              onAccept={acceptFriendMutate}
+              onReject={rejectFriendMutate}
               styles={styles}
             />
             <View style={[styles.sectionHeader, { marginTop: 24 }]}>
@@ -294,9 +196,9 @@ export default function FriendScreen() {
             t={t}
             renderAvatar={renderAvatar}
             onRequestDm={(targetUserId, friend) =>
-              requestDmMutation({ targetUserId, friend })
+              requestFriendDmMutate({ targetUserId, friend })
             }
-            onBlockUser={(targetUserId) => unblockMutation(targetUserId)}
+            onBlockUser={unblockMutate}
           />
         )}
         ListEmptyComponent={
@@ -326,9 +228,9 @@ export default function FriendScreen() {
         setBlockNickname={setBlockNickname}
         onBlockSubmit={handleBlockByNickname}
         blockedUsers={blockedUsers}
-        isBlockedLoading={isBlockedLoading}
+        isBlockedLoading={isBlockedPending}
         onRefreshBlocked={refetchBlocked}
-        onUnblock={(targetUserId) => unblockMutation(targetUserId)}
+        onUnblock={(targetUserId) => unblockMutate(targetUserId)}
         renderAvatar={renderAvatar}
         Colors={Colors}
         t={t}

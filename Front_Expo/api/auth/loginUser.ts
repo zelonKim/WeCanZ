@@ -1,7 +1,7 @@
-import { LoginData } from "@/types/auth/LoginData";
+import { LoginDto } from "@/types/auth/LoginDto";
 import { client } from "../client";
 
-export const loginUser = async (loginData: LoginData) => {
-    const { data } = await client.post("/auth/login", loginData);
-    return data;
-  };
+export const loginUser = async (loginPayload: LoginDto) => {
+  const { data } = await client.post("/auth/login", loginPayload);
+  return data;
+};

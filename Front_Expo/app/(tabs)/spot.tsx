@@ -1,16 +1,19 @@
-import { client } from "@/api/client";
+import { getActiveAds } from "@/api/spot/getActiveAds";
+import { increaseClickCount } from "@/api/spot/postAdClick";
+import { AdsInfoModal } from "@/components/AdsInfoModal";
+
 import Colors from "@/constants/Colors";
-import { useCommercialLanguage } from "@/hooks/useCommercialLanguage";
+import { useCommercialLanguage } from "@/hooks/Languages/useCommercialLanguage";
+import { AdItem } from "@/types/spot/AdItem";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   Linking,
-  Modal,
   Platform,
   RefreshControl,
   StyleSheet,
@@ -20,68 +23,40 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface Store {
-  id: string;
-  name: string;
-  address: string;
-  openTime: string;
-  closeTime: string;
-  imageUrl?: string;
-}
-
-interface AdItem {
-  id: string;
-  title: string;
-  content: string;
-  imageUrl?: string;
-  linkUrl?: string;
-  store: Store;
-}
-
-// 1. 활성화된 광고 목록 조회 API 요청 함수
-const fetchActiveAds = async (): Promise<AdItem[]> => {
-  const response = await client.get("/commercial/ads");
-  return response.data;
-};
-
-// 2. 광고 클릭 시 클릭 수 증가 API 요청 함수
-const postAdClick = async (adId: string) => {
-  await client.post(`/commercial/ads/${adId}/click`);
-};
-
 export default function CommercialScreen() {
-  const router = useRouter();
-  const [modalVisible, setModalVisible] = useState(false);
-
-  // 다국어 텍스트 객체 가져오기
   const t = useCommercialLanguage();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const {
     data: ads = [],
-    isLoading,
+    isPending,
     isError,
     refetch,
     isRefetching,
   } = useQuery({
     queryKey: ["activeCommercialAds"],
-    queryFn: fetchActiveAds,
+    queryFn: getActiveAds,
   });
 
-  const { mutate: recordClick } = useMutation({
-    mutationFn: postAdClick,
+  ////////////////////////////////////////////////////////////////////////
+
+  const { mutate: ClickCountMutation } = useMutation({
+    mutationFn: increaseClickCount,
     onError: (error) => {
-      console.error("클릭 수 증가 실패:", error);
+      console.log(error);
     },
   });
 
+  ////////////////////////////////////////////////////////////////////////
+
   const handleAdClick = async (ad: AdItem) => {
-    recordClick(ad.id);
+    ClickCountMutation(ad.id);
 
     if (ad.linkUrl) {
       try {
         const canOpen = await Linking.canOpenURL(ad.linkUrl);
         if (canOpen) {
-          await Linking.URL(ad.linkUrl);
+          await Linking.openURL(ad.linkUrl);
         } else {
           Alert.alert("Error", t.linkError);
         }
@@ -91,7 +66,9 @@ export default function CommercialScreen() {
     }
   };
 
-  if (isLoading) {
+  ////////////////////////////////////////////////////////////////////////
+
+  if (isPending) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={Colors.green} />
@@ -107,9 +84,10 @@ export default function CommercialScreen() {
     );
   }
 
+  ////////////////////////////////////////////////////////////////////////
+
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      {/* 상단 커스텀 헤더 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{t.headerTitle}</Text>
 
@@ -138,13 +116,11 @@ export default function CommercialScreen() {
             activeOpacity={0.8}
             onPress={() => handleAdClick(item)}
           >
-            {(item.imageUrl || item.store.imageUrl) && (
-              <Image
-                source={{ uri: item.imageUrl || item.store.imageUrl }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-            )}
+            <Image
+              source={{ uri: item.imageUrl || item.store.imageUrl }}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
 
             <View style={styles.cardContent}>
               <View style={styles.badgeContainer}>
@@ -152,7 +128,7 @@ export default function CommercialScreen() {
               </View>
 
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.description} numberOfLines={5}>
+              <Text style={styles.description} numberOfLines={3}>
                 {item.content}
               </Text>
 
@@ -174,40 +150,20 @@ export default function CommercialScreen() {
         }
       />
 
-      {/* 광고 신청 방법 안내 모달 */}
-      <Modal
-        animationType="fade"
-        transparent={true}
+      <AdsInfoModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{t.modalTitle}</Text>
-            <Text style={styles.modalText}>{t.modalDescription}</Text>
-            <View
-              style={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "flex-start",
-              }}
-            >
-              <Text style={styles.modalSubText}>
-                {t.modalEmailLabel} ksz18601@gmail.com
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.modalCloseButtonText}>{t.modalClose}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        title={t.modalTitle}
+        description={t.modalDescription}
+        emailLabel={t.modalEmailLabel}
+        closeText={t.modalClose}
+        styles={styles}
+      />
     </SafeAreaView>
   );
 }
+
+////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: {
@@ -295,12 +251,12 @@ const styles = StyleSheet.create({
     color: Colors.tabIconDefault,
     lineHeight: 20,
     maxHeight: 200,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   infoRow: {
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    paddingTop: 10,
+    paddingTop: 16,
     gap: 4,
   },
   infoText: {

@@ -267,6 +267,7 @@ model Store {
   updatedAt DateTime @updatedAt
 }
 
+
 model Ad {
   id      String @id @default(uuid())
   title   String

@@ -1,10 +1,13 @@
-import { SocialLoginData } from "@/types/auth/SocialLoginData";
+import { SocialLoginDto } from "@/types/auth/SocialLoginDto";
 import { client } from "../client";
 
-export const socialLoginUser = async ({ idToken, provider }: SocialLoginData) => {
-    const { data } = await client.post("/auth/social-login", {
-      token: idToken,
-      provider: provider,
-    });
-    return data;
-  };
+export const socialLoginUser = async ({
+  idToken,
+  provider,
+}: SocialLoginDto) => {
+  const { data } = await client.post("/auth/social-login", {
+    token: idToken,
+    provider: provider,
+  });
+  return data;
+};

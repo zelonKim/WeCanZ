@@ -1,5 +1,5 @@
 import Colors from "@/constants/Colors";
-import { useTabLanguage } from "@/hooks/useTabLanguage";
+import { useTabLanguage } from "@/hooks/Languages/useTabLanguage";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";

@@ -129,17 +129,19 @@ function RootLayoutNav() {
         <APIProvider>
           <ActionSheetProvider>
             <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="gathering" options={{ headerShown: false }} />
               <Stack.Screen name="DM" options={{ headerShown: false }} />
+
               <Stack.Screen
                 name="commercial"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="flash" options={{ headerShown: false }} />
+              <Stack.Screen name="joined" options={{ headerShown: false }} />
               <Stack.Screen name="agreement" options={{ headerShown: false }} />
               <Stack.Screen name="profile" options={{ headerShown: false }} />
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+
               <Stack.Screen name="modal" options={{ presentation: "modal" }} />
             </Stack>
           </ActionSheetProvider>

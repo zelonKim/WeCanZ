@@ -1,12 +1,11 @@
-import { signupUser } from "@/api/auth/signupUser";
-import { setAccessToken } from "@/api/token";
 import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
-import { useSignupLanguage } from "@/hooks/useSignupLanguage";
+import { useSignupMutation } from "@/hooks/auth/useSignupMutation";
+import { useSignupLanguage } from "@/hooks/Languages/useSignupLanguage";
 import { AgreementModalTypes } from "@/types/auth/AgreementModalTypes";
+import { SignupDto } from "@/types/auth/SignupDto";
 import { generateRandomNickname } from "@/utils/generateRandomNickname";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -38,6 +37,8 @@ export default function SignupScreen() {
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
   const [modalType, setModalType] = useState<AgreementModalTypes | null>(null);
 
+  //////////////////////////////////////////////////////////////////////////
+
   const handleRefreshNickname = () => {
     const otherNickname = generateRandomNickname(nicknames, currentLang);
     setNickname(otherNickname);
@@ -52,24 +53,8 @@ export default function SignupScreen() {
 
   //////////////////////////////////////////////////////////////////////////
 
-  const { mutate: signupMutate, isPending } = useMutation({
-    mutationFn: signupUser,
-    onSuccess: async (data) => {
-      if (data.accessToken) {
-        await setAccessToken(data.accessToken);
-      }
-      setTimeout(() => {
-        router.replace("/");
-      }, 0);
-    },
-    onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message || t.alerts.defaultSignupError;
-      Alert.alert(t.alerts.error, errorMessage);
-    },
-  });
-
-  //////////////////////////////////////////////////////////////////////////
+  const { mutate: signupMutate, isPending: signupPending } =
+    useSignupMutation(t);
 
   const handleSignup = async () => {
     if (email.trim().length < 5) {
@@ -107,7 +92,7 @@ export default function SignupScreen() {
       return;
     }
 
-    signupMutate({
+    const signupPayload: SignupDto = {
       email,
       password,
       passwordConfirm,
@@ -115,7 +100,9 @@ export default function SignupScreen() {
       isTermsAgreed,
       isPrivacyAgreed,
       isMarketingAgreed,
-    });
+    };
+
+    signupMutate(signupPayload);
   };
 
   //////////////////////////////////////////////////////////////////////////
@@ -298,9 +285,9 @@ export default function SignupScreen() {
           <TouchableOpacity
             style={[styles.submitBtn, { backgroundColor: Colors.green }]}
             onPress={handleSignup}
-            disabled={isPending}
+            disabled={signupPending}
           >
-            {isPending ? (
+            {signupPending ? (
               <ActivityIndicator size="small" color={Colors.background} />
             ) : (
               <Text style={styles.submitBtnText}>{t.submitBtn}</Text>

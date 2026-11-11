@@ -1,5 +1,8 @@
-import { client } from "@/api/client";
+import { getUserDetail } from "@/api/user/getUserDetail";
 import Colors from "@/constants/Colors";
+import { useProfileLanguage } from "@/hooks/Languages/useProfileLanguage";
+import { UserDetail } from "@/types/user/UserDetail";
+import { formatDateYear } from "@/utils/formatDateYear";
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -15,36 +18,26 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface UserProfile {
-  id: string;
-  profileImage?: string;
-  nickname: string;
-  bio?: string;
-  noShowCount: number;
-  yesShowCount: number;
-  createdAt: string;
-}
-
 export default function UserProfileScreen() {
-  const router = useRouter();
+  const { t } = useProfileLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const {
     data: user,
-    isLoading,
+    isPending,
     error,
-  } = useQuery<UserProfile>({
-    queryKey: ["userProfile", id],
-    queryFn: async () => {
-      const { data } = await client.get(`/user/${id}`);
-      return data;
-    },
+  } = useQuery<UserDetail>({
+    queryKey: ["userDetail", id],
+    queryFn: () => getUserDetail(id),
     enabled: !!id,
   });
 
-  if (isLoading) {
+  /////////////////////////////////////////////////////////////////////////////////////
+
+  if (isPending) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: Colors.background }]}
@@ -57,6 +50,8 @@ export default function UserProfileScreen() {
       </SafeAreaView>
     );
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////
 
   if (error || !user) {
     return (
@@ -84,16 +79,13 @@ export default function UserProfileScreen() {
     );
   }
 
-  const formattedDate = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString()
-    : "-";
+  /////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: Colors.background }]}
       edges={["top", "left", "right"]}
     >
-      {/* 상단 네비게이션바 */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -101,12 +93,12 @@ export default function UserProfileScreen() {
         >
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>프로필 보기</Text>
+        {/* 다국어 헤더 타이틀 */}
+        <Text style={styles.headerTitle}>{t.headerTitle}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.content}>
-        {/* 상단 프로필 이미지 & 닉네임 */}
         <View style={styles.headerSection}>
           {user.profileImage ? (
             <TouchableOpacity
@@ -130,22 +122,22 @@ export default function UserProfileScreen() {
           )}
 
           <Text style={styles.nickname}>{user.nickname}</Text>
-          <Text style={styles.bio}>
-            {user.bio || "등록된 자기소개가 없습니다."}
-          </Text>
+          {/* 다국어 자기소개 없을 때 문구 */}
+          <Text style={styles.bio}>{user.bio || t.defaultBio}</Text>
         </View>
 
-        {/* 활동 통계 (참석 / 노쇼 횟수) */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>예스쇼</Text>
+            {/* 다국어 '예스쇼' 라벨 */}
+            <Text style={styles.statLabel}>{t.yesShow}</Text>
             <Text style={[styles.statValue, { color: Colors.green }]}>
               {user.yesShowCount}회
             </Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>노쇼</Text>
+            {/* 다국어 '노쇼' 라벨 */}
+            <Text style={styles.statLabel}>{t.noShow}</Text>
             <Text
               style={[styles.statValue, { color: Colors.red || "#FF453A" }]}
             >
@@ -154,16 +146,15 @@ export default function UserProfileScreen() {
           </View>
         </View>
 
-        {/* 상세 정보 카드 */}
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-            <Text style={styles.infoKey}>가입일</Text>
-            <Text style={styles.infoVal}>{formattedDate}</Text>
+            {/* 다국어 '가입일' 라벨 */}
+            <Text style={styles.infoKey}>{t.joinDate}</Text>
+            <Text style={styles.infoVal}>{formatDateYear(user.createdAt)}</Text>
           </View>
         </View>
       </View>
 
-      {/* 프로필 사진 확대 보기 모달 */}
       <Modal
         visible={isModalVisible}
         transparent={true}
@@ -195,6 +186,8 @@ export default function UserProfileScreen() {
     </SafeAreaView>
   );
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

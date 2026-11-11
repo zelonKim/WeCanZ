@@ -1,7 +1,7 @@
-import { SignupData } from "@/types/auth/SignupData";
+import { SignupDto } from "@/types/auth/SignupDto";
 import { client } from "../client";
 
-export const signupUser = async (signupData: SignupData) => {
-  const { data } = await client.post("/auth/signup", signupData);
+export const signupUser = async (signupPayload: SignupDto) => {
+  const { data } = await client.post("/auth/signup", signupPayload);
   return data;
 };

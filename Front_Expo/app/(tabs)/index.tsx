@@ -1,20 +1,20 @@
 import { client } from "@/api/client";
-import { createGathering } from "@/api/gathering/createGathering";
 import { getGatherings } from "@/api/gathering/getGatherings";
-import { searchGatheringByCode } from "@/api/gathering/searchGatheringByCode";
 import { saveTokenToServer } from "@/api/user/saveTokenToServer";
-import { CreateGatheringModal } from "@/components/CreateGatheringModal";
+import { GatheringModal } from "@/components/GatheringModal";
 import { InviteCodeModal } from "@/components/InviteCodeModal";
 import { MeetupItem } from "@/components/MeetupItem";
 import { CATEGORIES } from "@/constants/CATEGORIES";
 import Colors from "@/constants/Colors";
-import { useHomeLanguage } from "@/hooks/useHomeLanguage";
+import { useCreateGatheringMutation } from "@/hooks/gathering/useCreateGatheringMutation";
+import { useJoinGatheringMutation } from "@/hooks/gathering/useJoinGatheringMutation";
+import { useHomeLanguage } from "@/hooks/Languages/useHomeLanguage";
 import { CreateGatheringDto } from "@/types/gathering/CreateGatheringDto";
 import { Gathering } from "@/types/gathering/Gathering";
 import { GatheringCategory } from "@/types/gathering/GatheringCategory";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { DateData } from "react-native-calendars";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 Notifications.setNotificationHandler({
@@ -44,7 +45,6 @@ Notifications.setNotificationHandler({
 
 export default function HomeScreen() {
   const { t, currentLang } = useHomeLanguage();
-  const queryClient = useQueryClient();
   const router = useRouter();
 
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
@@ -67,6 +67,8 @@ export default function HomeScreen() {
   const [inviteCode, setInviteCode] = useState("");
   const [isInviteLoading, setIsInviteLoading] = useState(false);
 
+  ////////////////////////////////////////////////////////////////////////////////////
+
   const closeAndResetModal = () => {
     setIsModalOpen(false);
     setTitle("");
@@ -86,6 +88,10 @@ export default function HomeScreen() {
   const handleCloseInviteModal = () => {
     setInviteCode("");
     setIsInviteModalOpen(false);
+  };
+
+  const handleDayPress = (day: DateData) => {
+    setSelectedDateStr(day.dateString);
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -136,46 +142,25 @@ export default function HomeScreen() {
 
   ////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: joinGatheringMutation } = useMutation({
-    mutationFn: searchGatheringByCode,
-    onSuccess: (data) => {
-      const gatheringId = data.id;
-      setInviteCode("");
-      setIsInviteModalOpen(false);
-      router.push(`/gathering/${gatheringId}`);
-    },
-    onError: (error: any) => {
-      Alert.alert(t.error, t.alerts.roomNotFound);
-    },
+  const { mutate: joinGatheringMutate } = useJoinGatheringMutation(t, () => {
+    setInviteCode("");
+    setIsInviteModalOpen(false);
   });
 
   const handleEnterRoom = () => {
-    const cleanCode = inviteCode.trim().toLowerCase();
-    if (!cleanCode || cleanCode.length !== 4) {
-      Alert.alert("알림", t.alerts.roomCodeLength);
+    const cleanInviteCode = inviteCode.trim().toLowerCase();
+    if (!cleanInviteCode || cleanInviteCode.length !== 4) {
+      Alert.alert(t.alerts.title, t.alerts.roomCodeLength);
       return;
     }
 
-    joinGatheringMutation(cleanCode);
+    joinGatheringMutate(cleanInviteCode);
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: createGatheringMutation, isPending: createGatheringPending } =
-    useMutation({
-      mutationFn: createGathering,
-      onSuccess: () => {
-        Alert.alert(t.alerts.successCreate);
-        queryClient.invalidateQueries({ queryKey: ["gatherings"] });
-        closeAndResetModal();
-      },
-      onError: (error: any) => {
-        const msg = error.response?.data?.message || t.alerts.failCreate;
-        Alert.alert(Array.isArray(msg) ? msg[0] : msg);
-      },
-    });
-
-  ////////////////////////////////////////////////////////////////////////////////////
+  const { mutate: createGatheringMutate, isPending: createGatheringPending } =
+    useCreateGatheringMutation(t, closeAndResetModal);
 
   const handleCreateGathering = () => {
     if (!title.trim())
@@ -203,7 +188,7 @@ export default function HomeScreen() {
       selectedMinute,
     );
 
-    const dto: CreateGatheringDto = {
+    const createGatheringPayload: CreateGatheringDto = {
       title,
       description,
       category,
@@ -212,7 +197,7 @@ export default function HomeScreen() {
       dateTime: finalDate.toISOString(),
     };
 
-    createGatheringMutation(dto);
+    createGatheringMutate(createGatheringPayload);
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -291,9 +276,10 @@ export default function HomeScreen() {
         <Ionicons name="add" size={30} color="#000000" />
       </TouchableOpacity>
 
-      <CreateGatheringModal
-        isModalOpen={isModalOpen}
-        closeAndResetModal={closeAndResetModal}
+      <GatheringModal
+        mode="create"
+        isOpen={isModalOpen}
+        onClose={closeAndResetModal}
         category={category}
         setCategory={setCategory}
         title={title}
@@ -303,16 +289,15 @@ export default function HomeScreen() {
         location={location}
         setLocation={setLocation}
         selectedDateStr={selectedDateStr}
-        handleDayPress={(day: any) => setSelectedDateStr(day.dateString)}
+        handleDayPress={handleDayPress}
         selectedHour={selectedHour}
         setSelectedHour={setSelectedHour}
         selectedMinute={selectedMinute}
         setSelectedMinute={setSelectedMinute}
         maxPeople={maxPeople}
         setMaxPeople={setMaxPeople}
-        createGatheringPending={createGatheringPending}
-        handleCreateGathering={handleCreateGathering}
-        t={t}
+        onSubmit={handleCreateGathering}
+        isPending={createGatheringPending}
         styles={styles}
       />
 

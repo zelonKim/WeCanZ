@@ -1,6 +1,9 @@
-import { client } from "@/api/client";
+import { getMyInfo } from "@/api/user/getMyInfo";
+import { updateAgreementAndNickname } from "@/api/user/updateAgreementAndNickname";
 import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
+import { useAgreementLanguage } from "@/hooks/Languages/useAgreementLanguage";
+import { AgreementModalTypes } from "@/types/auth/AgreementModalTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -18,25 +21,32 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AgreementScreen() {
+  const { t } = useAgreementLanguage();
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const [nickname, setNickname] = useState("");
-
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
+  const [modalType, setModalType] = useState<AgreementModalTypes | null>(null);
 
-  const [modalType, setModalType] = useState<
-    "terms" | "privacy" | "marketing" | null
-  >(null);
+  const isFormValid =
+    nickname.trim().length > 0 && termsAgreed && privacyAgreed;
+
+  const handleAllAgree = () => {
+    const nextState = !(termsAgreed && privacyAgreed && isMarketingAgreed);
+    setTermsAgreed(nextState);
+    setPrivacyAgreed(nextState);
+    setIsMarketingAgreed(nextState);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const { data: me } = useQuery({
     queryKey: ["me"],
-    queryFn: async () => {
-      const { data } = await client.get("/user/me");
-      return data;
-    },
+    queryFn: getMyInfo,
   });
 
   useEffect(() => {
@@ -45,27 +55,10 @@ export default function AgreementScreen() {
     }
   }, [me]);
 
-  // 전체 동의 상태 토글
-  const handleAllAgree = () => {
-    const nextState = !(termsAgreed && privacyAgreed && isMarketingAgreed);
-    setTermsAgreed(nextState);
-    setPrivacyAgreed(nextState);
-    setIsMarketingAgreed(nextState);
-  };
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
-  // 회원가입 최종 완료 및 약관 동의 업데이트 API 호출
-  const updateAgreementAndNickname = async () => {
-    const { data } = await client.patch("/user/profile", {
-      nickname,
-      termsAgreedAt: new Date().toISOString(),
-      privacyAgreedAt: new Date().toISOString(),
-      marketingAgreedAt: isMarketingAgreed ? new Date().toISOString() : null,
-    });
-    return data;
-  };
-
-  const { mutate: completeMutate, isPending } = useMutation({
-    mutationFn: updateAgreementAndNickname,
+  const { mutate: completeAgreeMutate, isPending } = useMutation({
+    mutationFn: () => updateAgreementAndNickname(nickname, isMarketingAgreed),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["me"] });
       router.replace("/(tabs)");
@@ -73,24 +66,25 @@ export default function AgreementScreen() {
     onError: (error: any) => {
       const message = error.response?.data?.message;
       const displayMessage = Array.isArray(message) ? message[0] : message;
-      Alert.alert("알림", displayMessage || "처리 중 오류가 발생했습니다.");
+      Alert.alert(t.alerts.warning, t.alerts.defaultError);
     },
   });
 
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
   const handleSubmit = () => {
     if (!nickname.trim()) {
-      Alert.alert("경고", "사용하실 닉네임을 입력해 주세요.");
+      Alert.alert(t.alerts.warning, t.alerts.nicknameRequired);
       return;
     }
     if (!termsAgreed || !privacyAgreed) {
-      Alert.alert("경고", "필수 약관에 모두 동의해 주세요.");
+      Alert.alert(t.alerts.warning, t.alerts.termsRequired);
       return;
     }
-    completeMutate();
+    completeAgreeMutate();
   };
 
-  const isFormValid =
-    nickname.trim().length > 0 && termsAgreed && privacyAgreed;
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView
@@ -98,22 +92,19 @@ export default function AgreementScreen() {
     >
       <View style={styles.content}>
         <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
-          <Text style={styles.title}>거의 다 완료됐어요</Text>
+          <Text style={styles.title}>{t.title}</Text>
           <Image
             source={require("@/assets/images/sticker.png")}
             style={{ width: 50, height: 50 }}
           />
         </View>
-        <Text style={styles.subtitle}>
-          서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.
-        </Text>
+        <Text style={styles.subtitle}>{t.subtitle}</Text>
 
-        {/* 닉네임 입력 */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>닉네임</Text>
+          <Text style={styles.label}>{t.nicknameLabel}</Text>
           <TextInput
             style={styles.input}
-            placeholder="최소 2자 이상 입력"
+            placeholder={t.nicknamePlaceholder}
             placeholderTextColor="#666"
             value={nickname}
             onChangeText={setNickname}
@@ -122,7 +113,6 @@ export default function AgreementScreen() {
           />
         </View>
 
-        {/* 약관 동의 영역 */}
         <View style={styles.agreementSection}>
           <TouchableOpacity
             style={styles.agreementRow}
@@ -141,12 +131,11 @@ export default function AgreementScreen() {
                   : "#666"
               }
             />
-            <Text style={styles.allAgreeText}>전체 동의하기</Text>
+            <Text style={styles.allAgreeText}>{t.allAgree}</Text>
           </TouchableOpacity>
 
           <View style={styles.divider} />
 
-          {/* 서비스 이용약관 */}
           <View style={styles.rowContainer}>
             <TouchableOpacity
               style={styles.agreementRow}
@@ -157,16 +146,13 @@ export default function AgreementScreen() {
                 size={20}
                 color={termsAgreed ? Colors.green : "#666"}
               />
-              <Text style={styles.agreementText}>
-                [필수] 서비스 이용약관 동의
-              </Text>
+              <Text style={styles.agreementText}>{t.termsAgree}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalType("terms")}>
-              <Text style={styles.viewLinkText}>보기</Text>
+              <Text style={styles.viewLinkText}>{t.viewLink}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* 개인정보 처리방침 */}
           <View style={styles.rowContainer}>
             <TouchableOpacity
               style={styles.agreementRow}
@@ -177,12 +163,12 @@ export default function AgreementScreen() {
                 size={20}
                 color={privacyAgreed ? Colors.green : "#666"}
               />
-              <Text style={styles.agreementText}>
-                [필수] 개인정보 처리방침 동의
+              <Text style={styles.agreementText} numberOfLines={2}>
+                {t.privacyAgree}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setModalType("privacy")}>
-              <Text style={styles.viewLinkText}>보기</Text>
+              <Text style={styles.viewLinkText}>{t.viewLink}</Text>
             </TouchableOpacity>
           </View>
 
@@ -198,18 +184,15 @@ export default function AgreementScreen() {
                 size={20}
                 color={isMarketingAgreed ? Colors.green : "#666"}
               />
-              <Text style={styles.agreementText}>
-                [선택] 마케팅 정보 수신 동의
-              </Text>
+              <Text style={styles.agreementText}>{t.marketingAgree}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => setModalType("marketing")}>
-              <Text style={styles.viewLinkText}>보기</Text>
+              <Text style={styles.viewLinkText}>{t.viewLink}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 시작하기 버튼 */}
         <TouchableOpacity
           style={[
             styles.submitBtn,
@@ -227,13 +210,12 @@ export default function AgreementScreen() {
                 { color: isFormValid ? "#000" : "#666" },
               ]}
             >
-              시작하기
+              {t.startBtn}
             </Text>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* 💡 약관 및 개인정보 처리방침 모달 컴포넌트 장착 */}
       <TermsModal
         visible={modalType !== null}
         type={modalType}
@@ -242,6 +224,8 @@ export default function AgreementScreen() {
     </SafeAreaView>
   );
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, justifyContent: "center" },
@@ -277,7 +261,7 @@ const styles = StyleSheet.create({
   },
   agreementRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   allAgreeText: { color: "#FFF", fontSize: 15, fontWeight: "bold" },
-  agreementText: { color: "#CCC", fontSize: 14 },
+  agreementText: { color: "#CCC", fontSize: 14, maxWidth: 230 },
   viewLinkText: {
     color: "#8E8E93",
     fontSize: 13,
