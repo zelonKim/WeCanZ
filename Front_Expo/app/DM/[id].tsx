@@ -1,17 +1,18 @@
-import { client } from "@/api/client";
+import { getDmMessages } from "@/api/DM/getDmMessages";
 import { getRoomInfo } from "@/api/DM/getDMRoomInfo";
-import { blockFriend } from "@/api/friend/blcokFriend";
-import { requestFriendship } from "@/api/friend/requestFriendship";
-import { createReport } from "@/api/user/createReport";
 import { getBlockedUsers } from "@/api/user/getBlockedUsers";
 import { getMyInfo } from "@/api/user/getMyInfo";
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatInputBar } from "@/components/ChatInputBar";
-import { ChatMessageItem } from "@/components/ChatMessageItem";
+import { DirectChatMessageItem } from "@/components/DirectChatMessageItem";
 import { DmMenuPopover } from "@/components/DmMenuPopover";
 import { ImageViewerModal } from "@/components/ImageViewerModal";
 import { ReportModal } from "@/components/ReportModal";
 import Colors from "@/constants/Colors";
+import { useBlockUserMutation } from "@/hooks/friend/useBlockUserMutation";
+import { useSendFriendRequestMutation } from "@/hooks/friend/useSendFriendRequestMutation";
+import { useDmRoomLanguage } from "@/hooks/Languages/useDmRoomLanguage";
+import { useCreateReportMutation } from "@/hooks/user/useCreateReportMutation";
 import { getSocket } from "@/lib/socket";
 import { DirectChatMessage } from "@/types/DM/DirectChatMessage";
 import { DMRoomInfoResponse } from "@/types/DM/DMRoomInfoResponse";
@@ -20,7 +21,7 @@ import { ReportReason } from "@/types/user/ReportReason";
 import { handleImagePick } from "@/utils/handleImagePick";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import NetInfo from "@react-native-community/netinfo";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as NavigationBar from "expo-navigation-bar";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -43,6 +44,8 @@ import {
 import { Socket } from "socket.io-client";
 
 export default function DirectChatRoomScreen() {
+  const { t } = useDmRoomLanguage();
+
   const { id: roomId } = useLocalSearchParams<{
     id: string;
   }>();
@@ -155,7 +158,7 @@ export default function DirectChatRoomScreen() {
     };
   }, [roomId, myInfo?.id]);
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   useEffect(() => {
     if (!roomId) return;
@@ -167,7 +170,6 @@ export default function DirectChatRoomScreen() {
         queryClient.invalidateQueries({ queryKey: ["dm-messages", roomId] });
       }
     });
-
     return () => {
       unsubscribe();
     };
@@ -190,12 +192,7 @@ export default function DirectChatRoomScreen() {
   const { data: initialMessages = [], isPending: initMessagePending } =
     useQuery<DirectChatMessage[]>({
       queryKey: ["dm-messages", roomId],
-      queryFn: async () => {
-        const { data } = await client.get(
-          `/direct-chat/rooms/${roomId}/messages`,
-        );
-        return data;
-      },
+      queryFn: () => getDmMessages(roomId),
       enabled: !!roomId,
     });
 
@@ -205,22 +202,7 @@ export default function DirectChatRoomScreen() {
     }
   }, [initialMessages]);
 
-  ////////////////////////////////////////////////////////
-
-  const { mutate: sendFriendRequestMutation } = useMutation({
-    mutationFn: requestFriendship,
-    onSuccess: () => {
-      Alert.alert("성공", "친구 요청을 보냈습니다.");
-    },
-    onError: (err: any) => {
-      const message = err.response?.data?.message;
-      const displayMessage = Array.isArray(message) ? message[0] : message;
-
-      Alert.alert("오류", displayMessage || "친구 신청에 실패했습니다.");
-    },
-  });
-
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const { data: blockedUsers = [] } = useQuery({
     queryKey: ["blocked-users"],
@@ -230,62 +212,36 @@ export default function DirectChatRoomScreen() {
     refetchOnWindowFocus: true,
   });
 
-  const targetUserId = partnerId; // 또는 상대방의 고유 ID
-
   const isBlocked = useMemo(() => {
-    if (!targetUserId || !blockedUsers || blockedUsers.length === 0)
-      return false;
+    if (!partnerId || !blockedUsers || blockedUsers.length === 0) return false;
 
     return blockedUsers.some((item: any) => {
       return (
-        String(item.senderId) === String(targetUserId) ||
-        String(item.receiverId) === String(targetUserId) ||
-        String(item.receiver?.id) === String(targetUserId)
+        String(item.senderId) === String(partnerId) ||
+        String(item.receiverId) === String(partnerId) ||
+        String(item.receiver?.id) === String(partnerId)
       );
     });
-  }, [targetUserId, blockedUsers]);
+  }, [partnerId, blockedUsers]);
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: blockUserMutation } = useMutation({
-    mutationFn: blockFriend,
-    onSuccess: () => {
-      Alert.alert("성공", "해당 유저를 차단했습니다.");
-      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "유저 차단에 실패했습니다.",
-      );
-    },
-  });
-
-  ///////////////////////////////////////////////////////////////////////////
-
-  const { mutate: createReportMutation } = useMutation({
-    mutationFn: createReport,
-    onSuccess: () => {
-      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+  const { mutate: createReportMutate } = useCreateReportMutation(
+    () => {
       setIsReportModalOpen(false);
       setSelectedReason(ReportReason.SPAM);
       setReportDetails("");
     },
-    onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
-      Alert.alert("오류", msg);
-    },
-    onSettled: () => {
+    () => {
       setIsSubmittingReport(false);
     },
-  });
+  );
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleSubmitReport = async () => {
     if (!reportDetails.trim()) {
-      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      Alert.alert(t.alerts.warning, t.alerts.reportEmptyDetails);
       return;
     }
     setIsSubmittingReport(true);
@@ -297,17 +253,16 @@ export default function DirectChatRoomScreen() {
         details: reportDetails.trim(),
       };
 
-      createReportMutation(createReportPayload);
+      
+      createReportMutate(createReportPayload);
     } catch (error: any) {
-      const msg =
-        error.response?.data?.message ||
-        "존재하지 않는 유저이거나 조회 실패했습니다.";
-      Alert.alert("조회 실패", msg);
+      const msg = error.response?.data?.message || t.alerts.reportUserNotFound;
+      Alert.alert(t.alerts.reportUserNotFoundTitle, msg);
       setIsSubmittingReport(false);
     }
   };
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleSendMessage = async () => {
     const messageText = inputText.trim();
@@ -357,20 +312,20 @@ export default function DirectChatRoomScreen() {
         imageUrl: imageUrl,
       });
     } catch (error) {
-      console.error("메시지 전송 또는 이미지 업로드 실패:", error);
-      Alert.alert("오류", "메시지를 전송하지 못했습니다.");
+      console.error(error);
+      Alert.alert(t.alerts.error, t.alerts.sendMessageFail);
     }
   };
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleDeleteMessage = (msg: DirectChatMessage) => {
     if (myInfo?.id && msg.senderId !== myInfo.id) return;
 
-    Alert.alert("메시지 삭제", "이 메시지를 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
+    Alert.alert(t.alerts.deleteMessageTitle, t.alerts.deleteMessageConfirm, [
+      { text: t.alerts.cancel, style: "cancel" },
       {
-        text: "삭제",
+        text: t.alerts.delete,
         style: "destructive",
         onPress: () => {
           setMessages((prev) => prev.filter((m) => m.id !== msg.id));
@@ -384,7 +339,13 @@ export default function DirectChatRoomScreen() {
     ]);
   };
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: sendFriendRequestMutate } = useSendFriendRequestMutation();
+
+  const { mutate: blockUserMutate } = useBlockUserMutation();
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -403,8 +364,8 @@ export default function DirectChatRoomScreen() {
             partnerName={partnerName}
             onClose={() => setIsMenuOpen(false)}
             onNavigateProfile={(id) => router.push(`/profile/${id}`)}
-            onSendFriendRequest={sendFriendRequestMutation}
-            onBlockUser={blockUserMutation}
+            onSendFriendRequest={sendFriendRequestMutate}
+            onBlockUser={blockUserMutate}
             styles={styles}
           />
         )}
@@ -432,7 +393,7 @@ export default function DirectChatRoomScreen() {
               flatListRef.current?.scrollToEnd({ animated: true })
             }
             renderItem={({ item }) => (
-              <ChatMessageItem
+              <DirectChatMessageItem
                 item={item}
                 myInfo={myInfo}
                 onDeleteMessage={handleDeleteMessage}
@@ -494,19 +455,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#2C2C2E",
   },
-  // 좌측 버튼 고정 너비
   headerButtonLeft: {
     width: 40,
     alignItems: "flex-start",
     justifyContent: "center",
   },
-  // 우측 버튼 고정 너비 (좌측과 동일하게 주어야 닉네임이 정확히 가운데 옵니다)
   headerButtonRight: {
     width: 40,
     alignItems: "flex-end",
     justifyContent: "center",
   },
-  // 중앙 컨테이너가 남은 공간을 차지하며 내부 요소를 센터 정렬
   headerTitleContainer: {
     flex: 1,
     flexDirection: "row",
@@ -628,7 +586,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#3A3A3C",
   },
   blockedBanner: {
-    height: 40, // flex: 1 제거하여 높이 찌그러짐 방지
+    height: 40,
     backgroundColor: "#2C2C2E",
     borderRadius: 20,
     justifyContent: "center",
@@ -649,7 +607,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   popoverDivider: {
-    width: 80,
+    width: 110,
     height: 1,
     marginVertical: 5,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
@@ -670,7 +628,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 8,
     zIndex: 9999,
-    width: 130,
+    width: 150,
   },
   modalOverlay: {
     flex: 1,

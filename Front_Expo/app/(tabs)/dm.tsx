@@ -98,7 +98,7 @@ export default function DMScreen() {
   /////////////////////////////////////////////////////////////////////////
 
   const { mutate: requestDmMutate, isPending: isRequesting } =
-    useRequestDmMutation(t, () => {
+    useRequestDmMutation(() => {
       setIsModalVisible(false);
       setTargetNickname("");
     });

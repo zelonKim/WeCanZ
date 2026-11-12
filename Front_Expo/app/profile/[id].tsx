@@ -19,7 +19,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UserProfileScreen() {
-  const { t } = useProfileLanguage();
+  const { t, currentLang } = useProfileLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
@@ -67,12 +67,12 @@ export default function UserProfileScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>유저 정보를 불러올 수 없습니다.</Text>
+          <Text style={styles.errorText}>{t.notUserInfo}</Text>
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.backBtn}
           >
-            <Text style={styles.backBtnText}>뒤로가기</Text>
+            <Text style={styles.backBtnText}>{t.back}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -131,7 +131,7 @@ export default function UserProfileScreen() {
             {/* 다국어 '예스쇼' 라벨 */}
             <Text style={styles.statLabel}>{t.yesShow}</Text>
             <Text style={[styles.statValue, { color: Colors.green }]}>
-              {user.yesShowCount}회
+              {user.yesShowCount}
             </Text>
           </View>
           <View style={styles.statDivider} />
@@ -141,7 +141,7 @@ export default function UserProfileScreen() {
             <Text
               style={[styles.statValue, { color: Colors.red || "#FF453A" }]}
             >
-              {user.noShowCount}회
+              {user.noShowCount}
             </Text>
           </View>
         </View>
@@ -150,7 +150,9 @@ export default function UserProfileScreen() {
           <View style={styles.infoRow}>
             {/* 다국어 '가입일' 라벨 */}
             <Text style={styles.infoKey}>{t.joinDate}</Text>
-            <Text style={styles.infoVal}>{formatDateYear(user.createdAt)}</Text>
+            <Text style={styles.infoVal}>
+              {formatDateYear(user.createdAt, currentLang)}
+            </Text>
           </View>
         </View>
       </View>

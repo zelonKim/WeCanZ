@@ -1,15 +1,7 @@
+import { useGatheringChatMenuLanguage } from "@/hooks/Languages/useGatheringChatMenuLanguage";
+import { GatheringChatMenuPopoverProps } from "@/types/gathering/GatheringChatMenuPopoverProps";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
-
-interface GatheringChatMenuPopoverProps {
-  msg: any;
-  onClose: () => void;
-  onViewProfile: (userId: string) => void;
-  onSendFriendRequest: (userId: string) => void;
-  onRequestDm: (userId: string) => void;
-  onBlockUser: (userId: string, nickname?: string) => void;
-  styles: any;
-}
 
 export const GatheringChatMenuPopover = ({
   msg,
@@ -20,6 +12,8 @@ export const GatheringChatMenuPopover = ({
   onBlockUser,
   styles,
 }: GatheringChatMenuPopoverProps) => {
+  const { t } = useGatheringChatMenuLanguage();
+
   const userId = msg.user?.id || "";
   const nickname = msg.user?.nickname || "";
 
@@ -32,7 +26,7 @@ export const GatheringChatMenuPopover = ({
           onViewProfile(userId);
         }}
       >
-        <Text style={styles.popoverText}>프로필 보기</Text>
+        <Text style={styles.popoverText}>{t.menu.viewProfile}</Text>
       </TouchableOpacity>
 
       <View style={styles.popoverDivider} />
@@ -44,7 +38,7 @@ export const GatheringChatMenuPopover = ({
           onSendFriendRequest(userId);
         }}
       >
-        <Text style={styles.popoverText}>친구 요청</Text>
+        <Text style={styles.popoverText}>{t.menu.friendRequest}</Text>
       </TouchableOpacity>
 
       <View style={styles.popoverDivider} />
@@ -56,7 +50,7 @@ export const GatheringChatMenuPopover = ({
           onRequestDm(userId);
         }}
       >
-        <Text style={styles.popoverText}>DM 요청</Text>
+        <Text style={styles.popoverText}>{t.menu.requestDm}</Text>
       </TouchableOpacity>
 
       <View style={styles.popoverDivider} />
@@ -65,17 +59,19 @@ export const GatheringChatMenuPopover = ({
         style={styles.popoverItem}
         onPress={() => {
           onClose();
-          Alert.alert("유저 차단", `${nickname}님을 차단하시겠습니까?`, [
-            { text: "취소", style: "cancel" },
+          Alert.alert(t.alerts.blockTitle, t.alerts.blockConfirm(nickname), [
+            { text: t.alerts.cancel, style: "cancel" },
             {
-              text: "차단",
+              text: t.alerts.block,
               style: "destructive",
               onPress: () => onBlockUser(userId, nickname),
             },
           ]);
         }}
       >
-        <Text style={[styles.popoverText, { color: "#FF5252" }]}>차단</Text>
+        <Text style={[styles.popoverText, { color: "#FF5252" }]}>
+          {t.menu.block}
+        </Text>
       </TouchableOpacity>
     </View>
   );

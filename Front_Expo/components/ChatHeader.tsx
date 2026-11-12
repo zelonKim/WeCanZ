@@ -24,7 +24,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
   return (
     <View style={[styles.header, { position: "relative" }]}>
-      {/* 1. 좌측 뒤로가기 */}
+
       <TouchableOpacity
         style={{
           width: 40,
@@ -36,7 +36,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <Ionicons name="chevron-back" size={26} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* 2. 중앙 정중앙 배치 컨테이너 */}
+
       <View
         style={{
           position: "absolute",
@@ -68,7 +68,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
           {children}
         </View>
 
-        {/* 닉네임과 서브타이틀(참가자 수 등) 영역 */}
+
         <View style={{ flexShrink: 1 }}>
           <Text style={styles.headerNickname} numberOfLines={1}>
             {title}
@@ -81,7 +81,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </View>
       </View>
 
-      {/* 3. 우측 신고 버튼 */}
+
       <TouchableOpacity
         style={{ width: 40, alignItems: "flex-end", justifyContent: "center" }}
         onPress={onReportPress}

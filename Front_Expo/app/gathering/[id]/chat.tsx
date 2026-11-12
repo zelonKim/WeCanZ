@@ -1,29 +1,29 @@
 import { client } from "@/api/client";
-import { requestDM } from "@/api/DM/requestDM";
-import { blockFriend } from "@/api/friend/blcokFriend";
-import { requestFriendship } from "@/api/friend/requestFriendship";
 import { getGatheringDetail } from "@/api/gathering/getGatheringDetail";
-import { createReport } from "@/api/user/createReport";
 import { getMyInfo } from "@/api/user/getMyInfo";
 import { searchUserByNickname } from "@/api/user/searchUserByNickname";
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatInputBar } from "@/components/ChatInputBar";
 import { GatheringChatMenuPopover } from "@/components/GatheringChatMenuPopover";
+import { GatheringChatMessageItem } from "@/components/GatheringChatMessageItem";
 import { ImageViewerModal } from "@/components/ImageViewerModal";
 import { ReportModal } from "@/components/ReportModal";
 import Colors from "@/constants/Colors";
+import { useRequestDmMutation } from "@/hooks/DM/useRequestDmMutation";
+import { useBlockUserMutation } from "@/hooks/friend/useBlockUserMutation";
+import { useSendFriendRequestMutation } from "@/hooks/friend/useSendFriendRequestMutation";
 import { useGatheringChatLanguage } from "@/hooks/Languages/useGatheringChatLanguage";
+import { useCreateReportMutation } from "@/hooks/user/useCreateReportMutation";
 import { getSocket } from "@/lib/socket";
 import { ChatMessage } from "@/types/gathering/ChatMessage";
 import { CreateReportDto } from "@/types/user/CreateReportDto";
 import { Participant } from "@/types/user/Participant";
 import { ReportReason } from "@/types/user/ReportReason";
-import { formatTime } from "@/utils/formatTime";
 import { handleImagePick } from "@/utils/handleImagePick";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
 import NetInfo from "@react-native-community/netinfo";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -31,12 +31,10 @@ import {
   Alert,
   AppState,
   AppStateStatus,
-  Image,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -45,6 +43,7 @@ import { Socket } from "socket.io-client";
 
 export default function GatheringChatScreen() {
   const { t, currentLang } = useGatheringChatLanguage();
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -105,7 +104,7 @@ export default function GatheringChatScreen() {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { data: serverMessages = [], isLoading } = useQuery<ChatMessage[]>({
+  const { data: serverMessages = [], isPending } = useQuery<ChatMessage[]>({
     queryKey: ["gathering-messages", id],
     queryFn: async () => {
       const { data } = await client.get(`/gathering-chat/${id}/messages`);
@@ -216,7 +215,7 @@ export default function GatheringChatScreen() {
     };
   }, [id, me?.id, queryClient]);
 
-  ///////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleSendMessage = async () => {
     const text = messageText.trim();
@@ -262,7 +261,7 @@ export default function GatheringChatScreen() {
       });
     } catch (error) {
       console.error("메시지 전송 또는 이미지 업로드 실패:", error);
-      Alert.alert("오류", "메시지를 전송하지 못했습니다.");
+      Alert.alert(t.alerts.error, t.alerts.sendFailMessage);
     }
   };
 
@@ -273,15 +272,15 @@ export default function GatheringChatScreen() {
 
     if (!isHost && !isMyMessage) {
       return Alert.alert(
-        "권한 없음",
-        "본인이 작성한 메시지만 삭제할 수 있습니다.",
+        t.alerts.unauthorizedTitle,
+        t.alerts.unauthorizedMessage,
       );
     }
 
-    Alert.alert("메시지 삭제", "이 메시지를 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
+    Alert.alert(t.alerts.deleteTitle, t.alerts.deleteMessage, [
+      { text: t.alerts.cancel, style: "cancel" },
       {
-        text: "삭제",
+        text: t.alerts.delete,
         style: "destructive",
         onPress: () => {
           if (!socketRef.current || !me?.id) return;
@@ -298,34 +297,27 @@ export default function GatheringChatScreen() {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: createReportMutation } = useMutation({
-    mutationFn: createReport,
-    onSuccess: () => {
-      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+  const { mutate: createReportMutate } = useCreateReportMutation(
+    () => {
       setIsReportModalOpen(false);
       setTargetNickname("");
       setSelectedReason(ReportReason.SPAM);
       setReportDetails("");
     },
-    onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
-      Alert.alert("오류", msg);
-    },
-    onSettled: () => {
+    () => {
       setIsSubmittingReport(false);
     },
-  });
+  );
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleSubmitReport = async () => {
     if (!targetNickname.trim()) {
-      Alert.alert("경고", "신고할 유저의 닉네임을 입력해주세요.");
+      Alert.alert(t.alerts.warning, t.alerts.emptyTargetNickname);
       return;
     }
     if (!reportDetails.trim()) {
-      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      Alert.alert(t.alerts.warning, t.alerts.emptyReportDetails);
       return;
     }
 
@@ -335,7 +327,7 @@ export default function GatheringChatScreen() {
       const searchedUser = await searchUserByNickname(targetNickname.trim());
 
       if (!searchedUser || !searchedUser.id) {
-        Alert.alert("오류", "해당 닉네임을 가진 유저를 찾을 수 없습니다.");
+        Alert.alert(t.alerts.error, t.alerts.userNotFound);
         setIsSubmittingReport(false);
         return;
       }
@@ -346,61 +338,13 @@ export default function GatheringChatScreen() {
         details: reportDetails.trim(),
       };
 
-      createReportMutation(createReportPayload);
+      createReportMutate(createReportPayload);
     } catch (error: any) {
-      const msg =
-        error.response?.data?.message ||
-        "존재하지 않는 유저이거나 조회 실패했습니다.";
-      Alert.alert("조회 실패", msg);
+      const msg = error.response?.data?.message || t.alerts.defaultLookupFail;
+      Alert.alert(t.alerts.lookupFailTitle, msg);
       setIsSubmittingReport(false);
     }
   };
-
-  ////////////////////////////////////////////////////////
-
-  const { mutate: sendFriendRequestMutation } = useMutation({
-    mutationFn: requestFriendship,
-    onSuccess: () => {
-      Alert.alert("성공", "친구 요청을 보냈습니다.");
-    },
-    onError: (err: any) => {
-      const message = err.response?.data?.message;
-      const displayMessage = Array.isArray(message) ? message[0] : message;
-
-      Alert.alert("오류", displayMessage || "친구 신청에 실패했습니다.");
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: requestDmMutation } = useMutation({
-    mutationFn: requestDM,
-    onSuccess: () => {
-      Alert.alert("성공", "DM 요청을 보냈습니다.");
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "DM 요청에 실패했습니다.",
-      );
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: blockUserMutation } = useMutation({
-    mutationFn: blockFriend,
-    onSuccess: () => {
-      Alert.alert("성공", "해당 유저를 차단했습니다.");
-      queryClient.invalidateQueries({ queryKey: ["blocked-users"] });
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "유저 차단에 실패했습니다.",
-      );
-    },
-  });
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -422,6 +366,14 @@ export default function GatheringChatScreen() {
       (msg) => !blockedUserIds.includes(String(msg.userId || msg.user?.id)),
     );
   }, [messages, blockedUserIds]);
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: blockUserMutate } = useBlockUserMutation();
+
+  const { mutate: sendFriendRequestMutate } = useSendFriendRequestMutation();
+
+  const { mutate: requestDmMutate } = useRequestDmMutation();
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -448,7 +400,7 @@ export default function GatheringChatScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "padding"}
         keyboardVerticalOffset={Platform.OS === "ios" ? -20 : -50}
       >
-        {isLoading ? (
+        {isPending ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={Colors.green} />
           </View>
@@ -475,133 +427,38 @@ export default function GatheringChatScreen() {
                 <Text style={styles.emptySubText}>{t.emptySubText}</Text>
               </View>
             ) : (
-              visibleMessages.map((msg) => {
-                const isMyMessage = String(msg.userId) === String(me?.id);
-                const formattedTime = formatTime(msg.createdAt, currentLang);
-
-                return (
-                  <View
-                    key={msg.id}
-                    style={[
-                      styles.messageWrapper,
-                      isMyMessage
-                        ? styles.myMessageWrapper
-                        : styles.otherMessageWrapper,
-                    ]}
-                  >
-                    {!isMyMessage && (
-                      <View style={styles.senderContainer}>
-                        <TouchableOpacity
-                          activeOpacity={me?.id ? 1 : 0.5}
-                          onPress={() => {
-                            if (msg.user && msg.user.id !== me?.id) {
-                              setActiveMenuMessageId(
-                                activeMenuMessageId === msg.id ? null : msg.id,
-                              );
-                            }
-                          }}
-                        >
-                          {msg.user?.profileImage ? (
-                            <Image
-                              source={{ uri: msg.user.profileImage }}
-                              style={styles.profileImage}
-                            />
-                          ) : (
-                            <View style={styles.avatarPlaceholder}>
-                              <Ionicons
-                                name="person"
-                                size={14}
-                                color="#8E8E93"
-                              />
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                        <Text style={styles.senderName}>
-                          {msg.user?.nickname || ""}
-                        </Text>
-                      </View>
-                    )}
-
-                    {activeMenuMessageId === msg.id && msg.user && (
-                      <GatheringChatMenuPopover
-                        msg={msg}
-                        onClose={handleCloseMenu}
-                        onViewProfile={(userId) =>
-                          router.push(`/profile/${userId}`)
-                        }
-                        onSendFriendRequest={(userId) =>
-                          sendFriendRequestMutation(userId)
-                        }
-                        onRequestDm={(userId) => requestDmMutation(userId)}
-                        onBlockUser={(userId) => blockUserMutation(userId)}
-                        styles={styles}
-                      />
-                    )}
-
-                    <View style={styles.bubbleRow}>
-                      {isMyMessage && (
-                        <Text style={styles.myTimestamp}>{formattedTime}</Text>
-                      )}
-
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        onLongPress={() => handleDeleteMessage(msg)}
-                        style={[
-                          styles.messageContainer,
-                          isMyMessage
-                            ? styles.myMessageContainer
-                            : styles.otherMessageContainer,
-                        ]}
-                      >
-                        {msg.imageUrl && (
-                          <TouchableOpacity
-                            activeOpacity={0.9}
-                            onPress={() => setModalImageUri(msg.imageUrl || "")}
-                          >
-                            <Image
-                              source={{ uri: msg.imageUrl }}
-                              style={
-                                !msg.message
-                                  ? styles.onlyImage
-                                  : styles.chatImage
-                              }
-                              resizeMode="cover"
-                            />
-                          </TouchableOpacity>
-                        )}
-
-                        {msg.message ? (
-                          <View
-                            style={[
-                              styles.bubble,
-                              isMyMessage
-                                ? styles.myBubble
-                                : styles.otherBubble,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.messageText,
-                                isMyMessage
-                                  ? styles.myMessageText
-                                  : styles.otherMessageText,
-                              ]}
-                            >
-                              {msg.message}
-                            </Text>
-                          </View>
-                        ) : null}
-                      </TouchableOpacity>
-
-                      {!isMyMessage && (
-                        <Text style={styles.otherTimestamp}>
-                          {formattedTime}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                );
-              })
+              visibleMessages.map((msg) => (
+                <GatheringChatMessageItem
+                  key={msg.id}
+                  msg={msg}
+                  me={me}
+                  currentLang={currentLang}
+                  activeMenuMessageId={activeMenuMessageId}
+                  onToggleMenu={(msgId) =>
+                    setActiveMenuMessageId(
+                      activeMenuMessageId === msgId ? null : msgId,
+                    )
+                  }
+                  onDeleteMessage={handleDeleteMessage}
+                  onOpenImageModal={(uri) => setModalImageUri(uri)}
+                  styles={styles}
+                  renderMenuPopover={(item) => (
+                    <GatheringChatMenuPopover
+                      msg={item}
+                      onClose={handleCloseMenu}
+                      onViewProfile={(userId) =>
+                        router.push(`/profile/${userId}`)
+                      }
+                      onSendFriendRequest={(userId) =>
+                        sendFriendRequestMutate(userId)
+                      }
+                      onRequestDm={(userId) => requestDmMutate(userId)}
+                      onBlockUser={(userId) => blockUserMutate(userId)}
+                      styles={styles}
+                    />
+                  )}
+                />
+              ))
             )}
           </ScrollView>
         )}
@@ -963,23 +820,21 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   popoverDivider: {
-    width: 80,
+    width: 110,
     height: 1,
     marginVertical: 5,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
-  // 💡 프로필 이미지 바로 옆에 뜰 인라인 팝업 탭 스타일
   inlineTabPopover: {
     position: "absolute",
-    left: 38, // 아바타 너비(40) + 여백
+    left: 38,
     top: 0,
     flexDirection: "column",
     alignItems: "center",
-    backgroundColor: "#2C2C2E", // 모던한 다크 팝업/카드 배경색 (앱 테마에 맞게 조정)
+    backgroundColor: "#2C2C2E",
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    // 그림자 효과
+    paddingVertical: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -988,14 +843,14 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   button: {
-    padding: 8, // p-2 (Tailwind p-2는 보통 8px)
-    backgroundColor: "rgba(82, 82, 82, 0.6)", // bg-neutral-600/60
-    borderRadius: 9999, // rounded-full
+    padding: 8,
+    backgroundColor: "rgba(82, 82, 82, 0.6)",
+    borderRadius: 9999,
     alignItems: "center",
     justifyContent: "center",
   },
   disabledButton: {
-    opacity: 0.5, // 비활성화 시 투명도 조절
+    opacity: 0.5,
   },
   imagePreviewContainer: {
     flexDirection: "row",

@@ -18,7 +18,6 @@ export const useJoinGatheringMutation = (
         onSuccessCallback();
       }
 
-      // 상세 페이지로 라우팅
       router.push(`/gathering/${gatheringId}`);
     },
     onError: (error: any) => {

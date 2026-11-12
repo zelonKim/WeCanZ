@@ -18,7 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DoneGatheringsScreen() {
-  const { t, currentLang } = useMeetupHistoryLanguage();
+  const { t } = useMeetupHistoryLanguage();
   const [activeTab, setActiveTab] = useState<TabType>("COMPLETED");
 
   const { data: me } = useQuery({

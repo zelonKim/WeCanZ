@@ -1,32 +1,33 @@
 import { client } from "@/api/client";
-import { requestDM } from "@/api/DM/requestDM";
-import { blockFriend } from "@/api/friend/blcokFriend";
-import { requestFriendship } from "@/api/friend/requestFriendship";
-import { applyGathering } from "@/api/gathering/applyGathering";
-import { approveParticipant } from "@/api/gathering/approveParticipant";
-import { banParticipant } from "@/api/gathering/banParticipant";
-import { cancelApplyGathering } from "@/api/gathering/cancelApplyGathering";
-import { cancelGathering } from "@/api/gathering/cancelGathering";
-import { completeGathering } from "@/api/gathering/completeGathering";
-import { editGathering } from "@/api/gathering/editGathering";
-import { markParticipantNoShow } from "@/api/gathering/markParticipantNoShow";
-import { PendingParticipant } from "@/api/gathering/pendingarticipant";
-import { startGathering } from "@/api/gathering/startGathering";
-import { createReport } from "@/api/user/createReport";
 import { GatheringModal } from "@/components/GatheringModal";
 import { GatheringUserCard } from "@/components/GatheringUserCard";
 import { NoShowModal } from "@/components/NoShowModal";
 import { ReportModal } from "@/components/ReportModal";
 import Colors from "@/constants/Colors";
 import { STATUS_COLOR } from "@/constants/STATUS_COLOR";
+import { useRequestDmMutation } from "@/hooks/DM/useRequestDmMutation";
+import { useBlockUserMutation } from "@/hooks/friend/useBlockUserMutation";
+import { useSendFriendRequestMutation } from "@/hooks/friend/useSendFriendRequestMutation";
+import { useApplyGatheringMutation } from "@/hooks/gathering/useApplyGatheringMutation";
+import { useApproveParticipantMutation } from "@/hooks/gathering/useApproveParticipantMutation";
+import { useBanParticipantMutation } from "@/hooks/gathering/useBanParticipantMutation";
+import { useCancelApplyGatheringMutation } from "@/hooks/gathering/useCancelApplyGatheringMutation";
+import { useCancelGatheringMutation } from "@/hooks/gathering/useCancelGatheringMutation";
+import { useCompleteGatheringMutation } from "@/hooks/gathering/useCompleteGatheringMutation";
+import { useEditGatheringMutation } from "@/hooks/gathering/useEditGatheringMutation";
+import { useNoShowParticipantMutation } from "@/hooks/gathering/useNoShowParticipantMutation";
+import { usePendingParticipantMutation } from "@/hooks/gathering/usePendingParticipantMutation";
+import { useStartGatheringMutation } from "@/hooks/gathering/useStartGatheringMutation";
 import { useGatheringDetailLanguage } from "@/hooks/Languages/useGatheringDetailLanguage";
+import { useCreateReportMutation } from "@/hooks/user/useCreateReportMutation";
 import { EditGatheringDto } from "@/types/gathering/EditGatheringDto";
 import { GatheringCategory } from "@/types/gathering/GatheringCategory";
 import { GatheringDetail } from "@/types/gathering/GatheringDetail";
+import { CreateReportDto } from "@/types/user/CreateReportDto";
 import { ReportReason } from "@/types/user/ReportReason";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -154,34 +155,23 @@ export default function GatheringDetailScreen() {
 
   ////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: editGatheringMutation, isPending: editGatheringPending } =
-    useMutation({
-      mutationFn: ({ id, dto }: { id: string; dto: EditGatheringDto }) =>
-        editGathering(id, dto),
-      onSuccess: async () => {
-        Alert.alert("성공", "모임이 수정되었습니다!");
-        await gatheringRefetch();
-        refreshGathering();
-        closeEditModal();
-      },
-      onError: (error: any) => {
-        const msg =
-          error.response?.data?.message || "모임 수정에 실패했습니다.";
-        Alert.alert("오류", Array.isArray(msg) ? msg[0] : msg);
-      },
+  const { mutate: editGatheringMutate, isPending: editGatheringPending } =
+    useEditGatheringMutation(async () => {
+      await gatheringRefetch();
+      refreshGathering();
+      closeEditModal();
     });
 
-  ////////////////////////////////////////////////////////////////////////////////////
-
   const handleEditGathering = () => {
-    if (!title?.trim()) return Alert.alert("경고", "제목을 입력해주세요.");
+    if (!title?.trim())
+      return Alert.alert(t.alerts.warning, t.alerts.emptyTitle);
     if (!description?.trim())
-      return Alert.alert("경고", "설명을 입력해주세요.");
+      return Alert.alert(t.alerts.warning, t.alerts.emptyDescription);
     if (!location?.trim())
-      return Alert.alert("경고", "모임 장소를 입력해주세요.");
+      return Alert.alert(t.alerts.warning, t.alerts.emptyLocation);
 
     if (!maxPeople || isNaN(Number(maxPeople))) {
-      return Alert.alert("경고", "올바른 정원 숫자를 입력해주세요.");
+      return Alert.alert(t.alerts.warning, t.alerts.invalidMaxPeople);
     }
 
     const [year, month, day] = selectedDateStr.split("-").map(Number);
@@ -194,7 +184,7 @@ export default function GatheringDetailScreen() {
       selectedMinute,
     );
 
-    const dto: EditGatheringDto = {
+    const editGatheringPayload: EditGatheringDto = {
       title,
       description,
       category,
@@ -203,126 +193,72 @@ export default function GatheringDetailScreen() {
       dateTime: finalDate.toISOString(),
     };
 
-    editGatheringMutation({ id, dto });
+    editGatheringMutate({ id, editGatheringPayload });
   };
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: applyMutation } = useMutation({
-    mutationFn: () => applyGathering(id),
-    onSuccess: async () => {
-      Alert.alert("성공", "참여 신청이 완료되었습니다.");
-      await gatheringRefetch();
-      refreshGathering();
-    },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "신청 실패"),
+  const { mutate: applyMutate } = useApplyGatheringMutation(id, async () => {
+    await gatheringRefetch();
+    refreshGathering();
   });
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: cancelApplyMutation } = useMutation({
-    mutationFn: () => cancelApplyGathering(id),
-    onSuccess: async () => {
-      Alert.alert("성공", "참여 신청이 취소되었습니다.");
+  const { mutate: cancelApplyMutate } = useCancelApplyGatheringMutation(
+    id,
+    async () => {
       await gatheringRefetch();
       refreshGathering();
     },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "취소 실패"),
+  );
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: approveMutate } = useApproveParticipantMutation(async () => {
+    await gatheringRefetch();
+    refreshGathering();
+  });
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: pendingMutate } = usePendingParticipantMutation(async () => {
+    await gatheringRefetch();
+    refreshGathering();
   });
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: approveMutation } = useMutation({
-    mutationFn: approveParticipant,
-    onSuccess: async () => {
-      Alert.alert("성공", "참가자로 승인되었습니다.");
-      await gatheringRefetch();
-      refreshGathering();
-    },
-    onError: (err: any) => {
-      const msg = err.response?.data?.message || "승인 실패";
-      Alert.alert("오류", Array.isArray(msg) ? msg[0] : msg);
-    },
+  const { mutate: banMutate } = useBanParticipantMutation(async () => {
+    await gatheringRefetch();
+    refreshGathering();
   });
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: pendingMutation } = useMutation({
-    mutationFn: PendingParticipant,
-    onSuccess: async () => {
-      Alert.alert("성공", "대기 상태로 변경되었습니다.");
+  const { mutate: startGatheringMutate } = useStartGatheringMutation(
+    async () => {
       await gatheringRefetch();
       refreshGathering();
     },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "상태 변경 실패"),
-  });
+  );
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: banMutation } = useMutation({
-    mutationFn: banParticipant,
-    onSuccess: async () => {
-      Alert.alert("성공", "강퇴 처리되었습니다.");
+  const { mutate: completeGatheringMutate } = useCompleteGatheringMutation(
+    async () => {
       await gatheringRefetch();
       refreshGathering();
     },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "강퇴 실패"),
-  });
+  );
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: startGatheringMutation } = useMutation({
-    mutationFn: startGathering,
-    onSuccess: async () => {
-      Alert.alert("성공", "모임이 시작되었습니다.");
+  const { mutate: cancelGatheringMutate } = useCancelGatheringMutation(
+    async () => {
       await gatheringRefetch();
       refreshGathering();
     },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "시작 실패"),
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: completeGatheringMutation } = useMutation({
-    mutationFn: completeGathering,
-    onSuccess: async () => {
-      Alert.alert("성공", "모임이 종료되었습니다.");
-      await gatheringRefetch();
-      refreshGathering();
-    },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "종료 실패"),
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: cancelGatheringMutation } = useMutation({
-    mutationFn: cancelGathering,
-    onSuccess: async () => {
-      Alert.alert("성공", "모임이 취소되었습니다.");
-      await gatheringRefetch();
-      refreshGathering();
-    },
-    onError: (err: any) =>
-      Alert.alert("오류", err.response?.data?.message || "취소 실패"),
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: noShowMutation } = useMutation({
-    mutationFn: markParticipantNoShow,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gathering", id] });
-    },
-    onError: (err: any) => {
-      Alert.alert("오류", err.response?.data?.message || "노쇼 처리 실패");
-    },
-  });
+  );
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -342,99 +278,56 @@ export default function GatheringDetailScreen() {
       }
 
       setIsNoShowModalOpen(false);
-      Alert.alert("완료", "참가자 출석 체크가 완료되었습니다.");
+      Alert.alert(t.alerts.success, t.alerts.completeCheckSuccess);
     } catch (error) {
-      Alert.alert("오류", "출석 체크 처리 중 오류가 발생했습니다.");
+      Alert.alert(t.alerts.error, t.alerts.completeCheckFail);
     }
   };
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: sendFriendRequestMutation } = useMutation({
-    mutationFn: requestFriendship,
-    onSuccess: () => {
-      Alert.alert("성공", "친구 요청을 보냈습니다.");
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "친구 신청에 실패했습니다.",
-      );
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: requestDmMutation } = useMutation({
-    mutationFn: requestDM,
-    onSuccess: (data) => {
-      Alert.alert("성공", "DM 요청을 보냈습니다.");
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "DM 요청에 실패했습니다.",
-      );
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: blockUserMutation } = useMutation({
-    mutationFn: blockFriend,
-    onSuccess: () => {
-      Alert.alert("성공", "해당 유저를 차단했습니다.");
-    },
-    onError: (err: any) => {
-      Alert.alert(
-        "오류",
-        err.response?.data?.message || "유저 차단에 실패했습니다.",
-      );
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
-
-  const { mutate: reportMutation } = useMutation({
-    mutationFn: createReport,
-    onSuccess: () => {
-      Alert.alert("신고 완료", "신고가 성공적으로 접수되었습니다.");
+  const { mutate: createReportMutate } = useCreateReportMutation(
+    () => {
       setIsReportModalOpen(false);
       setSelectedReason(ReportReason.SPAM);
       setReportDetails("");
     },
-    onError: (error: any) => {
-      const msg =
-        error.response?.data?.message || "신고 접수 중 오류가 발생했습니다.";
-      Alert.alert("오류", msg);
-    },
-    onSettled: () => {
+    () => {
       setIsSubmittingReport(false);
     },
-  });
+  );
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
   const handleSubmitReport = async () => {
     if (!reportDetails.trim()) {
-      Alert.alert("경고", "상세 신고 내용을 입력해주세요.");
+      Alert.alert(t.alerts.warning, t.reportDetailsPlaceholder);
       return;
     }
     setIsSubmittingReport(true);
     try {
-      reportMutation({
+      const createReportPayload: CreateReportDto = {
         reportedUserId: gathering!.hostId,
         reason: selectedReason,
         details: reportDetails.trim(),
-      });
+      };
+
+      createReportMutate(createReportPayload);
     } catch (error: any) {
-      const msg =
-        error.response?.data?.message ||
-        "존재하지 않는 유저이거나 조회 실패했습니다.";
-      Alert.alert("조회 실패", msg);
+      Alert.alert(t.alerts.error, t.alerts.userNotFound);
       setIsSubmittingReport(false);
     }
   };
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: blockUserMutate } = useBlockUserMutation();
+
+  const { mutate: sendFriendRequestMutate } = useSendFriendRequestMutation();
+
+  const { mutate: requestDmMutate } = useRequestDmMutation();
+
+  const { mutate: noShowMutate } = useNoShowParticipantMutation(id);
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -464,7 +357,7 @@ export default function GatheringDetailScreen() {
   const isApprovedParticipant = myParticipant?.status === "APPROVED";
   const canAccessChat = isHost || isApprovedParticipant;
 
-  //////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////
 
   return (
     <SafeAreaView style={styles.container}>
@@ -669,7 +562,7 @@ export default function GatheringDetailScreen() {
                             { text: t.alerts.no },
                             {
                               text: t.alerts.yes,
-                              onPress: () => startGatheringMutation(id),
+                              onPress: () => startGatheringMutate(id),
                             },
                           ])
                         }
@@ -699,7 +592,7 @@ export default function GatheringDetailScreen() {
                               { text: t.alerts.no },
                               {
                                 text: t.alerts.yes,
-                                onPress: () => cancelGatheringMutation(id),
+                                onPress: () => cancelGatheringMutate(id),
                               },
                             ],
                           )
@@ -726,7 +619,7 @@ export default function GatheringDetailScreen() {
                           { text: t.alerts.no },
                           {
                             text: t.alerts.yes,
-                            onPress: () => completeGatheringMutation(id),
+                            onPress: () => completeGatheringMutate(id),
                           },
                         ])
                       }
@@ -773,12 +666,12 @@ export default function GatheringDetailScreen() {
                 activeMenuUserId={activeMenuUserId}
                 setActiveMenuUserId={setActiveMenuUserId}
                 handleCloseMenu={handleCloseMenu}
-                sendFriendRequestMutation={sendFriendRequestMutation}
-                requestDmMutation={requestDmMutation}
-                blockUserMutation={blockUserMutation}
-                pendingMutation={pendingMutation}
-                approveMutation={approveMutation}
-                banMutation={banMutation}
+                sendFriendRequestMutation={sendFriendRequestMutate}
+                requestDmMutation={requestDmMutate}
+                blockUserMutation={blockUserMutate}
+                pendingMutation={pendingMutate}
+                approveMutation={approveMutate}
+                banMutation={banMutate}
                 Colors={Colors}
                 styles={styles}
               />
@@ -819,12 +712,12 @@ export default function GatheringDetailScreen() {
                 activeMenuUserId={activeMenuUserId}
                 setActiveMenuUserId={setActiveMenuUserId}
                 handleCloseMenu={handleCloseMenu}
-                sendFriendRequestMutation={sendFriendRequestMutation}
-                requestDmMutation={requestDmMutation}
-                blockUserMutation={blockUserMutation}
-                pendingMutation={pendingMutation}
-                approveMutation={approveMutation}
-                banMutation={banMutation}
+                sendFriendRequestMutation={sendFriendRequestMutate}
+                requestDmMutation={requestDmMutate}
+                blockUserMutation={blockUserMutate}
+                pendingMutation={pendingMutate}
+                approveMutation={approveMutate}
+                banMutation={banMutate}
                 Colors={Colors}
                 styles={styles}
               />
@@ -848,7 +741,7 @@ export default function GatheringDetailScreen() {
                             { text: t.alerts.no },
                             {
                               text: t.alerts.yes,
-                              onPress: () => cancelApplyMutation(),
+                              onPress: () => cancelApplyMutate(),
                             },
                           ],
                         )
@@ -868,7 +761,7 @@ export default function GatheringDetailScreen() {
               ) : (
                 <TouchableOpacity
                   style={styles.applyButton}
-                  onPress={() => applyMutation()}
+                  onPress={() => applyMutate()}
                 >
                   <Text style={styles.applyButtonText}>{t.apply}</Text>
                 </TouchableOpacity>
@@ -920,7 +813,7 @@ export default function GatheringDetailScreen() {
         onClose={() => setIsNoShowModalOpen(false)}
         participants={gathering?.participants}
         meId={me?.id}
-        noShowMutation={noShowMutation}
+        noShowMutation={noShowMutate}
         handleCompleteCheck={handleCompleteCheck}
         styles={styles}
       />
@@ -946,21 +839,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
     flex: 1,
-    position: "relative", // 팝업 위치용
+    position: "relative",
   },
-
-  // 💡 프로필 이미지 바로 옆에 뜰 인라인 팝업 탭 스타일
   inlineTabPopover: {
     position: "absolute",
-    left: 48, // 아바타 너비(40) + 여백
+    left: 48,
     top: -16,
     flexDirection: "column",
     alignItems: "center",
-    backgroundColor: "#2C2C2E", // 모던한 다크 팝업/카드 배경색 (앱 테마에 맞게 조정)
+    backgroundColor: "#2C2C2E",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    // 그림자 효과
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -991,22 +881,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
   },
-
   chatButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6, // 아이콘과 텍스트 사이 간격
+    gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 20, // 둥근 알약 형태 버튼
+    borderRadius: 20,
     borderWidth: 1,
   },
-  // 활성화(권한 있음) 상태 스타일
   chatButtonActive: {
     borderColor: Colors.green,
-    backgroundColor: "rgba(255, 204, 0, 0.1)", // 은은한 노란색 배경 틴트
+    backgroundColor: "rgba(255, 204, 0, 0.1)",
   },
-  // 비활성화(권한 없음) 상태 스타일
   chatButtonDisabled: {
     borderColor: "#444",
     backgroundColor: "#222",
@@ -1019,9 +906,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },
   content: { padding: 16, paddingBottom: 50, paddingTop: 20 },
   editIconButton: {
@@ -1284,6 +1169,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    flexWrap: "nowrap",
     backgroundColor: Colors.red,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -1354,8 +1240,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     overflow: "hidden",
   },
-
-  // 모달 하단 버튼 영역
   modalFooter: {
     marginTop: 16,
     paddingTop: 12,
@@ -1377,7 +1261,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 8, // statusRow와의 상하 간격
+    marginBottom: 8,
   },
   roomCodeLabel: {
     fontSize: 12,
@@ -1386,16 +1270,15 @@ const styles = StyleSheet.create({
   },
   roomCodeText: {
     fontSize: 13,
-    color: Colors.green, // 포인트 컬러 (노란색)
+    color: Colors.green,
     fontWeight: "bold",
-    backgroundColor: "#2C2C2E", // 약간 밝은 카드 배경
+    backgroundColor: "#2C2C2E",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
     overflow: "hidden",
-    letterSpacing: 1, // 4자리 문자가 잘 보이도록 자간 조정
+    letterSpacing: 1,
   },
-
   saveButton: {
     backgroundColor: Colors.green,
     paddingVertical: 14,

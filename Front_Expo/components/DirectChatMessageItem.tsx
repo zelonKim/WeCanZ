@@ -12,7 +12,7 @@ interface ChatMessageItemProps {
   styles: any;
 }
 
-export const ChatMessageItem = ({
+export const DirectChatMessageItem = ({
   item,
   myInfo,
   onDeleteMessage,
@@ -49,6 +49,7 @@ export const ChatMessageItem = ({
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => onOpenImageModal(item.imageUrl)}
+              onLongPress={() => onDeleteMessage(item)}
             >
               <Image
                 source={{ uri: item.imageUrl }}

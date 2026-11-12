@@ -19,8 +19,7 @@ export const useRequestFriendMutation = (
       }
     },
     onError: (error: any) => {
-      const errorMessage = t.alerts.searchFail;
-      Alert.alert(t.alerts.notice, errorMessage);
+      Alert.alert(t.alerts.notice, t.alerts.searchFail);
     },
   });
 };

@@ -1,12 +1,11 @@
 import { blockFriend } from "@/api/friend/blcokFriend";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
+import { useBlockUserLanguage } from "../Languages/useBlockUserLanguage";
 
-export const useBlockUserMutation = (
-  t: any,
-  onSuccessCallback?: () => void,
-) => {
+export const useBlockUserMutation = (onSuccessCallback?: () => void) => {
   const queryClient = useQueryClient();
+  const { t } = useBlockUserLanguage();
 
   return useMutation({
     mutationFn: blockFriend,
@@ -20,10 +19,7 @@ export const useBlockUserMutation = (
       }
     },
     onError: (err: any) => {
-      Alert.alert(
-        t.alerts.error,
-        err.response?.data?.message || t.alerts.blockFail,
-      );
+      Alert.alert(t.alerts.error, t.alerts.blockFail);
     },
   });
 };

@@ -1,12 +1,11 @@
 import { requestDM } from "@/api/DM/requestDM";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "react-native";
+import { useRequestDmLanguage } from "../Languages/useRequestDmLanguage";
 
-export const useRequestDmMutation = (
-  t: any,
-  onSuccessCallback?: () => void,
-) => {
+export const useRequestDmMutation = (onSuccessCallback?: () => void) => {
   const queryClient = useQueryClient();
+  const { t } = useRequestDmLanguage();
 
   return useMutation({
     mutationFn: requestDM,

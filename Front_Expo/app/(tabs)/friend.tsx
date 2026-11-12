@@ -83,11 +83,10 @@ export default function FriendScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: requestFriendMutate, isPending: isRequesting } =
-    useRequestFriendMutation(t, () => {
-      setIsAddModalVisible(false);
-      setFriendNickname("");
-    });
+  const { mutate: requestFriendMutate } = useRequestFriendMutation(t, () => {
+    setIsAddModalVisible(false);
+    setFriendNickname("");
+  });
 
   const handleSendFriendRequest = async () => {
     if (!friendNickname.trim()) {
@@ -105,7 +104,7 @@ export default function FriendScreen() {
 
   /////////////////////////////////////////////////////////////////////////
 
-  const { mutate: blockUserMutate } = useBlockUserMutation(t, () => {
+  const { mutate: blockUserMutate } = useBlockUserMutation(() => {
     setBlockNickname("");
   });
 

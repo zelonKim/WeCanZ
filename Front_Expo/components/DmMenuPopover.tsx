@@ -1,3 +1,4 @@
+import { useDmMenuPopoverLanguage } from "@/hooks/Languages/useDmMenuPopoverLanguage";
 import { DmMenuPopoverProps } from "@/types/DM/DmMenuPopoverProps";
 import React from "react";
 import { Alert, Text, TouchableOpacity, View } from "react-native";
@@ -11,6 +12,8 @@ export const DmMenuPopover = ({
   onBlockUser,
   styles,
 }: DmMenuPopoverProps) => {
+  const { t } = useDmMenuPopoverLanguage();
+
   return (
     <View style={styles.inlineTabPopover}>
       <TouchableOpacity
@@ -20,7 +23,7 @@ export const DmMenuPopover = ({
           onNavigateProfile(partnerId);
         }}
       >
-        <Text style={styles.popoverText}>프로필 보기</Text>
+        <Text style={styles.popoverText}>{t.menu.viewProfile}</Text>
       </TouchableOpacity>
 
       <View style={styles.popoverDivider} />
@@ -32,7 +35,7 @@ export const DmMenuPopover = ({
           onSendFriendRequest(partnerId);
         }}
       >
-        <Text style={styles.popoverText}>친구 요청</Text>
+        <Text style={styles.popoverText}>{t.menu.friendRequest}</Text>
       </TouchableOpacity>
 
       <View style={styles.popoverDivider} />
@@ -41,17 +44,19 @@ export const DmMenuPopover = ({
         style={styles.popoverItem}
         onPress={() => {
           onClose();
-          Alert.alert("유저 차단", `${partnerName}님을 차단하시겠습니까?`, [
-            { text: "취소", style: "cancel" },
+          Alert.alert(t.alerts.blockTitle, t.alerts.blockConfirm(partnerName), [
+            { text: t.alerts.cancel, style: "cancel" },
             {
-              text: "차단",
+              text: t.alerts.block,
               style: "destructive",
               onPress: () => onBlockUser(partnerId || ""),
             },
           ]);
         }}
       >
-        <Text style={[styles.popoverText, { color: "#FF5252" }]}>차단</Text>
+        <Text style={[styles.popoverText, { color: "#FF5252" }]}>
+          {t.menu.block}
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,5 +1,3 @@
-import { createReport } from "@/api/user/createReport";
-import { deleteAccount } from "@/api/user/deleteAccount";
 import { deleteTokenFromServer } from "@/api/user/deleteTokenFromServer";
 import { getMyInfo } from "@/api/user/getMyInfo";
 import { saveTokenToServer } from "@/api/user/saveTokenToServer";
@@ -10,7 +8,10 @@ import { ReportModal } from "@/components/ReportModal";
 import { SearchUserModal } from "@/components/SearchUserModal";
 import Colors from "@/constants/Colors";
 import { useSettingLanguage } from "@/hooks/Languages/useSettingLanguage";
+import { useCreateReportMutation } from "@/hooks/user/useCreateReportMutation";
+import { useDeleteAccountMutation } from "@/hooks/user/useDeleteAccountMutation";
 import { useUpdateProfileMutation } from "@/hooks/user/useUpdateProfileMutation";
+import { CreateReportDto } from "@/types/user/CreateReportDto";
 import { MyInfo } from "@/types/user/MyInfo";
 import { ReportReason } from "@/types/user/ReportReason";
 import { UpdateProfileDto } from "@/types/user/UpdateProfileDto";
@@ -19,7 +20,7 @@ import { handleImagePick } from "@/utils/handleImagePick";
 import { registerForPushNotificationsAsync } from "@/utils/registerForPushNotificationsAsync";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
@@ -40,7 +41,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SettingScreen() {
-  const t = useSettingLanguage();
+  const { t } = useSettingLanguage();
   const router = useRouter();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -90,12 +91,12 @@ export default function SettingScreen() {
     const trimmedNickname = nickname.trim();
 
     if (!trimmedNickname) {
-      Alert.alert(t.alertWarning, t.absentNickname);
+      Alert.alert(t.alerts.warning, t.alerts.absentNickname);
       return;
     }
 
     if (trimmedNickname.length < 2 || trimmedNickname.length > 30) {
-      Alert.alert(t.alertWarning, t.nicknameAlert);
+      Alert.alert(t.alerts.warning, t.alerts.nicknameAlert);
       return;
     }
 
@@ -122,76 +123,64 @@ export default function SettingScreen() {
       updateProfileMutate(updateProfilePayload);
     } catch (error) {
       console.error(error);
-      Alert.alert(t.alertError, t.uploadImageError);
+      Alert.alert(t.alerts.error, t.alerts.uploadImageError); 
     }
   };
 
-  ////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: deleteAccountMutate } = useMutation({
-    mutationFn: deleteAccount,
-    onSuccess: async () => {
-      Alert.alert(t.alertNotice, t.deleteAccount);
-      deactivateAuth();
-    },
-    onError: (error: any) => {
-      Alert.alert(t.alertError, t.deleteAccountError);
-    },
-  });
-
+  const { mutate: deleteAccountMutate } = useDeleteAccountMutation(
+    t,
+    deactivateAuth,
+  );
 
   const handleDeleteAccount = () => {
-    Alert.alert(t.deleteAccountTitle, t.deleteAccountConfirm, [
-      { text: t.cancel, style: "cancel" },
+    Alert.alert(t.alerts.deleteAccountTitle, t.alerts.deleteAccountConfirm, [
+      { text: t.alerts.cancel, style: "cancel" },
       {
-        text: t.deleteAccountAction,
+        text: t.alerts.deleteAccountAction,
         style: "destructive",
         onPress: () => deleteAccountMutate(),
       },
     ]);
   };
 
-  ////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
 
   const handleLogout = () => {
-    Alert.alert(t.logoutTitle, t.logoutConfirm, [
-      { text: t.cancel, style: "cancel" },
+    Alert.alert(t.alerts.logoutTitle, t.alerts.logoutConfirm, [
+      { text: t.alerts.cancel, style: "cancel" },
       {
-        text: t.logoutAction,
+        text: t.alerts.logoutAction,
         style: "destructive",
         onPress: () => deactivateAuth(),
       },
     ]);
   };
 
-  ////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: createReportMutation } = useMutation({
-    mutationFn: createReport,
-    onSuccess: () => {
-      Alert.alert(t.alertSuccess, t.reportSuccess);
+  const { mutate: createReportMutate } = useCreateReportMutation(
+    () => {
       setIsReportModalOpen(false);
       setTargetNickname("");
       setSelectedReason(ReportReason.SPAM);
       setReportDetails("");
     },
-    onError: (error: any) => {
-      Alert.alert(t.alertError, t.createReportError);
-    },
-    onSettled: () => {
+    () => {
       setIsSubmittingReport(false);
     },
-  });
+  );
 
-  ////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////
 
   const handleSubmitReport = async () => {
     if (!targetNickname.trim()) {
-      Alert.alert(t.alertWarning, t.reportTargetPlaceholder);
+      Alert.alert(t.alerts.warning, t.reportTargetPlaceholder);
       return;
     }
     if (!reportDetails.trim()) {
-      Alert.alert(t.alertWarning, t.reportDetailsPlaceholder);
+      Alert.alert(t.alerts.warning, t.reportDetailsPlaceholder);
       return;
     }
 
@@ -201,18 +190,20 @@ export default function SettingScreen() {
       const searchedUser = await searchUserByNickname(targetNickname.trim());
 
       if (!searchedUser || !searchedUser.id) {
-        Alert.alert(t.alertError, t.userNotFound);
+        Alert.alert(t.alerts.error, t.alerts.userNotFound);
         setIsSubmittingReport(false);
         return;
       }
 
-      createReportMutation({
+      const createReportPayload: CreateReportDto = {
         reportedUserId: searchedUser.id,
         reason: selectedReason,
         details: reportDetails.trim(),
-      });
+      };
+
+      createReportMutate(createReportPayload);
     } catch (error: any) {
-      Alert.alert(t.alertError, t.userNotFound);
+      Alert.alert(t.alerts.error, t.alerts.userNotFound);
       setIsSubmittingReport(false);
     }
   };
@@ -221,7 +212,7 @@ export default function SettingScreen() {
 
   const handleSearchProfile = async () => {
     if (!searchNickname.trim()) {
-      Alert.alert(t.alertNotice, t.enterNicknameAlert);
+      Alert.alert(t.alerts.notice, t.alerts.enterNicknameAlert);
       return;
     }
 
@@ -233,7 +224,7 @@ export default function SettingScreen() {
         router.push(`/profile/${searchedUser.id}`);
       }
     } catch (error: any) {
-      Alert.alert(t.alertError, t.userNotFound);
+      Alert.alert(t.alerts.error, t.alerts.userNotFound);
     }
   };
 
@@ -246,9 +237,12 @@ export default function SettingScreen() {
       const { status } = await Notifications.getPermissionsAsync();
 
       if (status !== "granted") {
-        Alert.alert(t.permTitle, t.permDesc, [
-          { text: t.cancel, style: "cancel" },
-          { text: t.settingsButton, onPress: () => Linking.openSettings() },
+        Alert.alert(t.alerts.permTitle, t.alerts.permDesc, [
+          { text: t.alerts.cancel, style: "cancel" },
+          {
+            text: t.alerts.settingsButton,
+            onPress: () => Linking.openSettings(),
+          },
         ]);
         setIsPushEnabled(false);
         return;
@@ -278,7 +272,7 @@ export default function SettingScreen() {
       }
     } catch (error) {
       setIsMarketingAgreed(!value);
-      Alert.alert(t.alertNotice, t.marketingAgreeError);
+      Alert.alert(t.alerts.notice, t.alerts.marketingAgreeError);
     }
   };
 
@@ -295,7 +289,9 @@ export default function SettingScreen() {
   if (myInfoError || !me) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <Text style={{ color: Colors.tabIconDefault }}>{t.userNotFound}</Text>
+        <Text style={{ color: Colors.tabIconDefault }}>
+          {t.alerts.userNotFound}
+        </Text>
       </SafeAreaView>
     );
   }

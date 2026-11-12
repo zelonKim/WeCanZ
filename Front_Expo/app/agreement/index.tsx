@@ -1,12 +1,12 @@
 import { getMyInfo } from "@/api/user/getMyInfo";
-import { updateAgreementAndNickname } from "@/api/user/updateAgreementAndNickname";
 import TermsModal from "@/components/TermsModal";
 import Colors from "@/constants/Colors";
 import { useAgreementLanguage } from "@/hooks/Languages/useAgreementLanguage";
+import { useCompleteAgreeMutation } from "@/hooks/user/useCompleteAgreeMutation";
 import { AgreementModalTypes } from "@/types/auth/AgreementModalTypes";
+import { CompleteAgreePayload } from "@/types/user/CompleteAgreePayload";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,9 +22,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AgreementScreen() {
   const { t } = useAgreementLanguage();
-
-  const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [nickname, setNickname] = useState("");
   const [termsAgreed, setTermsAgreed] = useState(false);
@@ -57,20 +54,8 @@ export default function AgreementScreen() {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
 
-  const { mutate: completeAgreeMutate, isPending } = useMutation({
-    mutationFn: () => updateAgreementAndNickname(nickname, isMarketingAgreed),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
-      router.replace("/(tabs)");
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message;
-      const displayMessage = Array.isArray(message) ? message[0] : message;
-      Alert.alert(t.alerts.warning, t.alerts.defaultError);
-    },
-  });
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
+  const { mutate: completeAgreeMutate, isPending: completeAgreePending } =
+    useCompleteAgreeMutation(t);
 
   const handleSubmit = () => {
     if (!nickname.trim()) {
@@ -81,7 +66,13 @@ export default function AgreementScreen() {
       Alert.alert(t.alerts.warning, t.alerts.termsRequired);
       return;
     }
-    completeAgreeMutate();
+
+    const completeAgreePayload: CompleteAgreePayload = {
+      nickname,
+      isMarketingAgreed,
+    };
+
+    completeAgreeMutate(completeAgreePayload);
   };
 
   ////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,9 +190,9 @@ export default function AgreementScreen() {
             { backgroundColor: isFormValid ? Colors.green : "#333" },
           ]}
           onPress={handleSubmit}
-          disabled={!isFormValid || isPending}
+          disabled={!isFormValid || completeAgreePending}
         >
-          {isPending ? (
+          {completeAgreePending ? (
             <ActivityIndicator color="#000" />
           ) : (
             <Text
