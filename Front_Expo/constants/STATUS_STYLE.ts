@@ -18,7 +18,7 @@ export const STATUS_STYLE = (
     textStyle: styles.statusFullText,
   },
   IN_PROGRESS: {
-    label: t.statusInProgess,
+    label: t.statusInProgress,
     badgeStyle: styles.statusInProgress,
     textStyle: styles.statusInProgressText,
   },
@@ -30,7 +30,6 @@ export const STATUS_STYLE = (
 });
 
 /////////////////////////////////////////////////////////////////////////////
-
 
 const styles = StyleSheet.create({
   statusBadge: {
