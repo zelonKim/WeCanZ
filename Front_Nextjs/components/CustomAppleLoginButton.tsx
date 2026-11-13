@@ -1,0 +1,61 @@
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+interface AppleLoginButtonProps {
+  onPress: () => void;
+  text: string;
+}
+
+export function CustomAppleLoginButton({
+  onPress,
+  text,
+}: AppleLoginButtonProps) {
+  return (
+    <TouchableOpacity
+      style={styles.appleButton}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <View style={styles.contentContainer}>
+        <Ionicons
+          name="logo-apple"
+          size={20}
+          color="#FFFFFF"
+          style={styles.logo}
+        />
+        <Text style={styles.appleButtonText}>{text}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  appleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center", // 전체 중앙 정렬
+    backgroundColor: "#000000",
+    height: 48,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    width: "100%",
+    // 눈에 띄는 선명한 흰색 테두리
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+  },
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logo: {
+    marginRight: 8, // 사과 로고와 텍스트 사이 적절한 간격
+    marginBottom: 2, // 시각적 중앙 맞춤 (아이콘 폰트 위치 보정)
+  },
+  appleButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

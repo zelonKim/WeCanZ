@@ -1,38 +1,42 @@
 "use client";
 
+import TermsModal from "@/components/TermsModal";
+import { getMyInfo } from "@/api/user/getMyInfo";
+import { useAgreementLanguage } from "@/hooks/Languages/useAgreementLanguage";
+import { useCompleteAgreeMutation } from "@/hooks/user/useCompleteAgreeMutation";
+import { AgreementModalTypes } from "@/types/auth/AgreementModalTypes";
+import { CompleteAgreePayload } from "@/types/user/CompleteAgreePayload";
+import { useQuery } from "@tanstack/react-query";
+import { CheckSquare, Loader2, Square } from "lucide-react";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  IoCheckbox,
-  IoSquareOutline,
-  IoCheckmarkCircle,
-  IoEllipseOutline,
-} from "react-icons/io5";
-
-// API 클라이언트 및 모달 컴포넌트 (프로젝트 환경에 맞게 경로 확인)
-import { client } from "@/api/client";
-import TermsModal from "@/components/TermsModal";
-import Image from "next/image";
 
 export default function AgreementPage() {
+  const { t } = useAgreementLanguage();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [nickname, setNickname] = useState("");
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [isMarketingAgreed, setIsMarketingAgreed] = useState(false);
+  const [modalType, setModalType] = useState<AgreementModalTypes | null>(null);
 
-  // 약관 모달 상태 관리 ('terms' | 'privacy' | null)
-  const [modalType, setModalType] = useState<"terms" | "privacy" | null>(null);
+  const isFormValid =
+    nickname.trim().length > 0 && termsAgreed && privacyAgreed;
 
-  // 유저 정보 조회
+  const handleAllAgree = () => {
+    const nextState = !(termsAgreed && privacyAgreed && isMarketingAgreed);
+    setTermsAgreed(nextState);
+    setPrivacyAgreed(nextState);
+    setIsMarketingAgreed(nextState);
+  };
+
+  //////////////////////////////////////////////////////////////////////////
+
   const { data: me } = useQuery({
     queryKey: ["me"],
-    queryFn: async () => {
-      const { data } = await client.get("/user/me");
-      return data;
-    },
+    queryFn: getMyInfo,
   });
 
   useEffect(() => {
@@ -41,194 +45,197 @@ export default function AgreementPage() {
     }
   }, [me]);
 
-  // 전체 동의 상태 토글
-  const handleAllAgree = () => {
-    const nextState = !(termsAgreed && privacyAgreed);
-    setTermsAgreed(nextState);
-    setPrivacyAgreed(nextState);
-  };
-
-  // 회원가입 최종 완료 및 약관 동의 업데이트 API 호출
-  const updateAgreementAndNickname = async () => {
-    const { data } = await client.patch("/user/profile", {
-      nickname,
-      termsAgreedAt: new Date().toISOString(),
-      privacyAgreedAt: new Date().toISOString(),
-    });
-    return data;
-  };
-
-  const { mutate: completeMutate, isPending } = useMutation({
-    mutationFn: updateAgreementAndNickname,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["me"] });
-      router.replace("/");
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message;
-      const displayMessage = Array.isArray(message) ? message[0] : message;
-      alert(displayMessage || "처리 중 오류가 발생했습니다.");
-    },
+  useEffect(() => {
+    if (me?.privacyAgreedAt && me?.termsAgreedAt) {
+      router.push("/");
+    }
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  
+  //////////////////////////////////////////////////////////////////////////
+
+  const { mutate: completeAgreeMutate, isPending: completeAgreePending } =
+    useCompleteAgreeMutation(t);
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
     if (!nickname.trim()) {
-      alert("사용하실 닉네임을 입력해 주세요.");
+      alert(`${t.alerts.warning}\n${t.alerts.nicknameRequired}`);
       return;
     }
     if (!termsAgreed || !privacyAgreed) {
-      alert("필수 약관에 모두 동의해 주세요.");
+      alert(`${t.alerts.warning}\n${t.alerts.termsRequired}`);
       return;
     }
-    completeMutate();
+
+    const completeAgreePayload: CompleteAgreePayload = {
+      nickname,
+      isMarketingAgreed,
+    };
+
+    completeAgreeMutate(completeAgreePayload);
   };
 
-  const isFormValid =
-    nickname.trim().length > 0 && termsAgreed && privacyAgreed;
+  //////////////////////////////////////////////////////////////////////////
+
+  const isAllAgreed = termsAgreed && privacyAgreed && isMarketingAgreed;
 
   return (
-    <div className="flex min-h-screen w-full items-start justify-center pt-32  bg-[#121212] px-6 text-white">
-      <div className="w-full max-w-md space-y-6">
-        {/* 헤더 타이틀 */}
-        <div>
-          <div className="flex flex-row items-end gap-2">
-            <h1 className="text-2xl italic font-bold text-[#bef408]">
-              거의 다 완료됐어요
+    <main className="min-h-screen bg-[#121212] flex items-center justify-center px-6 py-12">
+      <div className="w-full max-w-md flex flex-col gap-6">
+        {/* 상단 타이틀 및 스티커 이미지 */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-2xl font-bold flex items-center gap-1 text-[#bef408]">
+              {t.title}
             </h1>
             <Image
               src="/logo/sticker.png"
-              alt="WeCanZ_sticker"
-              width={40}
-              height={40}
+              alt="sticker"
+              width={50}
+              height={50}
+              className="object-contain"
             />
           </div>
-          <p className="mt-2 text-[15px] text-neutral-400">
-            서비스 이용을 위해서는 닉네임과 유저 동의가 필요해요.
-          </p>
+          <p className="text-sm text-[#8E8E93] -mt-2">{t.subtitle}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 닉네임 입력 */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-white">
-              닉네임
-            </label>
-            <input
-              type="text"
-              placeholder="최소 2자 이상 입력"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              maxLength={12}
-              className="h-13 w-full rounded-xl bg-[#1C1C1E] px-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-[#bef408]"
-            />
-          </div>
+        {/* 닉네임 입력 폼 */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-white">
+            {t.nicknameLabel}
+          </label>
+          <input
+            type="text"
+            className="bg-[#1C1C1E] h-[52px] rounded-[10px] px-4 text-white text-[15px] placeholder-[#666] focus:outline-none focus:ring-1 focus:ring-[#bef408]"
+            placeholder={t.nicknamePlaceholder}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            maxLength={12}
+            autoCapitalize="none"
+          />
+        </div>
 
-          {/* 약관 동의 영역 */}
-          <div className="space-y-3.5 rounded-xl bg-[#1C1C1E] p-4">
-            {/* 전체 동의하기 */}
+        {/* 약관 동의 섹션 */}
+        <div className="bg-[#1C1C1E] p-4 rounded-xl flex flex-col gap-3.5">
+          {/* 전체 동의 버튼 */}
+          <button
+            type="button"
+            onClick={handleAllAgree}
+            className="flex items-center gap-3 text-left cursor-pointer"
+          >
+            {isAllAgreed ? (
+              <CheckSquare className="w-5 h-5 shrink-0 text-[#bef408]" />
+            ) : (
+              <Square className="w-5 h-5 text-[#666] shrink-0" />
+            )}
+            <span className="text-[15px] font-bold text-white">
+              {t.allAgree}
+            </span>
+          </button>
+
+          <div className="h-[1px] bg-[#2C2C2E] my-1 " />
+
+          {/* 서비스 이용약관 (필수) */}
+          <div className="flex items-center justify-between ml-1">
             <button
               type="button"
-              onClick={handleAllAgree}
-              className="cursor-pointer flex items-center gap-3 text-left w-full"
+              onClick={() => setTermsAgreed(!termsAgreed)}
+              className="flex items-center gap-3 text-left cursor-pointer"
             >
-              {termsAgreed && privacyAgreed ? (
-                <IoCheckbox size={20} className="text-[#bef408]" />
+              {termsAgreed ? (
+                <CheckSquare className="w-4 h-4 shrink-0 text-[#bef408]" />
               ) : (
-                <IoSquareOutline size={20} className="text-neutral-500" />
+                <Square className="w-4 h-4 text-[#666] shrink-0" />
               )}
-              <span className="text-base font-bold text-white ">
-                전체 동의하기
+              <span className="text-sm text-[#CCC]  leading-tight">
+                {t.termsAgree}
               </span>
             </button>
-
-            <div className="h-px w-full bg-[#2C2C2E]" />
-
-            {/* 서비스 이용약관 */}
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setTermsAgreed(!termsAgreed)}
-                className="cursor-pointer flex items-center gap-3 text-left"
-              >
-                {termsAgreed ? (
-                  <IoCheckmarkCircle size={20} className="text-[#bef408]" />
-                ) : (
-                  <IoEllipseOutline size={20} className="text-neutral-500" />
-                )}
-                <span className="text-sm text-neutral-300">
-                  [필수] 서비스 이용약관 동의
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setModalType("terms")}
-                className="cursor-pointer text-xs text-neutral-400 underline hover:text-white"
-              >
-                보기
-              </button>
-            </div>
-
-            {/* 개인정보 처리방침 */}
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setPrivacyAgreed(!privacyAgreed)}
-                className="cursor-pointer flex items-center gap-3 text-left"
-              >
-                {privacyAgreed ? (
-                  <IoCheckmarkCircle size={20} className="text-[#bef408]" />
-                ) : (
-                  <IoEllipseOutline size={20} className="text-neutral-500" />
-                )}
-                <span className="text-sm text-neutral-300">
-                  [필수] 개인정보 처리방침 동의
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setModalType("privacy")}
-                className="cursor-pointer text-xs text-neutral-400 underline hover:text-white"
-              >
-                보기
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setModalType("terms")}
+              className="text-[13px] text-[#8E8E93] underline hover:text-white transition cursor-pointer shrink-0"
+            >
+              {t.viewLink}
+            </button>
           </div>
 
-          {/* 시작하기 버튼 */}
-          <button
-            type="submit"
-            disabled={!isFormValid || isPending}
-            className={`flex h-13 w-full items-center justify-center rounded-xl text-base font-bold transition ${
-              isFormValid
-                ? "bg-[#bef408] text-neutral-900 hover:opacity-80 cursor-pointer"
-                : "bg-[#333333] text-neutral-500 cursor-not-allowed"
-            }`}
-          >
-            {isPending ? (
-              <div className="animate-spin text-4xl">
-                <Image
-                  src="/logo/sticker.png"
-                  alt="WeCanZ_sticker"
-                  width={40}
-                  height={40}
-                />
-              </div>
-            ) : (
-              "시작하기"
-            )}
-          </button>
-        </form>
+          {/* 개인정보 처리방침 (필수) */}
+          <div className="flex items-center justify-between ml-1">
+            <button
+              type="button"
+              onClick={() => setPrivacyAgreed(!privacyAgreed)}
+              className="flex items-center gap-3 text-left cursor-pointer"
+            >
+              {privacyAgreed ? (
+                <CheckSquare className="w-4 h-4 shrink-0 text-[#bef408]" />
+              ) : (
+                <Square className="w-4 h-4 text-[#666] shrink-0" />
+              )}
+              <span className="text-sm text-[#CCC]  leading-tight line-clamp-2">
+                {t.privacyAgree}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalType("privacy")}
+              className="text-[13px] text-[#8E8E93] underline hover:text-white transition cursor-pointer shrink-0"
+            >
+              {t.viewLink}
+            </button>
+          </div>
+
+          {/* 마케팅 수신 동의 (선택) */}
+          <div className="flex items-center justify-between ml-1">
+            <button
+              type="button"
+              onClick={() => setIsMarketingAgreed(!isMarketingAgreed)}
+              className="flex items-center gap-3 text-left cursor-pointer "
+            >
+              {isMarketingAgreed ? (
+                <CheckSquare className="w-4 h-4 shrink-0 text-[#bef408]" />
+              ) : (
+                <Square className="w-4 h-4 text-[#666] shrink-0" />
+              )}
+              <span className="text-sm text-[#CCC]  leading-tight">
+                {t.marketingAgree}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalType("marketing")}
+              className="text-[13px] text-[#8E8E93] underline hover:text-white transition cursor-pointer shrink-0"
+            >
+              {t.viewLink}
+            </button>
+          </div>
+        </div>
+
+        {/* 제출 버튼 */}
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!isFormValid || completeAgreePending}
+          className={`h-[52px] rounded-[10px] flex justify-center items-center mt-3 transition font-bold text-base cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+            isFormValid ? "bg-[#bef408] text-black" : "bg-[#333] text-[#666]"
+          }`}
+        >
+          {completeAgreePending ? (
+            <Loader2 className="w-5 h-5 animate-spin text-black" />
+          ) : (
+            t.startBtn
+          )}
+        </button>
       </div>
 
-      {/* 약관 및 개인정보 처리방침 모달 컴포넌트 */}
-      {modalType && (
-        <TermsModal
-          visible={modalType !== null}
-          type={modalType}
-          onClose={() => setModalType(null)}
-        />
-      )}
-    </div>
+      {/* 약관 상세 모달 */}
+      <TermsModal
+        visible={modalType !== null}
+        type={modalType}
+        onClose={() => setModalType(null)}
+      />
+    </main>
   );
 }

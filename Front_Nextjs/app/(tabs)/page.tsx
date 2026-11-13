@@ -1,91 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { client } from "@/api/client";
-import {
-  IoAdd,
-  IoClose,
-  IoCalendarOutline,
-  IoLocationOutline,
-  IoPerson,
-  IoQrCodeOutline,
-} from "react-icons/io5";
-import Image from "next/image";
+import { getGatherings } from "@/api/gathering/getGatherings";
 
-export enum GatheringCategory {
-  US = "US",
-  UK = "UK",
-  KR = "KR",
-}
+import { GatheringModal } from "@/components/GatheringModal";
+import { InviteCodeModal } from "@/components/InviteCodeModal";
+import { MeetupItem } from "@/components/MeetupItem";
+import { CATEGORIES } from "@/constants/CATEGORIES";
+import { GREEN_COLOR } from "@/constants/Colors";
+import { useCreateGatheringMutation } from "@/hooks/gathering/useCreateGatheringMutation";
+import { useJoinGatheringMutation } from "@/hooks/gathering/useJoinGatheringMutation";
+import { useHomeLanguage } from "@/hooks/Languages/useHomeLanguage";
+import { CreateGatheringDto } from "@/types/gathering/CreateGatheringDto";
+import { Gathering } from "@/types/gathering/Gathering";
+import { GatheringCategory } from "@/types/gathering/GatheringCategory";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, Plus, QrCode } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
-export interface Gathering {
-  id: string;
-  title: string;
-  description: string;
-  category: GatheringCategory;
-  maxPeople: number;
-  location: string;
-  latitude?: number;
-  longitude?: number;
-  dateTime: string;
-  status: string;
-  createdAt: string;
-  hostId: string;
-  host: {
-    profileImage: string;
-  };
-}
-
-export interface CreateGatheringDto {
-  title: string;
-  description: string;
-  category: GatheringCategory;
-  maxPeople: number;
-  location: string;
-  dateTime: string;
-}
-
-const CATEGORIES = [
-  { label: "전체", value: "ALL" },
-  { label: "🇺🇸 미국", value: GatheringCategory.US },
-  { label: "🇬🇧 영국", value: GatheringCategory.UK },
-  { label: "🇰🇷 한국", value: GatheringCategory.KR },
-];
-
-const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
-const MINUTES = [0, 10, 20, 30, 40, 50];
-
-const fetchGatherings = async (): Promise<Gathering[]> => {
-  const { data } = await client.get("/gathering");
-  return data;
-};
-
-const createGathering = async (dto: CreateGatheringDto) => {
-  const { data } = await client.post("/gathering", dto);
-  return data;
-};
-
-const formatDateTime = (isoString: string) => {
-  const date = new Date(isoString);
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${month}월 ${day}일 ${hours}:${minutes}`;
-};
-
-export default function HomeScreen() {
-  const queryClient = useQueryClient();
+export default function HomePage() {
+  const { t, currentLang } = useHomeLanguage();
   const router = useRouter();
 
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-
-  // 생성 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // 폼 입력 상태
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<GatheringCategory>(
@@ -93,22 +32,46 @@ export default function HomeScreen() {
   );
   const [maxPeople, setMaxPeople] = useState("8");
   const [location, setLocation] = useState("");
-
-  // 날짜/시간 선택 상태
   const [selectedDateStr, setSelectedDateStr] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
   const [selectedHour, setSelectedHour] = useState<number>(
-    new Date().getHours() + 1,
+    new Date().getHours(),
   );
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
-
-  // 룸코드 모달 상태
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [isInviteLoading, setIsInviteLoading] = useState(false);
 
-  // 내 정보 확인 (약관 동의 미 진행 시 로그인 페이지로 이동)
+  const handleDayPress = (day: { dateString: string }) => {
+    setSelectedDateStr(day.dateString);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  const closeAndResetModal = () => {
+    setIsModalOpen(false);
+    setTitle("");
+    setDescription("");
+    setCategory(GatheringCategory.KR);
+    setMaxPeople("8");
+    setLocation("");
+    setSelectedDateStr(new Date().toISOString().split("T")[0]);
+    setSelectedHour(new Date().getHours());
+    setSelectedMinute(0);
+  };
+
+  const handleChangeCode = (text: string) => {
+    setInviteCode(text.toLowerCase());
+  };
+
+  const handleCloseInviteModal = () => {
+    setInviteCode("");
+    setIsInviteModalOpen(false);
+  };
+
+  ////////////////////////////////////////////////////////////////////////////////////
+
   const { data: me } = useQuery({
     queryKey: ["me"],
     queryFn: async () => {
@@ -118,96 +81,64 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
-    if (me) {
-      if (!me.termsAgreedAt || !me.privacyAgreedAt) {
-        router.replace("/agreement");
-      }
+    if (me && (!me.termsAgreedAt || !me.privacyAgreedAt)) {
+      router.replace("/login");
     }
   }, [me, router]);
 
-  // 모임 목록 Query
-  const {
-    data: gatherings = [],
-    isLoading,
-    refetch,
-  } = useQuery({
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  const { data: gatherings = [], isLoading } = useQuery<Gathering[]>({
     queryKey: ["gatherings"],
-    queryFn: fetchGatherings,
-    refetchInterval: 10 * 60 * 1000, // 10분 (밀리초 단위: 600,000ms)
-    refetchIntervalInBackground: true, // 유저가 다른 탭을 보고 있어도 백그라운드에서 주기적으로 갱신
+    queryFn: getGatherings,
+    refetchInterval: 15000,
   });
-
-  // 모임 생성 Mutation
-  const createMutation = useMutation({
-    mutationFn: createGathering,
-    onSuccess: () => {
-      alert("밋업이 생성되었습니다! 🎉");
-      queryClient.invalidateQueries({ queryKey: ["gatherings"] });
-      closeAndResetModal();
-    },
-    onError: (error: any) => {
-      const msg = error.response?.data?.message || "밋업 생성에 실패했습니다.";
-      alert(Array.isArray(msg) ? msg[0] : msg);
-    },
-  });
-
-  // 초대 코드로 모임 검색 후 이동
-  const handleEnterRoom = async () => {
-    const cleanCode = inviteCode.trim().toLowerCase();
-
-    if (!cleanCode || cleanCode.length !== 4) {
-      alert("4자리 룸코드를 올바르게 입력해 주세요.");
-      return;
-    }
-
-    try {
-      setIsInviteLoading(true);
-      const response = await client.get(`/gathering/search/${cleanCode}`);
-      const gatheringId = response.data.id;
-
-      setInviteCode("");
-      setIsInviteModalOpen(false);
-      router.push(`/gathering/${gatheringId}`);
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || "밋업를 찾을 수 없습니다.";
-      alert(message);
-    } finally {
-      setIsInviteLoading(false);
-    }
-  };
 
   const filteredGatherings = gatherings.filter((item) => {
     const isNotCanceled = item.status !== "CANCELED";
-
     const matchesCategory =
       selectedCategory === "ALL" || item.category === selectedCategory;
 
     return isNotCanceled && matchesCategory;
   });
 
-  const closeAndResetModal = () => {
-    setIsModalOpen(false);
-    setTitle("");
-    setDescription("");
-    setCategory(GatheringCategory.US);
-    setMaxPeople("8");
-    setLocation("");
-    setSelectedDateStr(new Date().toISOString().split("T")[0]);
-    setSelectedHour(new Date().getHours());
-    setSelectedMinute(0);
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: joinGatheringMutate } = useJoinGatheringMutation(t, () => {
+    setInviteCode("");
+    setIsInviteModalOpen(false);
+  });
+
+  const handleEnterRoom = () => {
+    const cleanInviteCode = inviteCode.trim().toLowerCase();
+    if (!cleanInviteCode || cleanInviteCode.length !== 4) {
+      alert(`${t.alerts.title}\n${t.alerts.roomCodeLength}`);
+      return;
+    }
+
+    joinGatheringMutate(cleanInviteCode);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  ////////////////////////////////////////////////////////////////////////////////////
+
+  const { mutate: createGatheringMutate, isPending: createGatheringPending } =
+    useCreateGatheringMutation(t, closeAndResetModal);
 
   const handleCreateGathering = () => {
-    if (!title.trim()) return alert("제목을 입력해주세요.");
-    if (!description.trim()) return alert("설명을 입력해주세요.");
-    if (!location.trim()) return alert("모임 장소를 입력해주세요.");
+    if (!title.trim())
+      return alert(`${t.alerts.title}\n${t.alerts.titleRequired}`);
+    if (!description.trim())
+      return alert(`${t.alerts.title}\n${t.alerts.descRequired}`);
+    if (!location.trim())
+      return alert(`${t.alerts.title}\n${t.alerts.locationRequired}`);
     if (!maxPeople || isNaN(Number(maxPeople))) {
-      return alert("올바른 정원 숫자를 입력해주세요.");
+      return alert(`${t.alerts.title}\n${t.alerts.invalidPeople}`);
+    }
+    if (Number(maxPeople) < 2) {
+      return alert(`${t.alerts.title}\n${t.alerts.minPeople}`);
+    }
+    if (Number(maxPeople) > 20) {
+      return alert(`${t.alerts.title}\n${t.alerts.maxPeople}`);
     }
 
     const [year, month, day] = selectedDateStr.split("-").map(Number);
@@ -219,7 +150,7 @@ export default function HomeScreen() {
       selectedMinute,
     );
 
-    const dto: CreateGatheringDto = {
+    const createGatheringPayload: CreateGatheringDto = {
       title,
       description,
       category,
@@ -228,438 +159,124 @@ export default function HomeScreen() {
       dateTime: finalDate.toISOString(),
     };
 
-    createMutation.mutate(dto);
+    createGatheringMutate(createGatheringPayload);
   };
 
-  const getCategoryLabel = (cat: GatheringCategory) => {
-    switch (cat) {
-      case GatheringCategory.US:
-        return "🇺🇸 미국";
-      case GatheringCategory.UK:
-        return "🇬🇧 영국";
-      case GatheringCategory.KR:
-        return "🇰🇷 한국";
-      default:
-        return cat;
-    }
-  };
-
-  const STATUS_CONFIG: Record<
-    string,
-    { label: string; badgeClass: string; textClass: string }
-  > = {
-    OPEN: {
-      label: "모집 중",
-      badgeClass: "bg-[#bef408]",
-      textClass: "text-gray-900",
-    },
-    FULL: {
-      label: "인원 마감",
-      badgeClass: "bg-red-500",
-      textClass: "text-gray-100",
-    },
-    IN_PROGRESS: {
-      label: "진행 중",
-      badgeClass: "bg-red-500",
-      textClass: "text-gray-100",
-    },
-    COMPLETED: {
-      label: "종료됨",
-      badgeClass: "bg-gray-700",
-      textClass: "text-gray-100",
-    },
-  };
+  ////////////////////////////////////////////////////////////////////////////////////
 
   return (
-    <main className=" min-h-screen text-white max-w-5xl w-full mx-auto relative px-6 pb-10">
-      {/* 상단 헤더 */}
-      <header className="flex items-center justify-between py-4 ">
-        <h1 className="text-[28px] text-[#bef408] font-bold italic">
-          Z-Meetup
+    <main className="min-h-screen bg-[#121212] text-white flex flex-col relative pb-20">
+      <header className="px-5 py-3.5 flex items-center justify-between border-b border-[#27272A] mb-3">
+        <h1
+          className="text-3xl font-extrabold italic tracking-tight"
+          style={{ color: GREEN_COLOR }}
+        >
+          {t.headerTitle}
         </h1>
 
         <button
-          className="p-2  hover:bg-zinc-800 rounded-2xl transition cursor-pointer"
+          type="button"
           onClick={() => {
             setIsInviteModalOpen(true);
             setInviteCode("");
           }}
-          aria-label="룸 코드 입장"
+          className="flex items-center px-3 py-2 rounded-full hover:bg-zinc-800/80 transition cursor-pointer"
         >
-          <IoQrCodeOutline size={22} className="text-[#bef408]" />
+          <QrCode className="w-5 h-5" style={{ color: GREEN_COLOR }} />
         </button>
       </header>
 
-      <div className="h-[1px] bg-zinc-800 mb-3" />
-
-      {/* 카테고리 필터 Bar */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => setSelectedCategory(cat.value)}
-            className={`cursor-pointer px-4 py-2 rounded-full text-[15px] font-semibold whitespace-nowrap transition-colors ${
-              selectedCategory === cat.value
-                ? "bg-[#bef408] text-black"
-                : "bg-[#2C2C2E] text-gray-400 hover:text-white"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* 모임 리스트 */}
-      {isLoading ? (
-        <div className="flex-1 flex justify-center items-center py-32">
-          <div className="animate-spin text-4xl">
-            {" "}
-            <Image
-              src="/logo/sticker.png"
-              alt="WeCanZ_sticker"
-              width={80}
-              height={80}
-            />
-          </div>
-        </div>
-      ) : filteredGatherings.length === 0 ? (
-        <div className="text-center py-24 text-gray-400 text-base leading-relaxed">
-          아직 등록된 밋업이 없습니다. <br /> 밑의 + 버튼을 눌러 첫 밋업을
-          열어보세요!
-        </div>
-      ) : (
-        <div className="grid md:grid-cols-2 flex flex-col gap-4">
-          {filteredGatherings.map((item) => (
-            <article
-              key={item.id}
-              onClick={() => router.push(`/gathering/${item.id}`)}
-              className="bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#bef408] transition-colors"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 rounded-lg text-xs font-bold ${
-                      STATUS_CONFIG[item.status]?.badgeClass || "bg-gray-700"
-                    } ${STATUS_CONFIG[item.status]?.textClass || "text-white"}`}
-                  >
-                    {STATUS_CONFIG[item.status]?.label || item.status}
-                  </span>
-                  <span className="text-sm font-bold text-[#bef408]">
-                    {getCategoryLabel(item.category)}
-                  </span>
-                </div>
-                <span className="text-sm text-zinc-400">
-                  정원 {item.maxPeople}명
-                </span>
-              </div>
-
-              <h2 className="text-lg font-bold text-white mb-1">
-                {item.title}
-              </h2>
-              <p className="text-base text-neutral-300  line-clamp-2 mb-3 leading-relaxed">
-                {item.description}
-              </p>
-
-              <div className="h-[1px] bg-zinc-800 mb-2" />
-
-              <div className="flex items-end justify-between pt-1">
-                <div className="flex flex-col gap-1 text-sm text-neutral-200 ">
-                  <div className="flex items-center gap-1.5">
-                    <IoCalendarOutline className="text-[#bef408]" size={15} />
-                    <span>{formatDateTime(item.dateTime)}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <IoLocationOutline className="text-emerald-400" size={15} />
-                    <span>{item.location}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end">
-                  {item.host?.profileImage ? (
-                    <img
-                      src={item.host.profileImage}
-                      alt="호스트 프로필"
-                      className="w-10 h-10 rounded-full object-cover border border-[#333]"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#2C2C2E] border border-[#333] flex items-center justify-center text-white">
-                      <IoPerson size={20} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {/* FAB (생성 플로팅 버튼) */}
-      <div className="fixed bottom-24 left-0 right-0 z-40 pointer-events-none">
-        <div className="max-w-5xl mx-auto px-6 flex justify-end">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="cursor-pointer pointer-events-auto w-14 h-14 bg-[#bef408] rounded-full flex items-center justify-center text-gray-800 shadow-xs hover:bg-[#bef408]/80 shadow-yellow-100 transition-transform active:scale-95"
-            aria-label="새 밋업 만들기"
-          >
-            <IoAdd size={32} />
-          </button>
-        </div>
-      </div>
-
-      {/* 새 밋업 만들기 모달 */}
-      {isModalOpen && (
-        <div className=" fixed inset-0 bg-black/75 flex justify-center items-end z-100 scrollbar-none">
-          <div
-            className="bg-[#1e1e1e] border border-[#333] rounded-3xl p-8 w-sm sm:w-md md:w-lg lg:w-xl max-h-[90vh] overflow-y-auto flex flex-col  scrollbar-none mb-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-[#333] mb-4 scrollbar-none">
-              <h3 className="text-lg font-bold text-white">New 밋업 만들기</h3>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-white cursor-pointer"
-              >
-                <IoClose size={24} />
-              </button>
-            </div>
-
-            {/* px-2 -> px-3으로 여백을 넓혀 테두리 공간 확보 */}
-            <div className="overflow-y-auto space-y-4 px-3 py-1 scrollbar-none">
-              {/* 카테고리 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  국가
-                </label>
-                <div className="flex gap-2">
-                  {[
-                    { label: "🇺🇸 미국", value: GatheringCategory.US },
-                    { label: "🇬🇧 영국", value: GatheringCategory.UK },
-                    {
-                      label: "🇰🇷 한국",
-                      value: GatheringCategory.KR,
-                    },
-                  ].map((item) => (
-                    <button
-                      key={item.value}
-                      type="button"
-                      onClick={() => setCategory(item.value)}
-                      className={`cursor-pointer flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                        category === item.value
-                          ? "bg-[#bef408] text-gray-900"
-                          : "bg-[#2C2C2E] text-gray-400"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 제목 (ring-inset 적용) */}
-              <div>
-                <label className="block text-sm font-bold text-gray-200 mb-1">
-                  모임 제목
-                </label>
-                <input
-                  type="text"
-                  placeholder="모임 제목을 입력해주세요."
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm  text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
-                />
-              </div>
-
-              {/* 설명 (ring-inset 적용) */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  모임 설명
-                </label>
-                <textarea
-                  placeholder="모임에 대한 설명을 입력해주세요."
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className=" w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408] resize-none"
-                />
-              </div>
-
-              {/* 장소 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  모임 장소
-                </label>
-                <input
-                  type="text"
-                  placeholder="모임 장소를 입력해주세요."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
-                />
-              </div>
-
-              {/* 모임 날짜 선택 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  모임 날짜
-                </label>
-                <input
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  value={selectedDateStr}
-                  onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className=" w-full bg-[#2C2C2E] font-semibold rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408] [color-scheme:dark]"
-                />
-              </div>
-
-              {/* 모임 시간 선택 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-2">
-                  모임 시간
-                </label>
-                <div className="bg-[#1C1C1E] border border-[#bef408] rounded-xl py-2.5 text-center mb-3">
-                  <span className="text-2xl font-bold text-[#bef408] tracking-widest">
-                    {String(selectedHour).padStart(2, "0")} :{" "}
-                    {String(selectedMinute).padStart(2, "0")}
-                  </span>
-                </div>
-
-                <span className="block text-xs text-gray-200 font-semibold mb-1">
-                  시
-                </span>
-                <div className="flex gap-2 overflow-x-auto scrollbar-none mb-3 py-0.5">
-                  {HOURS.map((h) => (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => setSelectedHour(h)}
-                      className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
-                        selectedHour === h
-                          ? "bg-[#bef408] text-gray-900"
-                          : "bg-[#2C2C2E] text-white"
-                      }`}
-                    >
-                      {String(h).padStart(2, "0")}시
-                    </button>
-                  ))}
-                </div>
-
-                <span className="block text-xs text-gray-200 font-semibold mb-1">
-                  분
-                </span>
-                <div className="flex gap-2 overflow-x-auto scrollbar-none py-0.5">
-                  {MINUTES.map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setSelectedMinute(m)}
-                      className={`cursor-pointer px-3.5 py-1.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors ${
-                        selectedMinute === m
-                          ? "bg-[#bef408] text-gray-900"
-                          : "bg-[#2C2C2E] text-white"
-                      }`}
-                    >
-                      {String(m).padStart(2, "0")}분
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 최대 인원 */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-200 mb-1">
-                  최대 인원 (명)
-                </label>
-                <input
-                  type="number"
-                  value={maxPeople}
-                  min={1}
-                  max={100}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-
-                    // 100 초과 입력 방지
-                    if (val > 99) {
-                      setMaxPeople("99");
-                      return;
-                    }
-
-                    // 음수 입력 방지 및 일반 값 반영
-                    setMaxPeople(e.target.value);
-                  }}
-                  className="w-full bg-[#2C2C2E] rounded-lg px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-1 focus:ring-inset focus:ring-[#bef408]"
-                />
-              </div>
-            </div>
-
+      {/* 카테고리 칩 스크롤 */}
+      <div className="px-5 mb-4 overflow-x-auto scrollbar-none flex gap-2">
+        {CATEGORIES(t).map((cat) => {
+          const isActive = selectedCategory === cat.value;
+          return (
             <button
-              onClick={handleCreateGathering}
-              disabled={createMutation.isPending}
-              className="cursor-pointer w-full bg-[#bef408] hover:bg-[#bef408]/80 py-3 rounded-xl font-bold text-gray-900 text-base mt-4 transition-colors flex justify-center items-center"
+              key={cat.value}
+              onClick={() => setSelectedCategory(cat.value)}
+              className={`px-4 py-2 rounded-full text-[13px] font-semibold transition shrink-0 cursor-pointer border ${
+                isActive
+                  ? "bg-[#bef408] text-black border-[#bef408] font-extrabold"
+                  : "bg-[#1C1C1E] hover:bg-zinc-800/80  text-[#A1A1AA] border-white/5 hover:border-white/10"
+              }`}
             >
-              {createMutation.isPending ? (
-                <div className="flex justify-center items-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
-                </div>
-              ) : (
-                "방 만들기"
-              )}
+              {cat.label}
             </button>
-          </div>
-        </div>
-      )}
+          );
+        })}
+      </div>
 
-      {/* 초대 코드 모달 */}
-      {isInviteModalOpen && (
-        <div
-          className="fixed inset-0 bg-black/75 flex justify-center items-center p-5 z-50"
-          onClick={() => {
-            setInviteCode("");
-            setIsInviteModalOpen(false);
-          }}
-        >
-          <div
-            className="bg-[#1C1C1E] rounded-2xl p-5 w-full max-w-[320px] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-white mb-1">
-              🔡 룸 코드 입장
-            </h3>
-            <p className="text-sm text-gray-400 mb-5 text-center">
-              방의 4자리 룸 코드를 입력해 주세요.
-            </p>
-
-            <input
-              type="text"
-              maxLength={4}
-              value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toLowerCase())}
-              placeholder="____"
-              className="w-full h-12 bg-[#2C2C2E] rounded-lg text-[#bef408] text-xl font-bold text-center tracking-[6px]  mb-5 focus:outline-none focus:ring-1 focus:ring-[#bef408]"
+      <div className="flex-1 px-5 pb-24 ">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2
+              className="w-8 h-8 animate-spin"
+              style={{ color: GREEN_COLOR }}
             />
-
-            <div className="flex gap-2.5 w-full">
-              <button
-                type="button"
-                className="flex-1 h-11 bg-[#2C2C2E] text-gray-400 hover:bg-[#2C2C2E]/80 cursor-pointer font-semibold rounded-lg text-sm"
-                onClick={() => {
-                  setInviteCode("");
-                  setIsInviteModalOpen(false);
-                }}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="cursor-pointer flex-1 h-11 bg-[#bef408] hover:bg-[#bef408]/90 text-black font-bold rounded-lg text-sm disabled:opacity-50"
-                onClick={handleEnterRoom}
-                disabled={isInviteLoading}
-              >
-                {isInviteLoading ? "확인 중..." : "입장하기"}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        ) : filteredGatherings.length === 0 ? (
+          <div className="py-28 flex flex-col items-center justify-center text-center">
+            <span className="text-4xl mb-3"></span>
+            <p className="text-[15px] text-[#71717A] leading-relaxed font-medium">
+              {t.emptyText}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {filteredGatherings.map((item) => (
+              <MeetupItem
+                key={item.id}
+                item={item}
+                t={t}
+                currentLang={currentLang}
+              />
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="z-50 fixed right-10 bottom-24 w-14 h-14 rounded-full bg-[#bef408] text-black flex items-center justify-center shadow-lg hover:opacity-95 active:scale-95 transition cursor-pointer z-20"
+          style={{ boxShadow: "0 6px 20px rgba(190, 244, 8, 0.35)" }}
+        >
+          <Plus className="w-8 h-8 stroke-[2]" />
+        </button>
+      </div>
+
+      <GatheringModal
+        mode="create"
+        isOpen={isModalOpen}
+        onClose={closeAndResetModal}
+        category={category}
+        setCategory={setCategory}
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        location={location}
+        setLocation={setLocation}
+        selectedDateStr={selectedDateStr}
+        selectedHour={selectedHour}
+        setSelectedHour={setSelectedHour}
+        selectedMinute={selectedMinute}
+        setSelectedMinute={setSelectedMinute}
+        maxPeople={maxPeople}
+        setMaxPeople={setMaxPeople}
+        onSubmit={handleCreateGathering}
+        isPending={createGatheringPending}
+        handleDayPress={handleDayPress}
+      />
+
+      {/* 초대 코드 입력 모달 */}
+      <InviteCodeModal
+        visible={isInviteModalOpen}
+        inviteCode={inviteCode}
+        onChangeCode={handleChangeCode}
+        onClose={handleCloseInviteModal}
+        onSubmit={handleEnterRoom}
+        isLoading={isInviteLoading}
+        t={t}
+      />
     </main>
   );
 }

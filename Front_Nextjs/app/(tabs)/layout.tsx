@@ -1,11 +1,10 @@
 "use client";
 
 import SocketInitializer from "@/components/SocketInitializer.tsx";
+import { useNavLanguage } from "@/hooks/Languages/useNavLanguage";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Flash,
-  FlashOutline,
   People,
   PeopleOutline,
   Chatbubbles,
@@ -14,62 +13,60 @@ import {
   SettingsOutline,
   Location,
   LocationOutline,
-  CheckmarkCircle,
-  CheckmarkCircleOutline,
-  Bulb,
-  BulbOutline,
   Happy,
   HappyOutline,
   HandRight,
   HandRightOutline,
 } from "react-ionicons";
 
-const navItems = [
-  {
-    name: "친구",
-    href: "/friend",
-    activeIcon: People,
-    inactiveIcon: PeopleOutline,
-  },
-  {
-    name: "DM",
-    href: "/dm",
-    activeIcon: Chatbubbles,
-    inactiveIcon: ChatbubblesOutline,
-  },
-  {
-    name: "스팟",
-    href: "/spot",
-    activeIcon: Location,
-    inactiveIcon: LocationOutline,
-  },
-  {
-    name: "밋업",
-    href: "/",
-    activeIcon: Happy,
-    inactiveIcon: HappyOutline,
-  },
-  {
-    name: "참여",
-    href: "/join",
-    activeIcon: HandRight,
-    inactiveIcon: HandRightOutline,
-  },
-  {
-    name: "설정",
-    href: "/setting",
-    activeIcon: Settings,
-    inactiveIcon: SettingsOutline,
-  },
-];
-
 export default function TabLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useNavLanguage();
+
   const pathname = usePathname();
 
   const isDmChatRoom = /^\/dm\/[^\/]+$/.test(pathname);
   const isGatheringChatRoom = /^\/gathering\/[^\/]+\/chat$/.test(pathname);
 
   const isChatRoom = isDmChatRoom || isGatheringChatRoom;
+
+  const navItems = [
+    {
+      name: t.friend,
+      href: "/friend",
+      activeIcon: People,
+      inactiveIcon: PeopleOutline,
+    },
+    {
+      name: t.dm,
+      href: "/dm",
+      activeIcon: Chatbubbles,
+      inactiveIcon: ChatbubblesOutline,
+    },
+    {
+      name: t.spot,
+      href: "/spot",
+      activeIcon: Location,
+      inactiveIcon: LocationOutline,
+    },
+    {
+      name: t.meetup,
+      href: "/",
+      activeIcon: Happy,
+      inactiveIcon: HappyOutline,
+    },
+    {
+      name: t.join,
+      href: "/join",
+      activeIcon: HandRight,
+      inactiveIcon: HandRightOutline,
+    },
+    {
+      name: t.setting,
+      href: "/setting",
+      activeIcon: Settings,
+      inactiveIcon: SettingsOutline,
+    },
+  ];
 
   return (
     <div className="flex min-h-screen justify-center bg-[#121212]">

@@ -1,0 +1,112 @@
+import { useEffect, useState } from "react";
+
+const translations = {
+  ko: {
+    headerTitle: "Z-Meetup",
+    all: "전체",
+    us: "🇺🇸 미국",
+    uk: "🇬🇧 영국",
+    kr: "🇰🇷 한국",
+    newMeetup: "New 밋업 만들기",
+    categoryLabel: "국가",
+    titleLabel: "모임 제목",
+    titlePlaceholder: "모임 제목을 입력해주세요.",
+    descLabel: "모임 설명",
+    descPlaceholder: "모임에 대한 설명을 입력해주세요.",
+    locationLabel: "모임 장소",
+    locationPlaceholder: "모임 장소를 입력해주세요.",
+    dateLabel: "모임 날짜",
+    timeLabel: "모임 시간",
+    hourLabel: "시",
+    minuteLabel: "분",
+    maxPeopleLabel: "최대 인원 (명)",
+    createBtn: "방 만들기",
+    emptyText: "아직 등록된 밋업이 없어요.\n지금 첫 밋업을 열어보세요!",
+    roomCodeTitle: "🔡 룸 코드 입장",
+    roomCodeSub: "공유받은 4자리 코드를 입력하세요.",
+    cancel: "취소",
+    enter: "입장하기",
+    checking: "확인중...",
+    statusOpen: "모집중",
+    statusFull: "인원 마감",
+    statusInProgress: "진행중",
+    statusCompleted: "종료됨",
+    people: "명",
+    error: "오류",
+    alerts: {
+      title: "알림",
+      titleRequired: "제목을 입력해주세요.",
+      descRequired: "설명을 입력해주세요.",
+      locationRequired: "모임 장소를 입력해주세요.",
+      invalidPeople: "올바른 정원 숫자를 입력해주세요.",
+      minPeople: "최대 인원은 2명 이상이어야 합니다.",
+      maxPeople: "최대 인원은 20명 이하이어야 합니다.",
+      successCreate: "밋업이 생성되었습니다!",
+      failCreate: "밋업 생성에 실패했습니다.",
+      roomCodeLength: "4자리 룸코드를 올바르게 입력해 주세요.",
+      roomNotFound: "밋업을 찾을 수 없습니다.",
+    },
+  },
+  en: {
+    headerTitle: "Z-Meetup",
+    all: "All",
+    us: "🇺🇸 US",
+    uk: "🇬🇧 UK",
+    kr: "🇰🇷 KR",
+    newMeetup: "Create New Meetup",
+    categoryLabel: "Country",
+    titleLabel: "Meetup Title",
+    titlePlaceholder: "Enter the meetup title.",
+    descLabel: "Description",
+    descPlaceholder: "Enter a description for the meetup.",
+    locationLabel: "Location",
+    locationPlaceholder: "Enter the meetup location.",
+    dateLabel: "Date",
+    timeLabel: "Time",
+    hourLabel: "H",
+    minuteLabel: "M",
+    maxPeopleLabel: "Max People",
+    createBtn: "Create Room",
+    emptyText: "No meetups registered yet.\n Open the first meetup now!",
+    roomCodeTitle: "🔡 Enter Room Code",
+    roomCodeSub: "Enter the 4-digit shared code.",
+    cancel: "Cancel",
+    enter: "Enter",
+    checking: "Checking...",
+    statusOpen: "Open",
+    statusFull: "Full",
+    statusInProgress: "In Progress",
+    statusCompleted: "Completed",
+    people: "p",
+    error: "Error",
+    alerts: {
+      title: "alert",
+      titleRequired: "Please enter a title.",
+      descRequired: "Please enter a description.",
+      locationRequired: "Please enter a location.",
+      invalidPeople: "Please enter a valid number for people.",
+      minPeople: "Maximum people must be at least 2.",
+      maxPeople: "Maximum people cannot exceed 20.",
+      successCreate: "Meetup created successfully!",
+      failCreate: "Failed to create meetup.",
+      roomCodeLength: "Please enter a valid 4-digit room code.",
+      roomNotFound: "Meetup not found.",
+    },
+  },
+};
+
+export const useHomeLanguage = () => {
+  const [currentLang, setCurrentLang] = useState<"ko" | "en">("en");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const browserLang = navigator.language || navigator.languages[0];
+      const langCode = browserLang.toLowerCase().startsWith("ko") ? "ko" : "en";
+      setCurrentLang(langCode);
+    }
+  }, []);
+
+  const t = translations[currentLang] || translations.en;
+
+  return { t, currentLang };
+};
