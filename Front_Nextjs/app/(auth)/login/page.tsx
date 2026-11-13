@@ -61,7 +61,7 @@ function LoginContent() {
   ///////////////////////////////////////////////////////////////////////////
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#000000] px-4 py-8">
+    <div className="flex min-h-screen items-center justify-center bg-[#121212] px-4 py-8">
       <div className="w-full max-w-md space-y-8 rounded-2xl   bg-[#1C1C1E] p-8 pb-6 ">
         <div className="flex flex-col items-center">
           <Image
@@ -141,14 +141,14 @@ function LoginContent() {
         />
 
         <div className="pt-6 border-t border-[#2C2C2E] text-center space-y-4">
-          <div className="bg-[#2C2C2E]/50 p-3 rounded-xl border border-[#3A3A3C]/50">
-            <p className="text-sm font-medium text-[#A1A1A6] mb-2"></p>
+          <div className="bg-[#2C2C2E]/50 pb-5 pt-3 rounded-xl border border-[#3A3A3C]/50">
+            <p className="text-[13px] font-medium text-[#A1A1A6] mb-2">
+              {t.downloadApp}
+            </p>
             <div className="flex justify-center items-center gap-3">
               <button
                 type="button"
-                onClick={() =>
-                  alert("안드로이드 앱이 11월 중에 출시될 예정입니다! 📱")
-                }
+                onClick={() => alert(t.alerts.android)}
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
                 <Image
@@ -162,9 +162,7 @@ function LoginContent() {
 
               <button
                 type="button"
-                onClick={() =>
-                  alert("iOS 앱이 11월 중에 출시될 예정입니다! 📱")
-                }
+                onClick={() => alert(t.alerts.ios)}
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
                 <Image
@@ -198,7 +196,7 @@ function LoginContent() {
             </div>
 
             <p className="mt-2 text-[11px] text-[#555]">
-              Copyright © 2026 Golazo. All rights reserved.
+              Copyright © 2026 WeCanZ. All rights reserved.
             </p>
           </div>
         </div>

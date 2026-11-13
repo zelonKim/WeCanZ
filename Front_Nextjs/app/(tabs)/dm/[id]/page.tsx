@@ -23,6 +23,7 @@ import { handleImagePick } from "@/utils/handleImagePick";
 import { uploadProfileImage } from "@/utils/uploadProfileImage";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Socket as SocketIoClient } from "socket.io-client";
@@ -295,8 +296,15 @@ export default function DirectChatRoomPage() {
       {/* 메시지 리스트 영역 */}
       <div className="flex-1 relative overflow-hidden flex flex-col">
         {initMessagePending ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#bef408]" />
+          <div className="flex-1 flex justify-center items-center py-24">
+            <div className="animate-spin text-4xl">
+              <Image
+                src="/logo/sticker.png"
+                alt="WeCanZ_sticker"
+                width={80}
+                height={80}
+              />
+            </div>
           </div>
         ) : (
           <div

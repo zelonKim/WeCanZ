@@ -45,7 +45,6 @@ export default function SignupScreen() {
     setIsMarketingAgreed(nextState);
   };
 
-
   //////////////////////////////////////////////////////////////////////////
 
   const { mutate: signupMutate, isPending: signupPending } =
@@ -105,8 +104,8 @@ export default function SignupScreen() {
   //////////////////////////////////////////////////////////////////////////
 
   return (
-    <div className="flex min-h-screen justify-center bg-[#000000] px-4 py-8 text-white">
-      <div className="w-full max-w-lg space-y-6">
+    <div className="flex min-h-screen justify-center bg-[#121212] px-4 py-8 text-white">
+      <div className="w-full max-w-lg space-y-4">
         <div className="flex items-center pb-2">
           <button
             type="button"
@@ -115,12 +114,12 @@ export default function SignupScreen() {
           >
             <FiChevronLeft size={30} />
           </button>
-          <h1 className="text-2xl font-bold">{t.headerTitle}</h1>
+          <h1 className="text-2xl font-bold text-[#bef408]">{t.headerTitle}</h1>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-5">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-[#A1A1A6]">
+            <label className=" text-sm font-semibold text-[#A1A1A6]">
               {t.idLabel}
             </label>
             <input
@@ -129,7 +128,7 @@ export default function SignupScreen() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
+              className="mt-1 w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -143,7 +142,7 @@ export default function SignupScreen() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
+              className="mt-1 w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -157,7 +156,7 @@ export default function SignupScreen() {
               value={passwordConfirm}
               onChange={(e) => setPasswordConfirm(e.target.value)}
               autoCapitalize="none"
-              className="w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
+              className="mt-1 w-full h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
             />
           </div>
 
@@ -172,7 +171,7 @@ export default function SignupScreen() {
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 autoCapitalize="none"
-                className="flex-1 h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
+                className="mt-1 flex-1 h-14 rounded-xl bg-[#1C1C1E] px-4 text-base text-white placeholder-[#666] outline-none focus:ring-2 focus:ring-[#bef408]"
               />
               <button
                 type="button"
@@ -180,7 +179,7 @@ export default function SignupScreen() {
                 className="cursor-pointer h-14 px-4 bg-[#2C2C2E] rounded-xl flex items-center gap-1.5 hover:bg-[#3A3A3C] transition shrink-0"
               >
                 <FiRefreshCw size={16} className="text-[#bef408]" />
-                <span className=" text-sm font-bold text-[#bef408]">
+                <span className="text-sm font-bold text-[#bef408]">
                   {t.refreshNickname}
                 </span>
               </button>
@@ -291,7 +290,7 @@ export default function SignupScreen() {
           <button
             type="submit"
             disabled={signupPending}
-            className="cursor-pointer w-full h-14 rounded-xl bg-[#bef408] font-bold text-lg text-gray-900 mt-6 hover:opacity-90 transition disabled:opacity-50"
+            className="cursor-pointer w-full h-14 rounded-xl bg-[#bef408] font-bold text-lg text-gray-900 my-4 hover:opacity-90 transition disabled:opacity-50"
           >
             {signupPending ? `${t.submitting}` : `${t.submitBtn}`}
           </button>

@@ -10,6 +10,7 @@ import { ChevronRight, Clock, Loader2, MapPin, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { JoinStatusBadge } from "@/components/JoinStatusBadge";
+import Image from "next/image";
 
 export default function JoinedPage() {
   const t = useFlashLanguage();
@@ -40,8 +41,8 @@ export default function JoinedPage() {
   return (
     <div className="min-h-screen bg-[#121212] text-white flex flex-col">
       {/* 상단 헤더 */}
-      <header className="top-0 z-10 bg-[#121212] backdrop-blur-md px-5 py-3.5 flex items-center justify-between border-b border-white/[0.08]">
-        <h1 className="text-3xl font-extrabold text-[#bef408] italic tracking-tight">
+      <header className="top-0 z-10 bg-[#121212] backdrop-blur-md px-5 py-3 flex items-center justify-between border-b border-white/[0.08]">
+        <h1 className="text-[26px] font-extrabold text-[#bef408] italic tracking-tight">
           {t.headerTitle}
         </h1>
 
@@ -61,8 +62,15 @@ export default function JoinedPage() {
       {/* 메인 콘텐츠 영역 */}
       <main className="flex-1 px-5 pt-3.5 pb-24">
         {isPending ? (
-          <div className="flex-1 h-[60vh] flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#bef408]" />
+          <div className="flex-1 flex justify-center items-center py-60">
+            <div className="animate-spin text-4xl">
+              <Image
+                src="/logo/sticker.png"
+                alt="WeCanZ_sticker"
+                width={80}
+                height={80}
+              />
+            </div>
           </div>
         ) : myGatherings.length === 0 ? (
           <div className="py-32 flex flex-col items-center justify-center text-center">

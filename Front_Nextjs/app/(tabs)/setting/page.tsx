@@ -34,6 +34,7 @@ import {
   User,
   UserX,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -246,8 +247,15 @@ export default function SettingPage() {
 
   if (myInfoPending) {
     return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#bef408]" />
+      <div className="flex-1 flex justify-center items-center py-80">
+        <div className="animate-spin text-4xl">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={80}
+            height={80}
+          />
+        </div>
       </div>
     );
   }
@@ -266,8 +274,8 @@ export default function SettingPage() {
     <div className="min-h-screen bg-[#121212] text-white flex justify-center pb-10">
       <div className="w-full max-w-3xl flex flex-col min-h-screen ">
         {/* 상단 헤더 */}
-        <header className="top-0 z-10 bg-[#121212]/90 backdrop-blur-md px-5 py-3.5 flex items-center justify-between border-b border-white/[0.08]">
-          <h1 className="text-3xl font-extrabold text-[#bef408] italic tracking-tight">
+        <header className="top-0 z-10 bg-[#121212]/90 backdrop-blur-md px-5 py-3 flex items-center justify-between border-b border-white/[0.08]">
+          <h1 className="text-[26px] font-extrabold text-[#bef408] italic tracking-tight">
             {t.headerTitle}
           </h1>
 

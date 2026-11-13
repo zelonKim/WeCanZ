@@ -78,8 +78,8 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
       >
         <main className="flex-1">{children}</main>
         {!isChatRoom && (
-          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1C1E] border-t border-[#2C2C2E] px-4 py-2 max-w-5xl mx-auto">
-            <ul className="flex justify-around items-center">
+          <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1C1C1E] border-t border-[#2C2C2E]  px-4 py-2 max-w-5xl mx-auto">
+            <ul className="flex justify-around items-center ">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
                 const SelectedIcon = isActive
@@ -91,7 +91,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="flex flex-col items-center gap-1 py-1 px-3 transition"
+                      className=" flex flex-col items-center gap-1 py-1 px-3 transition "
                     >
                       <SelectedIcon
                         color={iconColor}
@@ -99,7 +99,7 @@ export default function TabLayout({ children }: { children: React.ReactNode }) {
                         width="24px"
                       />
                       <span
-                        className={`text-xs font-medium ${
+                        className={`text-xs font-medium  ${
                           isActive ? "text-[#bef408]" : "text-[#8E8E93]"
                         }`}
                       >

@@ -19,6 +19,7 @@ import { MyInfo } from "@/types/user/MyInfo";
 import { useHandlePressDmRoom } from "@/utils/handlePressDmRoom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquareMore, Loader2, RefreshCw } from "lucide-react";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 export default function DMPage() {
@@ -165,8 +166,8 @@ export default function DMPage() {
   return (
     <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
       {/* 상단 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 bg-[#121212] shrink-0">
-        <h1 className="text-2xl font-extrabold italic tracking-tight text-[#bef408]">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#121212] shrink-0">
+        <h1 className="text-[26px] font-extrabold italic tracking-tight text-[#bef408]">
           {t.headerTitle}
         </h1>
         <div className="flex items-center gap-2">
@@ -200,8 +201,15 @@ export default function DMPage() {
 
         {/* 채팅방 목록 */}
         {isMyDmRoomsPending && myDMRooms.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-[#bef408]" />
+          <div className="flex-1 flex justify-center items-start py-20">
+            <div className="animate-spin text-4xl">
+              <Image
+                src="/logo/sticker.png"
+                alt="WeCanZ_sticker"
+                width={80}
+                height={80}
+              />
+            </div>
           </div>
         ) : myDMRooms.length > 0 ? (
           <div className="flex flex-col gap-3">

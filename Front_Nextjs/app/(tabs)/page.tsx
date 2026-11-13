@@ -16,6 +16,7 @@ import { Gathering } from "@/types/gathering/Gathering";
 import { GatheringCategory } from "@/types/gathering/GatheringCategory";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, Plus, QrCode } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -88,7 +89,7 @@ export default function HomePage() {
 
   ////////////////////////////////////////////////////////////////////////////////////
 
-  const { data: gatherings = [], isLoading } = useQuery<Gathering[]>({
+  const { data: gatherings = [], isPending } = useQuery<Gathering[]>({
     queryKey: ["gatherings"],
     queryFn: getGatherings,
     refetchInterval: 15000,
@@ -166,9 +167,9 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#121212] text-white flex flex-col relative pb-20">
-      <header className="px-5 py-3.5 flex items-center justify-between border-b border-[#27272A] mb-3">
+      <header className="px-5 py-3 flex items-center justify-between border-b border-[#27272A] mb-3">
         <h1
-          className="text-3xl font-extrabold italic tracking-tight"
+          className="text-[26px] font-extrabold italic tracking-tight"
           style={{ color: GREEN_COLOR }}
         >
           {t.headerTitle}
@@ -206,16 +207,20 @@ export default function HomePage() {
         })}
       </div>
 
-      <div className="flex-1 px-5 pb-24 ">
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: GREEN_COLOR }}
-            />
+      <div className="max-w-5xl mx-auto w-full px-4 relative flex-1 flex flex-col gap-5 ">
+        {isPending ? (
+          <div className="flex-1 flex justify-center items-start py-48">
+            <div className="animate-spin text-4xl">
+              <Image
+                src="/logo/sticker.png"
+                alt="WeCanZ_sticker"
+                width={80}
+                height={80}
+              />
+            </div>
           </div>
         ) : filteredGatherings.length === 0 ? (
-          <div className="py-28 flex flex-col items-center justify-center text-center">
+          <div className="py-28 flex flex-col items-center justify-center text-center ">
             <span className="text-4xl mb-3"></span>
             <p className="text-[15px] text-[#71717A] leading-relaxed font-medium">
               {t.emptyText}
@@ -233,14 +238,18 @@ export default function HomePage() {
             ))}
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="z-50 fixed right-10 bottom-24 w-14 h-14 rounded-full bg-[#bef408] text-black flex items-center justify-center shadow-lg hover:opacity-95 active:scale-95 transition cursor-pointer z-20"
-          style={{ boxShadow: "0 6px 20px rgba(190, 244, 8, 0.35)" }}
-        >
-          <Plus className="w-8 h-8 stroke-[2]" />
-        </button>
+        <div className="fixed inset-x-0 bottom-24 z-20 pointer-events-none">
+          <div className="max-w-5xl mx-auto px-5 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="pointer-events-auto w-14 h-14 rounded-full bg-[#bef408] text-black flex items-center justify-center shadow-lg hover:opacity-95 active:scale-95 transition cursor-pointer"
+              style={{ boxShadow: "0 6px 20px rgba(190, 244, 8, 0.35)" }}
+            >
+              <Plus className="w-8 h-8 stroke-2" />
+            </button>
+          </div>
+        </div>
       </div>
 
       <GatheringModal

@@ -7,6 +7,7 @@ import { useCommercialLanguage } from "@/hooks/Languages/useCommercialLanguage";
 import { AdItem } from "@/types/spot/AdItem";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Info, RefreshCw, Loader2 } from "lucide-react";
+import Image from "next/image";
 import React, { useState } from "react";
 
 export default function CommercialPage() {
@@ -46,8 +47,15 @@ export default function CommercialPage() {
 
   if (isPending) {
     return (
-      <div className="flex flex-col h-screen bg-[#121212] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[#bef408]" />
+      <div className="flex-1 flex justify-center items-center py-80">
+        <div className="animate-spin text-4xl">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={80}
+            height={80}
+          />
+        </div>
       </div>
     );
   }
@@ -63,8 +71,8 @@ export default function CommercialPage() {
   return (
     <div className=" flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
       {/* 상단 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 bg-[#121212] shrink-0">
-        <h1 className="text-2xl font-extrabold italic tracking-tight text-[#bef408]">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#121212] shrink-0">
+        <h1 className="text-[26px] font-extrabold italic tracking-tight text-[#bef408]">
           {t.headerTitle}
         </h1>
         <div className="flex items-center gap-2">

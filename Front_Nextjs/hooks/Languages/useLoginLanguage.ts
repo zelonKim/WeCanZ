@@ -14,7 +14,10 @@ const translations = {
     appleLoginBtn: "Apple로 로그인",
     termsOfService: "서비스 이용약관",
     privacyPolicy: "개인정보 처리방침",
+    downloadApp: "앱을 다운로드 받으세요",
     alerts: {
+      android: "안드로이드 앱이 11월 중에 출시될 예정입니다! 📱",
+      ios: "iOS 앱이 11월 중에 출시될 예정입니다! 📱",
       appleUnsupported: "안내",
       appleUnsupportedMsg: "Apple 로그인은 iOS기기에서만 지원됩니다.",
       appleTokenError: "오류",
@@ -47,7 +50,10 @@ const translations = {
     appleLoginBtn: "Sign in with Apple",
     termsOfService: "Terms of Service",
     privacyPolicy: "Privacy Policy",
+    downloadApp: "Download the App",
     alerts: {
+      android: "The Android app is coming in November! 📱",
+      ios: "The iOS app is coming in November! 📱",
       appleUnsupported: "Notice",
       appleUnsupportedMsg: "Apple Sign-In is only supported on iOS devices.",
       appleTokenError: "Error",

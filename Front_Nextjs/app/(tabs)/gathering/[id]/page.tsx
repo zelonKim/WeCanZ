@@ -49,6 +49,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -300,8 +301,15 @@ export default function GatheringDetailPage() {
 
   if (isPending || !gathering) {
     return (
-      <div className="min-h-screen bg-[#09090B] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#bef408]" />
+      <div className="flex-1 flex justify-center items-center py-80">
+        <div className="animate-spin text-4xl">
+          <Image
+            src="/logo/sticker.png"
+            alt="WeCanZ_sticker"
+            width={80}
+            height={80}
+          />
+        </div>
       </div>
     );
   }
@@ -332,7 +340,7 @@ export default function GatheringDetailPage() {
     <div className="min-h-screen bg-[#121212] text-white flex justify-center">
       <div className="w-full max-w-4xl flex flex-col min-h-screen pb-20">
         {/* 상단 헤더 */}
-        <header className="sticky top-0 z-10 bg-[#121212]/80 backdrop-blur-md px-4 py-3.5 flex items-center justify-between border-b border-white/[0.08]">
+        <header className="sticky top-0 z-10 bg-[#121212]/80 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-white/[0.08]">
           <button
             type="button"
             onClick={() => router.replace("/")}
