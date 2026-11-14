@@ -59,7 +59,7 @@ export const GatheringUserCard: React.FC<GatheringUserCardProps> = ({
               style={styles.popoverItem}
               onPress={() => {
                 handleCloseMenu();
-                router.push(`/profile/${user.id}`);
+                router.replace(`/profile/${user.id}`);
               }}
             >
               <Text style={styles.popoverText}>{t.viewProfile}</Text>

@@ -100,7 +100,7 @@ export default function DoneGatheringsScreen() {
           <TouchableOpacity
             style={styles.card}
             activeOpacity={0.8}
-            onPress={() => router.push(`/gathering/${item.id}`)}
+            onPress={() => router.replace(`/gathering/${item.id}`)}
           >
             <Text style={styles.cardTitle} numberOfLines={1}>
               {item.title}

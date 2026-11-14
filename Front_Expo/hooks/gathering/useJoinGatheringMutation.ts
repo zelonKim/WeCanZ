@@ -18,7 +18,7 @@ export const useJoinGatheringMutation = (
         onSuccessCallback();
       }
 
-      router.push(`/gathering/${gatheringId}`);
+      router.replace(`/gathering/${gatheringId}`);
     },
     onError: (error: any) => {
       Alert.alert(t.error, t.alerts.roomNotFound);

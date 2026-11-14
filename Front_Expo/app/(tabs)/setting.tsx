@@ -221,7 +221,7 @@ export default function SettingScreen() {
       if (searchedUser && searchedUser.id) {
         setIsModalVisible(false);
         setSearchNickname("");
-        router.push(`/profile/${searchedUser.id}`);
+        router.replace(`/profile/${searchedUser.id}`);
       }
     } catch (error: any) {
       Alert.alert(t.alerts.error, t.alerts.userNotFound);

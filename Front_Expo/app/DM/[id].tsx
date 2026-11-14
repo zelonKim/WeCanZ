@@ -363,7 +363,7 @@ export default function DirectChatRoomScreen() {
             partnerId={partnerId}
             partnerName={partnerName}
             onClose={() => setIsMenuOpen(false)}
-            onNavigateProfile={(id) => router.push(`/profile/${id}`)}
+            onNavigateProfile={(id) => router.replace(`/profile/${id}`)}
             onSendFriendRequest={sendFriendRequestMutate}
             onBlockUser={blockUserMutate}
             styles={styles}

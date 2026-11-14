@@ -20,7 +20,7 @@ export const useRequestFriendDmMutation = (t: any) => {
     },
     onSuccess: ({ roomData, friend }) => {
       const chatRoomId = roomData.id;
-      router.push({
+      router.replace({
         pathname: "/DM/[id]",
         params: {
           id: chatRoomId,

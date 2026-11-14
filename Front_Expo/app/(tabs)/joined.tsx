@@ -54,7 +54,7 @@ export default function JoinedScreen() {
 
         <TouchableOpacity
           style={styles.historyButton}
-          onPress={() => router.push("/joined/done")}
+          onPress={() => router.replace("/joined/done")}
           activeOpacity={0.7}
         >
           <Ionicons name="time-outline" size={25} color={Colors.green} />
@@ -81,7 +81,7 @@ export default function JoinedScreen() {
             <TouchableOpacity
               style={styles.card}
               activeOpacity={0.85}
-              onPress={() => router.push(`/gathering/${item.id}`)}
+              onPress={() => router.replace(`/gathering/${item.id}`)}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle} numberOfLines={1}>

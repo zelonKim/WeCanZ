@@ -362,7 +362,7 @@ export default function GatheringDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.replace("/")}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.headerTitle}</Text>
@@ -377,7 +377,7 @@ export default function GatheringDetailScreen() {
                 t.alerts.accessDeniedMsg,
               );
             }
-            router.push(`/gathering/${id}/chat`);
+            router.replace(`/gathering/${id}/chat`);
           }}
         >
           <Ionicons name="chatbubbles-outline" size={16} color={Colors.green} />

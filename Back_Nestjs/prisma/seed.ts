@@ -5,7 +5,6 @@ import {
   User,
   Gathering,
 } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -17,14 +16,14 @@ async function main() {
   await prisma.gathering.deleteMany();
   await prisma.user.deleteMany();
 
-  const hashedPassword = await bcrypt.hash('password1234!', 10);
+  const password = 'password1234!';
 
   // 1. 유저 9명 생성 (한국 3명, 미국 3명, 영국 3명)
   const usersData = [
     // 🇰🇷 한국 유저 3명
     {
       email: 'minjun.kim@wecanz.kr',
-      password: hashedPassword,
+      password: password,
       nickname: '성수동커피러버',
       bio: '주말마다 성수동, 연남동 카페 투어하고 사이드 프로젝트 이야기 나누는 거 좋아해요 ☕️',
       profileImage:
@@ -35,7 +34,7 @@ async function main() {
     },
     {
       email: 'jiwoo.park@wecanz.kr',
-      password: hashedPassword,
+      password: password,
       nickname: '한강러닝크루',
       bio: '퇴근 후 반포 한강공원 5km 러닝 뛰실 분! 초보자도 환영합니다 🏃‍♂️',
       profileImage:
@@ -46,7 +45,7 @@ async function main() {
     },
     {
       email: 'seoyeon.lee@wecanz.kr',
-      password: hashedPassword,
+      password: password,
       nickname: '이태원바이브',
       bio: '금요일 밤 이태원, 을지로 힙한 와인바 & 펍 탐방러 🍷',
       profileImage:
@@ -59,7 +58,7 @@ async function main() {
     // 🇺🇸 미국 유저 3명
     {
       email: 'liam.oconnor@wecanz.io',
-      password: hashedPassword,
+      password: password,
       nickname: 'Liam_NYC',
       bio: 'Product designer in Brooklyn. Always down for rooftop drinks or pickup basketball 🏀',
       profileImage:
@@ -70,7 +69,7 @@ async function main() {
     },
     {
       email: 'chloe.chen@wecanz.io',
-      password: hashedPassword,
+      password: password,
       nickname: 'ChloeSF',
       bio: "AI builder in SF. Let's grab matcha in Mission District and talk startups ✨",
       profileImage:
@@ -81,7 +80,7 @@ async function main() {
     },
     {
       email: 'marcus.vance@wecanz.io',
-      password: hashedPassword,
+      password: password,
       nickname: 'MarcusLA',
       bio: 'Venice Beach sunset runner & taco enthusiast 🌮🏄‍♂️',
       profileImage:
@@ -94,7 +93,7 @@ async function main() {
     // 🇬🇧 영국 유저 3명
     {
       email: 'oliver.smith@wecanz.uk',
-      password: hashedPassword,
+      password: password,
       nickname: 'Ollie_LDN',
       bio: 'Shoreditch local. Indie music, craft beer, and spontaneous Friday pub nights 🍺',
       profileImage:
@@ -105,7 +104,7 @@ async function main() {
     },
     {
       email: 'amelia.clarke@wecanz.uk',
-      password: hashedPassword,
+      password: password,
       nickname: 'Amelia_Soho',
       bio: 'Gallery hopping around Soho & Covent Garden. Looking for creative buddies 🎨',
       profileImage:
@@ -116,7 +115,7 @@ async function main() {
     },
     {
       email: 'harry.davies@wecanz.uk',
-      password: hashedPassword,
+      password: password,
       nickname: 'Harry_MCR',
       bio: 'Football fan & specialty coffee nerd based in London / Manchester ⚽️',
       profileImage:
@@ -126,7 +125,6 @@ async function main() {
       provider: 'LOCAL',
     },
   ];
-
 
   const createdUsers: User[] = [];
   for (const userData of usersData) {
@@ -270,7 +268,6 @@ async function main() {
       hostId: createdUsers[8].id,
     },
   ];
-
 
   const createdGatherings: Gathering[] = [];
   for (const gData of gatheringsData) {
