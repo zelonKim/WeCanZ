@@ -261,6 +261,7 @@ export default function SettingPage() {
   }
 
   if (myInfoError || !me) {
+    router.replace("/login");
     return (
       <div className="min-h-screen bg-[#09090B] flex items-center justify-center text-zinc-400">
         {t.alerts.userNotFound}

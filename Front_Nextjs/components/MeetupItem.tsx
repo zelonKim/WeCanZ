@@ -6,7 +6,7 @@ import { GatheringStatus } from "@/types/gathering/GatheringStatus";
 import { formatDateTime } from "@/utils/formatDateTime";
 import { getCategoryLabel } from "@/utils/getCategoryLabel";
 import { Clock, MapPin, Users, User } from "lucide-react";
-import Image from "next/image";
+
 import { useRouter } from "next/navigation";
 import React from "react";
 
@@ -91,11 +91,10 @@ export const MeetupItem: React.FC<MeetupItemProps> = ({
         <div className="flex justify-end">
           {item.host?.profileImage ? (
             <div className="relative w-10 h-10 rounded-[18px] overflow-hidden">
-              <Image
+              <img
                 src={item.host.profileImage}
-                alt={"Host"}
-                fill
-                className="object-cover"
+                alt={item.host.nickname || "Host"}
+                className="w-11 h-11 rounded-full object-cover border border-white/10"
               />
             </div>
           ) : (
