@@ -1,3 +1,4 @@
+import { queryClient } from "@/api/api-provider";
 import { loginUser } from "@/api/auth/loginUser";
 import { setAccessToken } from "@/api/token";
 import { useMutation } from "@tanstack/react-query";
@@ -12,10 +13,9 @@ export const useEmailLoginMutation = (t: any) => {
     onSuccess: async (data) => {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
+        await queryClient.invalidateQueries({ queryKey: ["me"] });
       }
-      setTimeout(() => {
-        router.replace("/");
-      }, 0);
+      router.replace("/");
     },
     onError: (error: any) => {
       const errorData = error.response?.data;

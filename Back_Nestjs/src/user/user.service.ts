@@ -185,7 +185,7 @@ export class UserService {
   /////////////////////////////////////////
 
   async updatePushToken(userId: string, pushToken: string) {
-    return this.prisma.user.update({
+    return this.prisma.user.updateMany({
       where: { id: userId },
       data: { pushToken },
     });
@@ -194,7 +194,7 @@ export class UserService {
   /////////////////////////////////////////
 
   async deletePushToken(userId: string) {
-    await this.prisma.user.update({
+    await this.prisma.user.updateMany({
       where: { id: userId },
       data: {
         pushToken: null,

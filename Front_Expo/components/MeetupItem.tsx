@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#D4D4D8",
     fontWeight: Platform.OS === "ios" ? "500" : "400",
+    maxWidth: 240,
   },
   hostContainer: {
     justifyContent: "flex-end",

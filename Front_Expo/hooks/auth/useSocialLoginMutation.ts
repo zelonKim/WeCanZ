@@ -1,3 +1,4 @@
+import { queryClient } from "@/api/api-provider";
 import { socialLoginUser } from "@/api/auth/socialLoginUser";
 import { setAccessToken } from "@/api/token";
 import { useMutation } from "@tanstack/react-query";
@@ -12,14 +13,13 @@ export const useSocialLoginMutation = (t: any) => {
     onSuccess: async (data) => {
       if (data.accessToken) {
         await setAccessToken(data.accessToken);
+        await queryClient.invalidateQueries({ queryKey: ["me"] });
       }
-      setTimeout(() => {
-        if (data.isNewUser) {
-          router.replace("/agreement");
-        } else {
-          router.replace("/");
-        }
-      }, 0);
+      if (data.isNewUser) {
+        router.replace("/agreement");
+      } else {
+        router.replace("/");
+      }
     },
     onError: (error: any) => {
       console.log("=== Backend Social Login Error ===", {

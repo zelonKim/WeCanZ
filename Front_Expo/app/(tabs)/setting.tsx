@@ -123,7 +123,7 @@ export default function SettingScreen() {
       updateProfileMutate(updateProfilePayload);
     } catch (error) {
       console.error(error);
-      Alert.alert(t.alerts.error, t.alerts.uploadImageError); 
+      Alert.alert(t.alerts.error, t.alerts.uploadImageError);
     }
   };
 
@@ -287,6 +287,7 @@ export default function SettingScreen() {
   }
 
   if (myInfoError || !me) {
+    router.replace("/login");
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
         <Text style={{ color: Colors.tabIconDefault }}>

@@ -362,7 +362,7 @@ export default function GatheringDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace("/")}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={Colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t.headerTitle}</Text>
@@ -482,7 +482,7 @@ export default function GatheringDetailScreen() {
               style={styles.editIconButton}
               onPress={() => setIsReportModalOpen(true)}
             >
-              <Ionicons name="warning-outline" size={15} color="#FF453A" />
+              <Ionicons name="warning-outline" size={14} color="#FF453A" />
               <Text style={[styles.editButtonText, { color: "#FF453A" }]}>
                 {t.report}
               </Text>
@@ -913,10 +913,10 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: Colors.border,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: 20,
   },
-  editButtonText: { color: Colors.text, fontSize: 12, fontWeight: "600" },
+  editButtonText: { color: Colors.text, fontSize: 11, fontWeight: "600" },
   statusRow: {
     flexDirection: "row",
     gap: 8,
