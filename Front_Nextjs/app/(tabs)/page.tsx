@@ -73,19 +73,25 @@ export default function HomePage() {
 
   ////////////////////////////////////////////////////////////////////////////////////
 
-  const { data: me } = useQuery({
+  const { data: me, isError } = useQuery({
     queryKey: ["me"],
     queryFn: async () => {
       const { data } = await client.get("/user/me");
       return data;
     },
+    retry: false,
   });
 
   useEffect(() => {
+    if (isError) {
+      router.replace("/login");
+      return;
+    }
+
     if (me && (!me.termsAgreedAt || !me.privacyAgreedAt)) {
       router.replace("/login");
     }
-  }, [me, router]);
+  }, [me, isError, router]);
 
   ////////////////////////////////////////////////////////////////////////////////////
 
