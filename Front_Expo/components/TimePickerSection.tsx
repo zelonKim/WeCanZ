@@ -40,7 +40,6 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
             ]}
           >
             {String(h).padStart(2, "0")}
-            {labels.hour}
           </Text>
         </TouchableOpacity>
       ))}
@@ -68,7 +67,6 @@ export const TimePickerSection: React.FC<TimePickerSectionProps> = ({
             ]}
           >
             {String(m).padStart(2, "0")}
-            {labels.minute}
           </Text>
         </TouchableOpacity>
       ))}

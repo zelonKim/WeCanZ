@@ -197,7 +197,7 @@ export default function FriendScreen() {
             onRequestDm={(targetUserId, friend) =>
               requestFriendDmMutate({ targetUserId, friend })
             }
-            onBlockUser={unblockMutate}
+            onBlockUser={blockUserMutate}
           />
         )}
         ListEmptyComponent={

@@ -525,114 +525,102 @@ export default function GatheringDetailScreen() {
               <Text style={styles.roomCodeText}>{gathering.roomCode}</Text>
             </View>
           )}
+        </View>
+        {isHost &&
+          !(
+            gathering.status === "COMPLETED" || gathering.status === "CANCELED"
+          ) && (
+            <View style={styles.hostBox}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  marginBottom: 10,
+                }}
+              >
+                <Ionicons
+                  name="settings-outline"
+                  size={16}
+                  color={Colors.text}
+                />
+                <Text style={styles.sectionTitle}>{t.management}</Text>
+              </View>
 
-          {isHost &&
-            !(
-              gathering.status === "COMPLETED" ||
-              gathering.status === "CANCELED"
-            ) && (
-              <View style={styles.hostBox}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 10,
-                  }}
-                >
-                  <Ionicons
-                    name="settings-outline"
-                    size={16}
-                    color={Colors.text}
-                  />
-                  <Text style={styles.sectionTitle}>{t.management}</Text>
-                </View>
-
-                <View style={styles.hostButtonGroup}>
-                  {(gathering.status === "OPEN" ||
-                    gathering.status === "FULL") && (
-                    <>
-                      <TouchableOpacity
-                        style={[
-                          styles.hostBtn,
-                          { backgroundColor: Colors.green },
-                        ]}
-                        onPress={() =>
-                          Alert.alert(t.alerts.startTitle, t.alerts.startMsg, [
-                            { text: t.alerts.no },
-                            {
-                              text: t.alerts.yes,
-                              onPress: () => startGatheringMutate(id),
-                            },
-                          ])
-                        }
-                      >
-                        <Text
-                          style={[styles.hostBtnText, { color: Colors.card }]}
-                        >
-                          {t.start}
-                        </Text>
-                        <Ionicons
-                          name="happy-outline"
-                          size={21}
-                          color={Colors.card}
-                        />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[
-                          styles.hostBtn,
-                          { backgroundColor: Colors.red },
-                        ]}
-                        onPress={() =>
-                          Alert.alert(
-                            t.alerts.cancelTitle,
-                            t.alerts.cancelMsg,
-                            [
-                              { text: t.alerts.no },
-                              {
-                                text: t.alerts.yes,
-                                onPress: () => cancelGatheringMutate(id),
-                              },
-                            ],
-                          )
-                        }
-                      >
-                        <Text style={styles.hostBtnText}>{t.cancel}</Text>
-                        <Ionicons
-                          name="trash-outline"
-                          size={19}
-                          color={Colors.text}
-                        />
-                      </TouchableOpacity>
-                    </>
-                  )}
-
-                  {gathering.status === "IN_PROGRESS" && (
+              <View style={styles.hostButtonGroup}>
+                {(gathering.status === "OPEN" ||
+                  gathering.status === "FULL") && (
+                  <>
                     <TouchableOpacity
                       style={[
                         styles.hostBtn,
-                        { backgroundColor: Colors.orange },
+                        { backgroundColor: Colors.green },
                       ]}
                       onPress={() =>
-                        Alert.alert(t.alerts.finishTitle, t.alerts.finishMsg, [
+                        Alert.alert(t.alerts.startTitle, t.alerts.startMsg, [
                           { text: t.alerts.no },
                           {
                             text: t.alerts.yes,
-                            onPress: () => completeGatheringMutate(id),
+                            onPress: () => startGatheringMutate(id),
                           },
                         ])
                       }
                     >
-                      <Text style={styles.hostBtnText}>{t.finish}</Text>
+                      <Text
+                        style={[styles.hostBtnText, { color: Colors.card }]}
+                      >
+                        {t.start}
+                      </Text>
+                      <Ionicons
+                        name="happy-outline"
+                        size={21}
+                        color={Colors.card}
+                      />
                     </TouchableOpacity>
-                  )}
-                </View>
-              </View>
-            )}
-        </View>
 
-        <View style={styles.divider} />
+                    <TouchableOpacity
+                      style={[styles.hostBtn, { backgroundColor: Colors.red }]}
+                      onPress={() =>
+                        Alert.alert(t.alerts.cancelTitle, t.alerts.cancelMsg, [
+                          { text: t.alerts.no },
+                          {
+                            text: t.alerts.yes,
+                            onPress: () => cancelGatheringMutate(id),
+                          },
+                        ])
+                      }
+                    >
+                      <Text style={styles.hostBtnText}>{t.cancel}</Text>
+                      <Ionicons
+                        name="trash-outline"
+                        size={19}
+                        color={Colors.text}
+                      />
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {gathering.status === "IN_PROGRESS" && (
+                  <TouchableOpacity
+                    style={[styles.hostBtn, { backgroundColor: Colors.orange }]}
+                    onPress={() =>
+                      Alert.alert(t.alerts.finishTitle, t.alerts.finishMsg, [
+                        { text: t.alerts.no },
+                        {
+                          text: t.alerts.yes,
+                          onPress: () => completeGatheringMutate(id),
+                        },
+                      ])
+                    }
+                  >
+                    <Text style={styles.hostBtnText}>{t.finish}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          )}
+
+        <View style={[styles.divider, { marginTop: 20 }]} />
 
         <View
           style={{
@@ -764,6 +752,11 @@ export default function GatheringDetailScreen() {
                   onPress={() => applyMutate()}
                 >
                   <Text style={styles.applyButtonText}>{t.apply}</Text>
+                  <Ionicons
+                    name="happy-outline"
+                    size={21}
+                    color={Colors.card}
+                  />
                 </TouchableOpacity>
               )}
             </View>
@@ -907,7 +900,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.text },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: Colors.text,
+    fontStyle: "italic",
+  },
   content: { padding: 16, paddingBottom: 50, paddingTop: 20 },
   editIconButton: {
     flexDirection: "row",
@@ -944,13 +942,18 @@ const styles = StyleSheet.create({
   description: { fontSize: 15, color: Colors.gray, lineHeight: 22 },
   divider: { height: 1, backgroundColor: Colors.border, marginTop: 12 },
 
-  infoSection: { gap: 10 },
+  infoSection: {
+    gap: 10,
+    backgroundColor: Colors.card,
+    padding: 15,
+    borderRadius: 12,
+  },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   infoText: { fontSize: 14, color: Colors.text },
   highlightText: { color: Colors.green, fontWeight: "bold" },
 
   hostBox: {
-    backgroundColor: "#2C2C2E",
+    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 12,
     marginTop: 16,
@@ -1022,6 +1025,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   emptyText: {
+    textAlign: "center",
+    padding: 21,
+    backgroundColor: Colors.card,
+    borderRadius: 12,
     color: Colors.tabIconDefault,
     fontSize: 13,
     marginBottom: 12,
