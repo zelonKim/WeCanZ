@@ -9,7 +9,7 @@ export const handlePressDmRoom = (item: DirectChatRoom) => {
     oldRooms?.map((r) => (r.id === item.id ? { ...r, hasUnread: false } : r)),
   );
 
-  router.replace({
+  router.push({
     pathname: "/DM/[id]",
     params: {
       id: item.id,

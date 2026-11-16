@@ -59,12 +59,12 @@ export default function RootLayout() {
       const data = response.notification.request.content.data;
       if (data?.type === "CHAT" && data?.gatheringId) {
         lastHandledNotificationId.current = notificationId; // 처리됨 기록
-        router.replace(`/gathering/${data.gatheringId}/chat`);
+        router.push(`/gathering/${data.gatheringId}/chat`);
       }
 
       if (data?.type === "DM" && data?.roomId) {
         lastHandledNotificationId.current = notificationId; // 처리됨 기록
-        router.replace({
+        router.push({
           pathname: "/DM/[id]", // 💡 실제 id 대신 라우트 파일명 구조 그대로 작성
           params: {
             id: String(data.roomId), // 💡 동적 파라미터 id를 params 안으로 이동
@@ -87,13 +87,13 @@ export default function RootLayout() {
         if (data?.type === "CHAT" && data?.gatheringId) {
           lastHandledNotificationId.current = notificationId; // 처리됨 기록
           setTimeout(() => {
-            router.replace(`/gathering/${data.gatheringId}/chat`);
+            router.push(`/gathering/${data.gatheringId}/chat`);
           }, 0);
         }
 
         if (data?.type === "DM" && data?.roomId) {
           lastHandledNotificationId.current = notificationId; // 처리됨 기록
-          router.replace({
+          router.push({
             pathname: "/DM/[id]", // 💡 실제 id 대신 라우트 파일명 구조 그대로 작성
             params: {
               id: String(data.roomId), // 💡 동적 파라미터 id를 params 안으로 이동

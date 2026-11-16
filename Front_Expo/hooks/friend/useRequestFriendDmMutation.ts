@@ -1,8 +1,8 @@
-import { Alert } from "react-native";
+import { requestDM } from "@/api/DM/requestDM";
+import { User } from "@/types/user/User";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { User } from "@/types/user/User";
-import { requestDM } from "@/api/DM/requestDM";
+import { Alert } from "react-native";
 
 export const useRequestFriendDmMutation = (t: any) => {
   const router = useRouter();
@@ -20,7 +20,7 @@ export const useRequestFriendDmMutation = (t: any) => {
     },
     onSuccess: ({ roomData, friend }) => {
       const chatRoomId = roomData.id;
-      router.replace({
+      router.push({
         pathname: "/DM/[id]",
         params: {
           id: chatRoomId,

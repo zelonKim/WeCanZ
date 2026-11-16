@@ -11,7 +11,7 @@ export const useRejectFriendMutation = (t: any) => {
       queryClient.invalidateQueries({ queryKey: ["friend-requests-pending"] });
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || t.alerts.rejectFail);
+      alert(t.alerts.rejectFail);
     },
   });
 };

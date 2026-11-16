@@ -140,7 +140,7 @@ export default function LoginScreen() {
             <View style={styles.signupBox}>
               <Text style={styles.signupPrompt}>{t.signupPrompt}</Text>
 
-              <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
+              <TouchableOpacity onPress={() => router.push("/(auth)/signup")}>
                 <Text style={[styles.signupLinkText, { color: Colors.green }]}>
                   {t.signupLink}
                 </Text>

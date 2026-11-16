@@ -253,7 +253,6 @@ export default function DirectChatRoomScreen() {
         details: reportDetails.trim(),
       };
 
-      
       createReportMutate(createReportPayload);
     } catch (error: any) {
       const msg = error.response?.data?.message || t.alerts.reportUserNotFound;
@@ -352,7 +351,7 @@ export default function DirectChatRoomScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#121212" />
 
       <ChatHeader
-        onBack={() => router.back()}
+        onBack={() => router.replace("/dm")}
         title={partnerName}
         avatarUri={partnerImage}
         onAvatarPress={() => setIsMenuOpen(!isMenuOpen)}
@@ -508,8 +507,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   messageWrapper: {
-    marginVertical: 4,
-    maxWidth: "75%",
+    marginVertical: 8,
+    maxWidth: "85%",
   },
   myWrapper: {
     alignSelf: "flex-end",

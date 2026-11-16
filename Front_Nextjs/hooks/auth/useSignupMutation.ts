@@ -17,9 +17,8 @@ export const useSignupMutation = (t: any) => {
       }, 0);
     },
     onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message || t.alerts.defaultSignupError;
-      alert(errorMessage);
+      const errorMessage = error.response?.data?.message;
+      alert(t.alerts.defaultSignupError);
     },
   });
 };

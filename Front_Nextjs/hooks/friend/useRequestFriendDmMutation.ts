@@ -28,7 +28,7 @@ export const useRequestFriendDmMutation = (t: any) => {
       router.push(`/dm/${chatRoomId}?${queryString}`);
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || t.alerts.dmFail);
+      alert(t.alerts.dmFail);
     },
   });
 };

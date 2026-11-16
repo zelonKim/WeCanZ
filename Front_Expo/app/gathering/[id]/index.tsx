@@ -377,7 +377,7 @@ export default function GatheringDetailScreen() {
                 t.alerts.accessDeniedMsg,
               );
             }
-            router.replace(`/gathering/${id}/chat`);
+            router.push(`/gathering/${id}/chat`);
           }}
         >
           <Ionicons name="chatbubbles-outline" size={16} color={Colors.green} />
@@ -948,7 +948,12 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
   },
-  infoRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    maxWidth: 290,
+  },
   infoText: { fontSize: 14, color: Colors.text },
   highlightText: { color: Colors.green, fontWeight: "bold" },
 
@@ -1006,7 +1011,7 @@ const styles = StyleSheet.create({
   statsText: {
     color: Colors.tabIconDefault,
     fontSize: 12,
-    marginTop: 2,
+    marginTop: Platform.OS === "ios" ? 6 : 2,
   },
   actionBtnGroup: { flexDirection: "row", gap: 6 },
   btnPending: {

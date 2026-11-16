@@ -12,7 +12,7 @@ export const useUnblockUserMutation = (t: any) => {
       queryClient.invalidateQueries({ queryKey: ["my-friends"] });
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || t.alerts.unblockFail);
+      alert(t.alerts.unblockFail);
     },
   });
 };

@@ -20,7 +20,7 @@ export const MeetupItem = (item: Gathering, t: any, currentLang: string) => {
     <TouchableOpacity
       style={styles.card}
       activeOpacity={0.85}
-      onPress={() => router.replace(`/gathering/${item.id}`)}
+      onPress={() => router.push(`/gathering/${item.id}`)}
     >
       <View style={styles.cardHeader}>
         <View style={styles.headerLeftGroup}>

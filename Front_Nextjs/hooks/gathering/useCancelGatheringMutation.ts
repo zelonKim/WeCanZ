@@ -17,8 +17,8 @@ export const useCancelGatheringMutation = (
       }
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || t.alerts.gatheringCancelFail;
-      alert(Array.isArray(msg) ? msg[0] : msg);
+      const msg = err.response?.data?.message;
+      alert(t.alerts.gatheringCancelFail);
     },
   });
 };

@@ -380,7 +380,7 @@ export default function GatheringChatScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ChatHeader
-        onBack={() => router.replace(`/gathering/${id}`)}
+        onBack={() => router.push(`/gathering/${id}`)}
         title={gathering ? gathering.title : t.defaultTitle}
         subtitle={
           gathering
@@ -447,7 +447,7 @@ export default function GatheringChatScreen() {
                       msg={item}
                       onClose={handleCloseMenu}
                       onViewProfile={(userId) =>
-                        router.replace(`/profile/${userId}`)
+                        router.push(`/profile/${userId}`)
                       }
                       onSendFriendRequest={(userId) =>
                         sendFriendRequestMutate(userId)

@@ -46,7 +46,7 @@ export default function DoneGatheringsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.push("/joined")}
           style={styles.backButton}
           activeOpacity={0.7}
         >
@@ -100,7 +100,7 @@ export default function DoneGatheringsScreen() {
           <TouchableOpacity
             style={styles.card}
             activeOpacity={0.8}
-            onPress={() => router.replace(`/gathering/${item.id}`)}
+            onPress={() => router.push(`/gathering/${item.id}`)}
           >
             <Text style={styles.cardTitle} numberOfLines={1}>
               {item.title}

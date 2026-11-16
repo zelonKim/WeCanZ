@@ -17,8 +17,8 @@ export const useApproveParticipantMutation = (
       }
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || t.alerts.approveFail;
-      alert(Array.isArray(msg) ? msg[0] : msg);
+      const msg = err.response?.data?.message;
+      alert(t.alerts.approveFail);
     },
   });
 };
