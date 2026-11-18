@@ -1,7 +1,7 @@
 # 🌎 WeCanZ - We Can be Gen-Z
 
-> **Connect Beyond Borders, Live the Gen-Z Vibe**  
-> WeCanZ is a new kind of social meetup platform designed for Gen-Z to discover, host, and join local hangouts, cultural experiences, and spontaneous gatherings across the US, UK, and South Korea—breaking boundaries of nationality and age. By welcoming anyone young at heart who wants to experience the Gen-Z lifestyle, it bridges generations and brings people of all ages together.
+**Connect Beyond Borders, Live the Gen-Z Vibe**  
+WeCanZ is a new kind of social meetup platform designed for Gen-Z to discover, host, and join local hangouts, cultural experiences, and spontaneous gatherings across the US, UK, and South Korea—breaking boundaries of nationality and age. By welcoming anyone young at heart who wants to experience the Gen-Z lifestyle, it bridges generations and brings people of all ages together.
 
 ---
 
