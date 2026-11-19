@@ -15,8 +15,6 @@ import { CreateStoreDto, UpdateStoreDto } from './dto/store.dto';
 export class CommercialController {
   constructor(private readonly commercialService: CommercialService) {}
 
-  // ==================== STORE (가게 API) ====================
-
   @Post('stores')
   createStore(@Body() createStoreDto: CreateStoreDto) {
     return this.commercialService.createStore(createStoreDto);
@@ -42,14 +40,11 @@ export class CommercialController {
     return this.commercialService.removeStore(id);
   }
 
-  // ==================== AD (광고 API) ====================
-
   @Post('ads')
   createAd(@Body() createAdDto: CreateAdDto) {
     return this.commercialService.createAd(createAdDto);
   }
 
-  // 유저 앱 화면용 (현재 활성화된 광고만 조회)
   @Get('ads')
   findActiveAds() {
     return this.commercialService.findActiveAds();
@@ -75,7 +70,7 @@ export class CommercialController {
   clickAd(@Param('id') id: string) {
     return this.commercialService.incrementClickCount(id);
   }
-  // 어드민용 (모든 광고 목록 조회)
+  // 모든 광고 목록 조회
   @Get('ads/all')
   findAllAds() {
     return this.commercialService.findAllAds();

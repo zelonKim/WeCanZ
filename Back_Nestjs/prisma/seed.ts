@@ -11,14 +11,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 시드 데이터 생성을 시작합니다...');
 
-  // 기존 데이터 초기화 (외래키 제약조건 순서 고려)
+  // 기존 데이터 초기화 
   await prisma.participant.deleteMany();
   await prisma.gathering.deleteMany();
   await prisma.user.deleteMany();
 
   const password = 'password1234!';
 
-  // 1. 유저 9명 생성 (한국 3명, 미국 3명, 영국 3명)
+  // 1. 유저 9명 생성
   const usersData = [
     // 🇰🇷 한국 유저 3명
     {
@@ -143,7 +143,7 @@ async function main() {
     return date;
   };
 
-  // 2. 모임(Gathering) 9개 생성 (한국 3개, 미국 3개, 영국 3개)
+  // 2. 모임(Gathering) 9개 생성 
   const gatheringsData = [
     // 🇰🇷 한국 모임 (KR)
     {

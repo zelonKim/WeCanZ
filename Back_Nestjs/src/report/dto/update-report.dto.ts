@@ -4,5 +4,5 @@ import { ReportStatus } from '@prisma/client';
 export class UpdateReportStatusDto {
   @IsNotEmpty()
   @IsEnum(ReportStatus)
-  status: ReportStatus; // RESOLVED 혹은 DISMISSED
+  status!: ReportStatus; 
 }

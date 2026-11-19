@@ -1,10 +1,10 @@
 import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateStoreDto {
-  name: string;
-  address: string;
-  openTime: string;
-  closeTime: string;
+  name!: string;
+  address!: string;
+  openTime!: string;
+  closeTime!: string;
   imageUrl?: string;
 }
 

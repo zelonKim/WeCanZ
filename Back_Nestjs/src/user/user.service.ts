@@ -21,6 +21,7 @@ export class UserService {
     @Inject(R2_CLIENT) private readonly s3Client: S3Client,
   ) {}
 
+  // 1. 내 정보 조회
   async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -45,8 +46,9 @@ export class UserService {
     return user;
   }
 
-  ////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 2. 프로필 수정
   async updateProfile(userId: string, dto: UpdateUserDto) {
     const {
       nickname,
@@ -102,8 +104,9 @@ export class UserService {
       },
     });
   }
-  ////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 3. 회원 탈퇴
   async deleteAccount(userId: string) {
     await this.prisma.user.delete({
       where: { id: userId },
@@ -111,8 +114,9 @@ export class UserService {
     return { message: '회원 탈퇴가 완료되었습니다.' };
   }
 
-  ////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 4. 닉네임으로 유저 찾기
   async findByNickname(nickname: string) {
     const user = await this.prisma.user.findUnique({
       where: { nickname },
@@ -130,8 +134,9 @@ export class UserService {
     return user;
   }
 
-  ////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 5. 프로필 이미지 업로드
   async uploadProfileImage(
     userId: string,
     file: Express.Multer.File,
@@ -158,10 +163,11 @@ export class UserService {
     }
   }
 
-  ////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 6. 특정 유저 프로필 조회
   async getUserProfile(id: string) {
-    // 💡 숫자형 ID인 경우 Number(id)로 변환 필요 (UUID라면 그대로 id 사용)
+    // 숫자형 ID인 경우 Number(id)로 변환 필요
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -182,8 +188,9 @@ export class UserService {
     return user;
   }
 
-  /////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 7. 유저 푸시 토큰 저장
   async updatePushToken(userId: string, pushToken: string) {
     return this.prisma.user.updateMany({
       where: { id: userId },
@@ -191,8 +198,9 @@ export class UserService {
     });
   }
 
-  /////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
 
+  // 8. 유저 푸시 토큰 삭제
   async deletePushToken(userId: string) {
     await this.prisma.user.updateMany({
       where: { id: userId },

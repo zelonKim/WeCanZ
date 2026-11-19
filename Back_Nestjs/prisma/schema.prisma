@@ -19,7 +19,7 @@ model User {
   noShowCount  Int @default(0) // 노쇼 누적 횟수 
   yesShowCount Int @default(0) // 예스쇼 누적 횟수
 
-  provider String? // 예: 'KAKAO', 'NAVER', 'GOOGLE', 'LOCAL' 등
+  provider String? // 예: 'GOOGLE', 'APPLE', 'LOCAL' 등
   socialId String? // 소셜 서비스에서 제공하는 유저의 고유 ID
 
   createdAt DateTime @default(now())
@@ -45,10 +45,10 @@ model User {
   sentReports     Report[] @relation("ReportReporter")
   receivedReports Report[] @relation("ReportedUser")
 
-  @@unique([provider, socialId]) // 같은 소셜 계정으로 중복 가입 방지
+  @@unique([provider, socialId]) 
 }
 
-///////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
 
 enum GatheringCategory {
   US // 미국
@@ -88,7 +88,7 @@ model Gathering {
   gatheringChatRooms GatheringChatRoom[]
 }
 
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 enum ParticipantStatus {
   PENDING // 승인 대기 중 
@@ -101,7 +101,7 @@ enum ParticipantStatus {
 // 참여자 모델
 model Participant {
   id       String            @id @default(uuid())
-  status   ParticipantStatus @default(PENDING) // 기본값은 대기 중
+  status   ParticipantStatus @default(PENDING) 
   joinedAt DateTime?
   userId   String
   user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -111,10 +111,10 @@ model Participant {
   gatheringChatMessages GatheringChatMessage[]
   lastReadAt            DateTime               @default(now())
 
-  @@unique([userId, gatheringId]) // 한 모임에 중복 신청 방지
+  @@unique([userId, gatheringId]) 
 }
 
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 
 // 모임 채팅방 모델
 model GatheringChatRoom {
@@ -175,7 +175,7 @@ model Friendship {
 ///////////////////////////////////////////////////////////////
 
 enum DirectChatRoomStatus {
-  PENDING // 대화 신청 대기 중 
+  PENDING // 대화 신청 대기중 
   ACCEPTED // 대화 수락됨 
   REJECTED // 대화 거절됨
 }
@@ -213,7 +213,7 @@ model DirectChatMessage {
   sender   User?   @relation("DirectChatMessages", fields: [senderId], references: [id], onDelete: SetNull)
 }
 
-///////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 
 enum ReportReason {
   SPAM // 불법 광고 및 도배
@@ -229,7 +229,7 @@ enum ReportStatus {
   DISMISSED // 무효 기각 
 }
 
-// 신고하기 모델 (신고자가 탈퇴하더라도 신고 내역은 관리자가 볼 수 있게 SetNull 처리)
+// 신고하기 모델 
 model Report {
   id String @id @default(uuid())
 
@@ -251,7 +251,8 @@ model Report {
   @@index([reportedUserId])
 }
 
-//////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+
 
 model Store {
   id        String  @id @default(uuid())
@@ -266,7 +267,6 @@ model Store {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 model Ad {
   id      String @id @default(uuid())

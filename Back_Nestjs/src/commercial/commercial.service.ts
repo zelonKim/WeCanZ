@@ -7,8 +7,6 @@ import { CreateAdDto, UpdateAdDto } from './dto/ad.dto';
 export class CommercialService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // ==================== STORE SERVICE ====================
-
   async createStore(dto: CreateStoreDto) {
     return await this.prisma.store.create({
       data: {
@@ -21,6 +19,8 @@ export class CommercialService {
     });
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async findAllStores() {
     return await this.prisma.store.findMany({
       include: {
@@ -29,6 +29,8 @@ export class CommercialService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   async findOneStore(id: string) {
     const store = await this.prisma.store.findUnique({
@@ -41,6 +43,8 @@ export class CommercialService {
     return store;
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async updateStore(id: string, dto: UpdateStoreDto) {
     await this.findOneStore(id);
     return this.prisma.store.update({
@@ -49,6 +53,8 @@ export class CommercialService {
     });
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async removeStore(id: string) {
     await this.findOneStore(id);
     return this.prisma.store.delete({
@@ -56,7 +62,7 @@ export class CommercialService {
     });
   }
 
-  // ==================== AD SERVICE ====================
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   async createAd(dto: CreateAdDto) {
     await this.findOneStore(dto.storeId);
@@ -70,7 +76,8 @@ export class CommercialService {
     });
   }
 
-  // 어드민 관리용 전체 광고 조회
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async findAllAds() {
     return await this.prisma.ad.findMany({
       include: { store: true },
@@ -78,7 +85,8 @@ export class CommercialService {
     });
   }
 
-  // 앱 화면 제공용
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async findActiveAds() {
     const now = new Date();
     return await this.prisma.ad.findMany({
@@ -92,6 +100,8 @@ export class CommercialService {
     });
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async findOneAd(id: string) {
     const ad = await this.prisma.ad.findUnique({
       where: { id },
@@ -102,6 +112,8 @@ export class CommercialService {
     }
     return ad;
   }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   async updateAd(id: string, dto: UpdateAdDto) {
     await this.findOneAd(id);
@@ -115,12 +127,16 @@ export class CommercialService {
     });
   }
 
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+
   async removeAd(id: string) {
     await this.findOneAd(id);
     return this.prisma.ad.delete({
       where: { id },
     });
   }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   async incrementClickCount(id: string) {
     return await this.prisma.ad.update({

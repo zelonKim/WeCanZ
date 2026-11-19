@@ -10,6 +10,7 @@ import { CreateGatheringDto } from './dto/create-gathering.dto';
 import { UpdateGatheringDto } from './dto/update-gathering.dto';
 import { GatheringStatus, ParticipantStatus } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { generateUniqueRoomCode } from 'utils/generateUniqueRoomCode';
 
 @Injectable()
 export class GatheringService {
@@ -17,57 +18,39 @@ export class GatheringService {
 
   private readonly logger = new Logger(GatheringService.name);
 
-  private generateRandomCode(): string {
-    const chars = 'abcdefghijklmnopqrstuvwxyz';
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  }
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async autoCompleteExpiredGatherings() {
+    try {
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12시간이 경과한 모임
 
-  private async generateUniqueRoomCode(tx: any): Promise<string> {
-    while (true) {
-      const code = this.generateRandomCode();
-
-      // DB에 해당 코드가 이미 존재하는지 확인
-      const existing = await tx.gathering.findUnique({
-        where: { roomCode: code },
+      const result = await this.prisma.gathering.updateMany({
+        where: {
+          status: {
+            notIn: [GatheringStatus.COMPLETED, GatheringStatus.CANCELED],
+          },
+          dateTime: {
+            lte: twelveHoursAgo,
+          },
+        },
+        data: {
+          status: GatheringStatus.COMPLETED,
+          roomCode: null,
+        },
       });
 
-      // 중복이 없다면 해당 코드 반환
-      if (!existing) {
-        return code;
+      if (result.count > 0) {
+        this.logger.log(
+          `[Auto-Close] 12시간 이상 경과한 모임 ${result.count}개가 COMPLETED 처리되었습니다.`,
+        );
       }
-    }
-  }
-
-  @Cron(CronExpression.EVERY_10_MINUTES) // 10분마다 실행
-  async autoCompleteExpiredGatherings() {
-    // 12시간이 경과한 모임
-    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-
-    const result = await this.prisma.gathering.updateMany({
-      where: {
-        status: {
-          notIn: [GatheringStatus.COMPLETED, GatheringStatus.CANCELED],
-        },
-        dateTime: {
-          lte: twelveHoursAgo,
-        },
-      },
-      data: {
-        status: GatheringStatus.COMPLETED,
-        roomCode: null, // 기존 completeGathering과 동일하게 초대코드 초기화
-      },
-    });
-
-    if (result.count > 0) {
-      this.logger.log(
-        `[Auto-Close] 12시간 이상 경과한 모임 ${result.count}개가 COMPLETED 처리되었습니다.`,
+    } catch (err) {
+      this.logger.error(
+        '만료된 모임 자동 마감 처리 중 에러가 발생했습니다:',
+        err,
       );
     }
   }
+  ////////////////////////////////////////////////////////////////////////////////////////////////
 
   // 1. 모임 생성
   async createGathering(
@@ -75,7 +58,7 @@ export class GatheringService {
     createGatheringDto: CreateGatheringDto,
   ) {
     return await this.prisma.$transaction(async (tx) => {
-      const roomCode = await this.generateUniqueRoomCode(tx);
+      const roomCode = await generateUniqueRoomCode(tx);
 
       const gathering = await tx.gathering.create({
         data: {
@@ -107,10 +90,9 @@ export class GatheringService {
   }
   //////////////////////////////////////////////////////////////////
 
-  // 2. 전체 모임 목록 조회 
+  // 2. 전체 모임 목록 조회
   async findAllGathering() {
     const [activeGatherings, completedGatherings] = await Promise.all([
-      // 1) 모집 중 / 인원 마감 / 진행 중인 모임 
       this.prisma.gathering.findMany({
         where: {
           status: {
@@ -129,7 +111,6 @@ export class GatheringService {
         },
       }),
 
-      // 2) 최근 종료된 모임 
       this.prisma.gathering.findMany({
         where: {
           status: GatheringStatus.COMPLETED,
@@ -144,7 +125,6 @@ export class GatheringService {
       }),
     ]);
 
-    // 두 배열을 하나로 합쳐서 기존처럼 1차원 배열로 반환
     return [...activeGatherings, ...completedGatherings];
   }
 
@@ -155,9 +135,8 @@ export class GatheringService {
     return await this.prisma.gathering.findMany({
       where: {
         OR: [
-          // 1. 내가 방장인 모임
           { hostId: userId },
-          // 2. 내가 참여 신청했거나 참여 중인 모임
+
           {
             participants: {
               some: {
@@ -175,7 +154,6 @@ export class GatheringService {
         ],
       },
       include: {
-        // 프런트엔드 뱃지 처리를 위한 참여자 정보 포함
         participants: {
           select: {
             userId: true,
@@ -191,7 +169,7 @@ export class GatheringService {
         },
       },
       orderBy: {
-        createdAt: 'desc', // 최신순 정렬
+        createdAt: 'desc',
       },
     });
   }
@@ -256,7 +234,7 @@ export class GatheringService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      // 1. 현재 APPROVED 상태인 참가자 수 조회
+      // 현재 APPROVED 상태인 참가자 수 조회
       const approvedCount = await tx.participant.count({
         where: {
           gatheringId: id,
@@ -264,7 +242,7 @@ export class GatheringService {
         },
       });
 
-      // 2. 수정하려는 maxPeople 값 확인 (전달받은 값이 없으면 기존 maxPeople 유지)
+      // 수정하려는 maxPeople 값 확인
       const newMaxPeople = updateGatheringDto.maxPeople ?? gathering.maxPeople;
 
       // 예외 처리: 현재 승인된 인원보다 최대 인원을 더 적게 줄이려고 하는 경우 방지
@@ -274,7 +252,7 @@ export class GatheringService {
         );
       }
 
-      // 3. 인원 수에 따른 GatheringStatus 계산
+      // 인원 수에 따른 GatheringStatus 계산
       let newStatus = gathering.status;
 
       // 모임이 이미 마감(COMPLETED)되거나 취소(CANCELLED)된 상태가 아닐 때만 인원에 따라 OPEN/FULL 변경
@@ -288,7 +266,7 @@ export class GatheringService {
             : GatheringStatus.OPEN;
       }
 
-      // 4. 모임 정보 및 status 업데이트
+      // 모임 정보 및 status 업데이트
       return await tx.gathering.update({
         where: { id },
         data: {
@@ -301,9 +279,9 @@ export class GatheringService {
 
   //////////////////////////////////////////////////////////////////
 
-  // 6. 모임 시작 (진행)
+  // 6. 모임 시작 
   async startGathering(gatheringId: string, userId: string) {
-    // 1. 모임 존재 여부 확인
+    // 모임 존재 여부 확인
     const gathering = await this.prisma.gathering.findUnique({
       where: { id: gatheringId },
     });
@@ -312,12 +290,12 @@ export class GatheringService {
       throw new NotFoundException('존재하지 않는 모임입니다.');
     }
 
-    // 2. 방장 권한 확인
+    // 방장 권한 확인
     if (gathering.hostId !== userId) {
       throw new ForbiddenException('모임을 시작할 권한이 없습니다.');
     }
 
-    // 3. 상태별 예외 처리
+    // 상태별 예외 처리
     if (gathering.status === GatheringStatus.IN_PROGRESS) {
       throw new BadRequestException('이미 진행 중인 모임입니다.');
     }
@@ -330,9 +308,8 @@ export class GatheringService {
       throw new BadRequestException('취소된 모임은 시작할 수 없습니다.');
     }
 
-    // 4. 트랜잭션으로 대기자 정리 & 상태 변경 원자적(Atomic) 처리
+    // 트랜잭션으로 대기자 정리 & 상태 변경 원자적(Atomic) 처리
     return await this.prisma.$transaction(async (tx) => {
-      // (A) 승인 대기 중(PENDING)인 참가자 일괄 삭제
       await tx.participant.deleteMany({
         where: {
           gatheringId,
@@ -340,7 +317,7 @@ export class GatheringService {
         },
       });
 
-      // (B) 모임 상태를 IN_PROGRESS로 변경
+      // 모임 상태를 IN_PROGRESS로 변경
       const updatedGathering = await tx.gathering.update({
         where: { id: gatheringId },
         data: { status: GatheringStatus.IN_PROGRESS },
@@ -442,11 +419,11 @@ export class GatheringService {
     return gathering;
   }
 
-  /////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////
 
-  // 유저의 안 읽은 모임 ID 목록 조회
+  // 10. 유저의 안 읽은 모임 ID 목록 조회
   async getUnreadGatheringIds(userId: string): Promise<string[]> {
-    // 1. 유저가 참가를 승인받았거나 참석 확정된 Participant 목록 조회
+    // 유저가 참가를 승인받았거나 참석 확정된 Participant 목록 조회
     const myParticipants = await this.prisma.participant.findMany({
       where: {
         userId,
@@ -460,8 +437,7 @@ export class GatheringService {
 
     if (myParticipants.length === 0) return [];
 
-    // 2. OR 조건으로 안 읽은 메시지가 존재하는 모임 찾기
-    // (내가 보낸 메시지 제외, 내 lastReadAt 이후 생성된 메시지)
+    // OR 조건으로 안 읽은 메시지가 존재하는 모임 찾기
     const unreadGatherings = await this.prisma.gathering.findMany({
       where: {
         OR: myParticipants.map((p) => ({
@@ -481,7 +457,7 @@ export class GatheringService {
       select: { id: true },
     });
 
-    // 3. 모임 ID 배열만 뽑아서 반환
+    // 모임 ID 배열만 뽑아서 반환
     return unreadGatherings.map((g) => g.id);
   }
 }

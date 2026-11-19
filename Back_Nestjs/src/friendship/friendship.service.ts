@@ -131,9 +131,9 @@ export class FriendshipService {
   //////////////////////////////////////////////////////////////
 
   // 4. 내 친구 목록 조회
-  // 백엔드: getMyFriends
+
   async getMyFriends(userId: string) {
-    // 1. 내가 차단(BLOCKED)한 유저 ID 목록을 먼저 조회
+    // 내가 차단(BLOCKED)한 유저 ID 목록을 먼저 조회
     const blockedFriendships = await this.prisma.friendship.findMany({
       where: {
         senderId: userId,
@@ -144,7 +144,7 @@ export class FriendshipService {
 
     const blockedUserIds = blockedFriendships.map((b) => b.receiverId);
 
-    // 2. 차단한 유저(blockedUserIds)를 제외하고 ACCEPTED 친구 관계 조회
+    // 차단한 유저(blockedUserIds)를 제외하고 ACCEPTED 친구 관계 조회
     const friendships = await this.prisma.friendship.findMany({
       where: {
         status: FriendshipStatus.ACCEPTED,
@@ -236,7 +236,7 @@ export class FriendshipService {
 
   // 7. 친구 차단 해제
   async unblockFriend(targetUserId: string, userId: string) {
-    // 1. 오직 '내가(userId) 상대방을(targetUserId)' 차단한 레코드만 정확히 찾기
+    // 오직 '내가(userId) 상대방을(targetUserId)' 차단한 레코드만 정확히 찾기
     const myBlockRecord = await this.prisma.friendship.findFirst({
       where: {
         senderId: userId,
@@ -251,8 +251,7 @@ export class FriendshipService {
       );
     }
 
-    // 2. 상대방이 나를 차단한 레코드(senderId: targetUserId, receiverId: userId)는 절대 건드리지 않고,
-    // 오직 내가 생성한 차단 레코드만 삭제하여 원점(요청 전 상태)으로 돌립니다.
+    // 상대방이 나를 차단한 레코드(senderId: targetUserId, receiverId: userId)는 절대 건드리지 않고,
     return await this.prisma.friendship.delete({
       where: { id: myBlockRecord.id },
     });

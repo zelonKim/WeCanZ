@@ -11,26 +11,27 @@ import { DirectChatService } from './direct-chat.service';
 import { GatheringChatService } from './gathering-chat.service';
 import { FriendshipStatus } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
-import Expo from 'expo-server-sdk';
+import { GatheringPushService } from './gathering-push.service';
+import { DirectPushService } from './direct-push.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
-  private expo = new Expo();
-
-  // 💡 1. 유저 접속 상태를 관리할 Map (Key: userId, Value: gatheringId)
   private activeUserGC = new Map<string, string>();
   private activeUserDM = new Map<string, string>();
 
   constructor(
     private readonly gatheringChatService: GatheringChatService,
     private readonly directChatService: DirectChatService,
+    private readonly gatheringPushService: GatheringPushService,
+    private readonly directPushService: DirectPushService,
     private readonly prisma: PrismaService,
   ) {}
 
-  // 💡 2. 외부 및 내부에서 호출 가능한 방 접속 상태 확인 메서드
+  ///////////////////////////////////////////////////////////////////////////
+
   isUserInGatheringRoom(userId: string, roomId: string): boolean {
     return this.activeUserGC.get(userId) === roomId;
   }
@@ -39,7 +40,8 @@ export class ChatGateway implements OnGatewayDisconnect {
     return this.activeUserDM.get(userId) === roomId;
   }
 
-  // 소켓 연결 해제 시 Map 정리
+  ///////////////////////////////////////////////////////////////////////////
+
   handleDisconnect(client: Socket) {
     const GCuserId = client.data?.userGCId;
     const DMuserId = client.data?.userDMId;
@@ -53,6 +55,8 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
+  ///////////////////////////////////////////////////////////////////////////
+
   @SubscribeMessage('joinGatheringRoom')
   handleJoinRoom(
     @ConnectedSocket() client: Socket,
@@ -60,7 +64,7 @@ export class ChatGateway implements OnGatewayDisconnect {
   ) {
     client.join(`gathering_${data.gatheringId}`);
 
-    // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
+    // 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
       client.data.GCuserId = data.userId;
       this.activeUserGC.set(data.userId, data.gatheringId);
@@ -69,20 +73,24 @@ export class ChatGateway implements OnGatewayDisconnect {
     return { event: 'joinedRoom', gatheringId: data.gatheringId };
   }
 
+  ///////////////////////////////////////////////////////////////////////////
+
   @SubscribeMessage('leaveGatheringRoom')
   handleLeaveRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { gatheringId: string; userId: string }, // 💡 userId 추가
+    @MessageBody() data: { gatheringId: string; userId: string },
   ) {
     client.leave(`gathering_${data.gatheringId}`);
 
-    // 💡 Map에서 유저 접속 상태 제거
+    // Map에서 유저 접속 상태 제거
     if (data.userId) {
       this.activeUserGC.delete(data.userId);
     }
 
     return { event: 'leftRoom', gatheringId: data.gatheringId };
   }
+
+  ///////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('sendGatheringMessage')
   async handleSendMessage(
@@ -108,78 +116,19 @@ export class ChatGateway implements OnGatewayDisconnect {
         gatheringId: data.gatheringId,
       });
 
-    this.sendGatheringPushNoti(
-      data.gatheringId,
-      data.userId,
-      data.message,
-    ).catch((err) => console.error('푸시 알림 전송 에러:', err));
+    this.gatheringPushService
+      .sendGatheringPushNoti(
+        data.gatheringId,
+        data.userId,
+        data.message,
+        (userId, gId) => this.isUserInGatheringRoom(userId, gId),
+      )
+      .catch((err) => console.error('푸시 알림 전송 에러:', err));
 
     return savedMessage;
   }
 
-  ///////////////////////////////////////////
-
-  private async sendGatheringPushNoti(
-    gatheringId: string,
-    senderId: string,
-    message: string,
-  ) {
-    const targetUsers = await this.gatheringChatService.getUsersPushTokens(
-      gatheringId,
-      senderId,
-    );
-
-    const pushMessages: any[] = [];
-
-    for (const user of targetUsers) {
-      console.log(
-        `[푸시 대상 검사] Target User ID: ${user.userId}, Token: ${user.pushToken}`,
-      );
-
-      if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
-        continue;
-      }
-
-      const isUserActiveInRoom = this.isUserInGatheringRoom(
-        user.userId,
-        gatheringId,
-      );
-
-      console.log(
-        `[방 접속 여부] User: ${user.userId}, Active: ${isUserActiveInRoom}`,
-      );
-
-      if (isUserActiveInRoom) {
-        continue;
-      }
-
-      pushMessages.push({
-        to: user.pushToken,
-        sound: 'default' as const,
-        title: '새로운 채팅',
-        body: message,
-        priority: 'high',
-        channelId: 'default',
-        data: { gatheringId, type: 'CHAT' },
-        android: {
-          channelId: 'default',
-          priority: 'high',
-          sound: true,
-          vibrate: true,
-        },
-      });
-    }
-
-    const chunks = this.expo.chunkPushNotifications(pushMessages);
-
-    for (const chunk of chunks) {
-      try {
-        await this.expo.sendPushNotificationsAsync(chunk);
-      } catch (error) {
-        console.error('Expo 푸시 전송 실패:', error);
-      }
-    }
-  }
+  ///////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('deleteGatheringMessage')
   async handleDeleteMessage(
@@ -206,7 +155,7 @@ export class ChatGateway implements OnGatewayDisconnect {
   ) {
     client.join(`direct_${data.roomId}`);
 
-    // 💡 소켓 객체 및 Map에 유저 접속 상태 등록
+    // 소켓 객체 및 Map에 유저 접속 상태 등록
     if (data.userId) {
       client.data.DMuserId = data.userId;
       this.activeUserDM.set(data.userId, data.roomId);
@@ -214,6 +163,8 @@ export class ChatGateway implements OnGatewayDisconnect {
 
     return { event: 'joinedDirectRoom', roomId: data.roomId };
   }
+
+  ///////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('leaveDirectRoom')
   handleLeaveDirectRoom(
@@ -229,9 +180,8 @@ export class ChatGateway implements OnGatewayDisconnect {
     return { event: 'leftDirectRoom', roomId: data.roomId };
   }
 
-  ////////////////////
+  ///////////////////////////////////////////////////////////////////////////
 
-  // 💡 [추가] 유저 개인 룸 입장 (DM 목록 실시간 업데이트 수신용)
   @SubscribeMessage('joinUserRoom')
   handleJoinUserRoom(
     @ConnectedSocket() client: Socket,
@@ -246,7 +196,8 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
-  // 💡 [추가] 유저 개인 룸 퇴장
+  ///////////////////////////////////////////////////////////////////////////
+
   @SubscribeMessage('leaveUserRoom')
   handleLeaveUserRoom(
     @ConnectedSocket() client: Socket,
@@ -258,7 +209,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
-  ////////////////////
+  ///////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('sendDirectMessage')
   async handleSendDirectMessage(
@@ -271,7 +222,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     },
   ) {
     try {
-      // 1. 방 정보 조회 및 상대방(수신자) ID 판별
+      //  방 정보 조회 및 상대방(수신자) ID 판별
       const room = await this.directChatService.getRoomById(data.roomId);
       if (!room) return;
 
@@ -282,16 +233,16 @@ export class ChatGateway implements OnGatewayDisconnect {
         return;
       }
 
-      // 2. 상대방(receiver)이 나(sender)를 차단했는지 확인
+      // 상대방(receiver)이 나(sender)를 차단했는지 확인
       const isBlockedByReceiver = await this.prisma.friendship.findFirst({
         where: {
-          senderId: receiverId, // 상대방이
-          receiverId: data.senderId, // 나를 차단함
+          senderId: receiverId,
+          receiverId: data.senderId,
           status: FriendshipStatus.BLOCKED,
         },
       });
 
-      // 🚨 3. 상대방이 나를 차단한 경우: 가짜 성공 응답 처리 (DB 저장 X, 상대방 알림 X)
+      //  상대방이 나를 차단한 경우: 가짜 성공 응답 처리
       if (isBlockedByReceiver) {
         const fakeSavedMessage = {
           id: `temp-${Date.now()}`,
@@ -319,7 +270,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         return fakeSavedMessage;
       }
 
-      // 4. 차단되지 않은 경우: 정상 로직 수행 (DB 저장 및 전체 방송)
+      // 차단되지 않은 경우: 정상 로직 수행 (DB 저장 및 전체 방송)
       const savedMessage = await this.directChatService.createMessage(
         data.roomId,
         data.senderId,
@@ -348,9 +299,14 @@ export class ChatGateway implements OnGatewayDisconnect {
         .to(`user_${data.senderId}`)
         .emit('dmListUpdated', updatePayload);
 
-      this.sendDMPushNoti(data.roomId, data.senderId, data.message).catch(
-        (err) => console.error('푸시 알림 전송 에러:', err),
-      );
+      this.directPushService
+        .sendDMPushNoti(
+          data.roomId,
+          data.senderId,
+          data.message,
+          (userId, rId) => this.isUserInDirectRoom(userId, rId),
+        )
+        .catch((err) => console.error('DM 푸시 알림 전송 에러:', err));
 
       return savedMessage;
     } catch (error) {
@@ -359,69 +315,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     }
   }
 
-  ///////////////////////////
-
-  private async sendDMPushNoti(
-    roomId: string,
-    senderId: string,
-    message: string,
-  ) {
-    const sender = await this.prisma.user.findUnique({
-      where: { id: senderId },
-      select: { nickname: true, profileImage: true },
-    });
-
-    const targetUsers = await this.directChatService.getUsersPushTokens(
-      roomId,
-      senderId,
-    );
-
-    const pushMessages: any[] = [];
-
-    for (const user of targetUsers) {
-      if (!user.pushToken || !Expo.isExpoPushToken(user.pushToken)) {
-        continue;
-      }
-
-      const isUserActiveInRoom = this.isUserInDirectRoom(user.userId, roomId);
-
-      if (isUserActiveInRoom) {
-        continue;
-      }
-
-      pushMessages.push({
-        to: user.pushToken,
-        sound: 'default' as const,
-        title: '새로운 DM',
-        body: message,
-        priority: 'high',
-        channelId: 'default',
-        data: {
-          roomId,
-          type: 'DM',
-          nickname: sender?.nickname ?? '',
-          profileImage: sender?.profileImage ?? '',
-        },
-        android: {
-          channelId: 'default',
-          priority: 'high',
-          sound: true,
-          vibrate: true,
-        },
-      });
-
-      const chunks = this.expo.chunkPushNotifications(pushMessages);
-
-      for (const chunk of chunks) {
-        try {
-          await this.expo.sendPushNotificationsAsync(chunk);
-        } catch (error) {
-          console.error('Expo DM 푸시 전송 실패:', error);
-        }
-      }
-    }
-  }
-  ///////////////////////////
+  ///////////////////////////////////////////////////////////////////////////
 
   @SubscribeMessage('deleteDirectMessage')
   async handleDeleteDirectMessage(
@@ -433,7 +327,7 @@ export class ChatGateway implements OnGatewayDisconnect {
     },
   ) {
     try {
-      // 1. 방 정보 조회 및 상대방(수신자) ID 판별
+      // 방 정보 조회 및 상대방(수신자) ID 판별
       const room = await this.directChatService.getRoomById(data.roomId);
       if (!room) return;
 
@@ -444,7 +338,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         return;
       }
 
-      // 2. 양방향 차단 여부 확인 (내가 상대를 차단했거나 OR 상대가 나를 차단했거나)
+      // 양방향 차단 여부 확인
       const isBlockedRelation = await this.prisma.friendship.findFirst({
         where: {
           OR: [
@@ -466,18 +360,17 @@ export class ChatGateway implements OnGatewayDisconnect {
         return;
       }
 
-      // 3. DB 삭제 완료를 반드시 기다림 (await 필수)
+      //  DB 삭제 완료를 반드시 기다림
       await this.directChatService.deleteMessage(data.messageId, data.userId);
 
-      // 4. 대화방 내부 삭제 이벤트 통보
+      //  대화방 내부 삭제 이벤트 통보
       this.server
         .to(`direct_${data.roomId}`)
         .emit('directMessageDeleted', { messageId: data.messageId });
 
-      // 5. 삭제 완료 후 최신 메시지 다시 조회
+      // 삭제 완료 후 최신 메시지 다시 조회
       const lastMsg = await this.directChatService.getLastMessage(data.roomId);
 
-      // 6. payload 생성 (content 키값 맞춤)
       const lastMessagePayload = lastMsg
         ? { content: lastMsg.message, createdAt: lastMsg.createdAt }
         : {
@@ -491,7 +384,7 @@ export class ChatGateway implements OnGatewayDisconnect {
         senderId: data.userId,
       };
 
-      // 7. 방 참여자들에게 DM 목록 업데이트 전송
+      // 방 참여자들에게 DM 목록 업데이트 전송
       this.server
         .to(`user_${room.user1Id}`)
         .emit('dmListUpdated', dmListPayload);

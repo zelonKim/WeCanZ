@@ -89,7 +89,7 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 2. 참여자 승인 (방장 전용)
+  // 2-1. 참여자 승인 (방장 전용)
   async approveParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -119,7 +119,7 @@ export class ParticipantService {
         );
       }
 
-      // 1) 대상 참여자 승인 처리
+      // 대상 참여자 승인 처리
       const updatedParticipant = await tx.participant.update({
         where: { id: participantId },
         data: {
@@ -128,7 +128,7 @@ export class ParticipantService {
         },
       });
 
-      // 2) 이번 승인으로 정원이 찼는지 확인 후 모임 상태 변경 (FULL)
+      // 이번 승인으로 정원이 찼는지 확인 후 모임 상태 변경 (FULL)
       const newApprovedCount = approvedCount + 1;
       if (newApprovedCount >= participant.gathering.maxPeople) {
         await tx.gathering.update({
@@ -143,7 +143,7 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 3. 참여자 대기 처리 (방장 전용)
+  // 2-2. 참여자 대기 처리 (방장 전용)
   async pendingParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -159,13 +159,13 @@ export class ParticipantService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      // 1) 대상 참여자 PENDING 처리
+      // 대상 참여자 PENDING 처리
       const updatedParticipant = await tx.participant.update({
         where: { id: participantId },
         data: { status: ParticipantStatus.PENDING },
       });
 
-      // 2) APPROVED 인원 재계산 후 정원 미만이면 모임 상태 변경 (OPEN)
+      // APPROVED 인원 재계산 후 정원 미만이면 모임 상태 변경 (OPEN)
       const approvedCount = await tx.participant.count({
         where: {
           gatheringId: participant.gatheringId,
@@ -186,7 +186,7 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 4. 참여자 강퇴 (방장 전용)
+  // 3. 참여자 강퇴 (방장 전용)
   async banParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -228,7 +228,7 @@ export class ParticipantService {
   }
   ////////////////////////////////////////////////////////////////
 
-  // 5. 노쇼 처리 (방장 전용)
+  // 4. 노쇼 처리 (방장 전용)
   async noShowParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -267,7 +267,7 @@ export class ParticipantService {
 
   ////////////////////////////////////////////////////////////////
 
-  // 6. 예스쇼 처리 (방장 전용)
+  // 5. 예스쇼 처리 (방장 전용)
   async yesShowParticipant(participantId: string, hostId: string) {
     const participant = await this.prisma.participant.findUnique({
       where: { id: participantId },
@@ -305,7 +305,7 @@ export class ParticipantService {
 
   ///////////////////////////////////////////////////
 
-  // 채팅방 읽음 처리
+  // 6. 채팅방 읽음 처리
   async updateLastRead(userId: string, gatheringId: string) {
     try {
       return await this.prisma.participant.update({

@@ -12,10 +12,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { UserService } from './user.service'; // 같은 user 폴더 안에 있다면!
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // auth 모듈 경로에 맞게 수정!
-import { GetUser } from '../auth/decorators/get-user.decorator'; // 커스텀 데코레이터 경로에 맞게!
-import type { User } from '@prisma/client'; // 또는 유저 타입 경로에 맞게!
+import { UserService } from './user.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; 
+import { GetUser } from '../auth/decorators/get-user.decorator'; 
+import type { User } from '@prisma/client'; 
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Express } from 'express';
@@ -26,7 +26,7 @@ import 'multer';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  //1. 내 정보 조회
+  // 1. 내 정보 조회
   @Get('me')
   getMe(@GetUser() user: User) {
     return this.userService.getMe(user.id);
@@ -77,7 +77,7 @@ export class UserController {
     return await this.userService.getUserProfile(id);
   }
 
-  // 유저 푸시 토큰 저장
+  // 7. 유저 푸시 토큰 저장
   @Patch('push-token')
   async updatePushToken(
     @GetUser() user: User,
@@ -86,7 +86,7 @@ export class UserController {
     return this.userService.updatePushToken(user.id, pushToken);
   }
 
-  // 유저 푸시 토큰 삭제
+  // 8. 유저 푸시 토큰 삭제
   @Delete('push-token')
   async deletePushToken(@GetUser() user: User) {
     return await this.userService.deletePushToken(user.id);

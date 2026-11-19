@@ -44,7 +44,7 @@ export class ParticipantController {
     return this.participantService.approveParticipant(participantId, user.id);
   }
 
-  // 2-2. 참여자 대기 (방장 전용))
+  // 2-2. 참여자 대기 (방장 전용)
   @Patch(':participantId/pending')
   pendingParticipant(
     @Param('participantId') participantId: string,
@@ -80,7 +80,7 @@ export class ParticipantController {
     return this.participantService.yesShowParticipant(participantId, user.id);
   }
 
-  // 채팅방 읽음 처리
+  // 6. 채팅방 읽음 처리
   @Patch('read/:gatheringId')
   async updateLastRead(
     @GetUser() user: User,

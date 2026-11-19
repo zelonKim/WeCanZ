@@ -175,6 +175,7 @@ export default function GatheringChatScreen() {
           return [...oldMessages, newMessage];
         },
       );
+      scrollToBottom();
     };
 
     const handleDeletedMessage = ({ messageId }: { messageId: string }) => {
