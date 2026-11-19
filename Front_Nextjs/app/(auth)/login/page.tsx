@@ -11,6 +11,7 @@ import { useLoginLanguage } from "@/hooks/Languages/useLoginLanguage";
 import { useEmailLoginMutation } from "@/hooks/auth/useEmailLoginMutation";
 import { useSocialLoginMutation } from "@/hooks/auth/useSocialLoginMutation";
 import { handleAppleLogin } from "@/utils/handleAppleLogin";
+import { handleAppDownload } from "@/utils/handleAppDownload";
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 
@@ -148,7 +149,11 @@ function LoginContent() {
             <div className="flex justify-center items-center gap-3">
               <button
                 type="button"
-                onClick={() => alert(t.alerts.android)}
+                onClick={() =>
+                  handleAppDownload(
+                    "https://play.google.com/store/apps/details?id=com.zelon.wecanz",
+                  )
+                }
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
                 <Image
@@ -162,7 +167,11 @@ function LoginContent() {
 
               <button
                 type="button"
-                onClick={() => alert(t.alerts.ios)}
+                onClick={() =>
+                  handleAppDownload(
+                    "https://apps.apple.com/us/app/wecanz/id6834660604",
+                  )
+                }
                 className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
               >
                 <Image
